@@ -1,6 +1,6 @@
 # smart-resize.nvim
 
-Resize Neovim splits based on the "direction" you want to resize in.
+"Smart" resize Neovim splits directionally.
 
 ![demo](./demo.gif)
 
