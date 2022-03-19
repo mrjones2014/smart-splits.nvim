@@ -1,6 +1,8 @@
 local M = {}
 
-local function resize(direction)
+local function resize(direction, amount)
+  print(vim.inspect(amount))
+  amount = amount or 3
   -- account for bufferline, status line, and cmd line
   local is_full_height = vim.api.nvim_win_get_height(0) == vim.o.lines - 2 - vim.o.cmdheight
   local is_full_width = vim.api.nvim_win_get_width(0) == vim.o.columns
@@ -30,16 +32,16 @@ local function resize(direction)
     -- top edge or middle of >2
     if cur_win == new_win or (cur_win ~= new_win3 and new_win2 ~= new_win3) then
       if direction == 'down' then
-        vim.cmd('resize +3')
+        vim.cmd('resize +' .. amount)
       else
-        vim.cmd('resize -3')
+        vim.cmd('resize -' .. amount)
       end
     else
       -- bottom edge
       if direction == 'down' then
-        vim.cmd('resize -3')
+        vim.cmd('resize -' .. amount)
       else
-        vim.cmd('resize +3')
+        vim.cmd('resize +' .. amount)
       end
     end
   else
@@ -55,24 +57,24 @@ local function resize(direction)
     -- left edge or middle of >2
     if cur_win == new_win or (cur_win ~= new_win3 and new_win2 ~= new_win3) then
       if direction == 'right' then
-        vim.cmd('vertical resize +3')
+        vim.cmd('vertical resize +' .. amount)
       else
-        vim.cmd('vertical resize -3')
+        vim.cmd('vertical resize -' .. amount)
       end
     else
       -- not top edge
       if direction == 'right' then
-        vim.cmd('vertical resize -3')
+        vim.cmd('vertical resize -' .. amount)
       else
-        vim.cmd('vertical resize +3')
+        vim.cmd('vertical resize +' .. amount)
       end
     end
   end
 end
 
 vim.tbl_map(function(direction)
-  M[string.format('resize_%s', direction)] = function()
-    resize(direction)
+  M[string.format('resize_%s', direction)] = function(amount)
+    resize(direction, amount)
   end
 end, {
   'left',
