@@ -1,7 +1,6 @@
 local M = {}
 
 local function resize(direction, amount)
-  print(vim.inspect(amount))
   amount = amount or 3
   -- account for bufferline, status line, and cmd line
   local is_full_height = vim.api.nvim_win_get_height(0) == vim.o.lines - 2 - vim.o.cmdheight
