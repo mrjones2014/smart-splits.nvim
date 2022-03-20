@@ -1,6 +1,12 @@
 local M = {}
 
-function M.at_positive_edge(direction)
+local win_pos = {
+  start = 0,
+  middle = 1,
+  last = 2,
+}
+
+function M.win_position(direction)
   local directions
   if direction == 'left' or direction == 'right' then
     directions = { 'h', 'l' }
@@ -19,16 +25,21 @@ function M.at_positive_edge(direction)
   local new_win3 = vim.api.nvim_get_current_win()
   vim.api.nvim_set_current_win(cur_win)
 
-  -- at left or op edge, or in one of the middle of > 2 splits
-  if cur_win == new_win or (cur_win ~= new_win3 and new_win2 ~= new_win3) then
-    return true
+  if new_win == cur_win then
+    return win_pos.start
   end
 
-  return false
+  -- at left or op edge, or in one of the middle of > 2 splits
+  if cur_win ~= new_win and cur_win ~= new_win3 and new_win2 ~= new_win3 then
+    return win_pos.middle
+  end
+
+  return win_pos.last
 end
 
 local function compute_direction_vertical(direction)
-  if M.at_positive_edge(direction) then
+  local current_pos = M.win_position(direction)
+  if current_pos == win_pos.start or current_pos == win_pos.middle then
     return direction == 'down' and '+' or '-'
   end
 
@@ -36,7 +47,8 @@ local function compute_direction_vertical(direction)
 end
 
 local function compute_direction_horizontal(direction)
-  if M.at_positive_edge(direction) then
+  local current_pos = M.win_position(direction)
+  if current_pos == win_pos.start then
     return direction == 'right' and '+' or '-'
   end
 
