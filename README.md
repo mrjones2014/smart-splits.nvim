@@ -27,10 +27,10 @@ require('smart-splits').resize_down(amount)
 require('smart-splits').resize_left(amount)
 require('smart-splits').resize_right(amount)
 -- movement
-require('smart-splits').move_cursor_up(amount)
-require('smart-splits').move_cursor_down(amount)
-require('smart-splits').move_cursor_left(amount)
-require('smart-splits').move_cursor_right(amount)
+require('smart-splits').move_cursor_up()
+require('smart-splits').move_cursor_down()
+require('smart-splits').move_cursor_left()
+require('smart-splits').move_cursor_right()
 
 -- recommended mappings
 -- resizing
