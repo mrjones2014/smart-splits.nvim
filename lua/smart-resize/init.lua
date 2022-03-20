@@ -13,7 +13,7 @@ local function at_positive_edge(direction)
   local new_win = vim.api.nvim_get_current_win()
   vim.cmd('wincmd ' .. directions[1])
   local new_win2 = vim.api.nvim_get_current_win()
-  for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
+  for _ = 0, 3, 1 do
     vim.cmd('wincmd ' .. directions[2])
   end
   local new_win3 = vim.api.nvim_get_current_win()
