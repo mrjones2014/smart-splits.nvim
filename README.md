@@ -23,6 +23,12 @@ require('smart-resize').resize_up(amount)
 require('smart-resize').resize_down(amount)
 require('smart-resize').resize_left(amount)
 require('smart-resize').resize_right(amount)
+
+-- recommended mappings
+vim.keymap.set('n', '<A-h>', require('smart-resize').resize_left)
+vim.keymap.set('n', '<A-j>', require('smart-resize').resize_down)
+vim.keymap.set('n', '<A-k>', require('smart-resize').resize_up)
+vim.keymap.set('n', '<A-l>', require('smart-resize').resize_right)
 ```
 
 With Vimscript:
@@ -34,4 +40,10 @@ With Vimscript:
 :SmartResizeDown [amount]
 :SmartResizeLeft [amount]
 :SmartResizeRight [amount]
+
+" recommended mappings
+nmap <A-h> :lua require('smart-resize').resize_left()<CR>
+nmap <A-j> :lua require('smart-resize').resize_down()<CR>
+nmap <A-k> :lua require('smart-resize').resize_up()<CR>
+nmap <A-l> :lua require('smart-resize').resize_right()<CR>
 ```
