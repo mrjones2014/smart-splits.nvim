@@ -1,8 +1,8 @@
 # smart-splits.nvim
 
-Smart, directional Neovim split resizing and navigation. Think about split resizing in terms of up, down, left, and right edge movements.
+Smart, directional Neovim split resizing and navigation.
+Think about split resizing in terms of up, down, left, and right edge movements.
 Move cyclicly through splits (moving left at the left edge jumps to the right edge).
-Extremely lightweight, weighing in at less than 150 source lines of code.
 
 ![demo](./demo.gif)
 
@@ -12,6 +12,25 @@ With Packer.nvim:
 
 ```lua
 use('mrjones2014/smart-splits.nvim')
+```
+
+## Configuration
+
+You can set ignored `buftype`s or `filetype`s which will be ignored when
+figuring out if your cursor is currently at an edge split for resizing.
+This is useful for things like `nvim-tree` which try to maintain its
+width, so resizing the split beside it feels unnatural unless we ignore
+`nvim-tree`'s buffer in our logic.
+
+Defaults are shown below:
+
+```lua
+require('smart-splits').ignored_filetypes = { 'NvimTree' }
+require('smart-splits').ignored_filetypes = {
+  'nofile',
+  'quickfix',
+  'prompt',
+}
 ```
 
 ## Usage
