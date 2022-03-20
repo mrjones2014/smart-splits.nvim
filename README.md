@@ -1,6 +1,7 @@
 # smart-resize.nvim
 
 Smart, directional Neovim split resizing. Think about split resizing in terms of up, down, left, and right edge movements.
+Extremely lightweight, weighing in at less than 100 lines of code.
 
 ![demo](./demo.gif)
 
