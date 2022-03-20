@@ -37,11 +37,9 @@ end
 
 local function compute_direction_horizontal(direction)
   if M.at_positive_edge(direction) then
-    print('1')
     return direction == 'right' and '+' or '-'
   end
 
-  print(2)
   return direction == 'right' and '-' or '+'
 end
 
