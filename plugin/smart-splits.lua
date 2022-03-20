@@ -5,7 +5,7 @@ local function resize_handler(direction)
       amount = args.args
     end
 
-    require('smart-resize')['resize_' .. direction](amount)
+    require('smart-splits')['resize_' .. direction](amount)
   end
 end
 
@@ -22,21 +22,21 @@ vim.api.nvim_add_user_command('SmartResizeDown', resize_handler('down'), { desc 
 -- movements
 vim.api.nvim_add_user_command(
   'SmartCursorMoveLeft',
-  require('smart-resize').move_cursor_left,
+  require('smart-splits').move_cursor_left,
   { desc = '"Smart" resize left' }
 )
 vim.api.nvim_add_user_command(
   'SmartCursorMoveRight',
-  require('smart-resize').move_cursor_right,
+  require('smart-splits').move_cursor_right,
   { desc = '"Smart" resize right' }
 )
 vim.api.nvim_add_user_command(
   'SmartCursorMoveUp',
-  require('smart-resize').move_cursor_up,
+  require('smart-splits').move_cursor_up,
   { desc = '"Smart" resize up' }
 )
 vim.api.nvim_add_user_command(
   'SmartCursorMoveDown',
-  require('smart-resize').move_cursor_down,
+  require('smart-splits').move_cursor_down,
   { desc = '"Smart" resize down' }
 )
