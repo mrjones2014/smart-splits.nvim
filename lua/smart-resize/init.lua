@@ -1,58 +1,48 @@
 local M = {}
 
-local function compute_direction_vertical(direction)
+local function at_positive_edge(direction)
+  local directions
+  if direction == 'left' or direction == 'right' then
+    directions = { 'h', 'l' }
+  else
+    directions = { 'k', 'j' }
+  end
+
   local cur_win = vim.api.nvim_get_current_win()
-  vim.cmd('wincmd k')
+  vim.cmd('wincmd ' .. directions[1])
   local new_win = vim.api.nvim_get_current_win()
-  vim.cmd('wincmd k')
+  vim.cmd('wincmd ' .. directions[1])
   local new_win2 = vim.api.nvim_get_current_win()
   for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-    vim.cmd('wincmd j')
+    vim.cmd('wincmd ' .. directions[2])
   end
   local new_win3 = vim.api.nvim_get_current_win()
   vim.api.nvim_set_current_win(cur_win)
-  -- top edge or middle of >2
+
+  -- at left or op edge, or in one of the middle of > 2 splits
   if cur_win == new_win or (cur_win ~= new_win3 and new_win2 ~= new_win3) then
-    if direction == 'down' then
-      return '+'
-    end
-
-    return '-'
+    return true
   end
 
-  if direction == 'down' then
-    return '-'
+  return false
+end
+
+local function compute_direction_vertical(direction)
+  if at_positive_edge(direction) then
+    return direction == 'down' and '+' or '-'
   end
 
-  return '+'
+  return direction == 'down' and '-' or '+'
 end
 
 local function compute_direction_horizontal(direction)
-  local cur_win = vim.api.nvim_get_current_win()
-  vim.cmd('wincmd h')
-  local new_win = vim.api.nvim_get_current_win()
-  vim.cmd('wincmd h')
-  local new_win2 = vim.api.nvim_get_current_win()
-  for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-    vim.cmd('wincmd l')
-  end
-  local new_win3 = vim.api.nvim_get_current_win()
-  vim.api.nvim_set_current_win(cur_win)
-  -- left edge or middle of >2
-  if cur_win == new_win or (cur_win ~= new_win3 and new_win2 ~= new_win3) then
-    if direction == 'right' then
-      return '+'
-    end
-
-    return '-'
+  if at_positive_edge(direction) then
+    print('1')
+    return direction == 'right' and '+' or '-'
   end
 
-  -- not top edge
-  if direction == 'right' then
-    return '-'
-  end
-
-  return '+'
+  print(2)
+  return direction == 'right' and '-' or '+'
 end
 
 local function resize(direction, amount)
