@@ -1,12 +1,21 @@
 local M = {}
 
+M.ignored_buftypes = {
+  'nofile',
+  'quickfix',
+  'prompt',
+}
+M.ignored_filetypes = {
+  'NvimTree',
+}
+
 local win_pos = {
   start = 0,
   middle = 1,
   last = 2,
 }
 
-function M.win_position(direction)
+function M.win_position(direction, for_resizing)
   local directions
   if direction == 'left' or direction == 'right' then
     directions = { 'h', 'l' }
@@ -15,12 +24,35 @@ function M.win_position(direction)
   end
 
   local cur_win = vim.api.nvim_get_current_win()
+  local cur_win_ignored = vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype)
+    or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype)
   vim.cmd('wincmd ' .. directions[1])
+  if
+    for_resizing
+    and not cur_win_ignored
+    and (vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype))
+  then
+    vim.cmd('wincmd ' .. directions[2])
+  end
   local new_win = vim.api.nvim_get_current_win()
   vim.cmd('wincmd ' .. directions[1])
+  if
+    for_resizing
+    and not cur_win_ignored
+    and (vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype))
+  then
+    vim.cmd('wincmd ' .. directions[2])
+  end
   local new_win2 = vim.api.nvim_get_current_win()
   for _ = 0, 3, 1 do
     vim.cmd('wincmd ' .. directions[2])
+  end
+  if
+    for_resizing
+    and not cur_win_ignored
+    and (vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype))
+  then
+    vim.cmd('wincmd ' .. directions[1])
   end
   local new_win3 = vim.api.nvim_get_current_win()
   vim.api.nvim_set_current_win(cur_win)
@@ -38,7 +70,7 @@ function M.win_position(direction)
 end
 
 local function compute_direction_vertical(direction)
-  local current_pos = M.win_position(direction)
+  local current_pos = M.win_position(direction, true)
   if current_pos == win_pos.start or current_pos == win_pos.middle then
     return direction == 'down' and '+' or '-'
   end
@@ -47,7 +79,9 @@ local function compute_direction_vertical(direction)
 end
 
 local function compute_direction_horizontal(direction)
-  local current_pos = M.win_position(direction)
+  local current_pos = M.win_position(direction, true)
+  print(current_pos)
+  print(direction)
   if current_pos == win_pos.start or current_pos == win_pos.middle then
     return direction == 'right' and '+' or '-'
   end
