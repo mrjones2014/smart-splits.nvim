@@ -1,6 +1,6 @@
 local M = {}
 
-local function at_positive_edge(direction)
+function M.at_positive_edge(direction)
   local directions
   if direction == 'left' or direction == 'right' then
     directions = { 'h', 'l' }
@@ -28,7 +28,7 @@ local function at_positive_edge(direction)
 end
 
 local function compute_direction_vertical(direction)
-  if at_positive_edge(direction) then
+  if M.at_positive_edge(direction) then
     return direction == 'down' and '+' or '-'
   end
 
@@ -36,7 +36,7 @@ local function compute_direction_vertical(direction)
 end
 
 local function compute_direction_horizontal(direction)
-  if at_positive_edge(direction) then
+  if M.at_positive_edge(direction) then
     print('1')
     return direction == 'right' and '+' or '-'
   end
