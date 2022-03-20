@@ -1,6 +1,6 @@
 # smart-resize.nvim
 
-"Smart" resize Neovim splits directionally.
+"Smart" resize Neovim splits directionally. Extremely lightweight (less than 100 lines of code).
 
 ![demo](./demo.gif)
 
@@ -18,6 +18,7 @@ With Lua:
 
 ```lua
 -- amount defaults to 3 if not specified
+-- use absolute values, no + or -
 require('smart-resize').resize_up(amount)
 require('smart-resize').resize_down(amount)
 require('smart-resize').resize_left(amount)
@@ -28,6 +29,7 @@ With Vimscript:
 
 ```VimL
 " amount defaults to 3 if not specified
+" use absolute values, no + or -
 :SmartResizeUp [amount]
 :SmartResizeDown [amount]
 :SmartResizeLeft [amount]
