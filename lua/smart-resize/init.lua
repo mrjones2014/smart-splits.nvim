@@ -83,9 +83,40 @@ local function resize(direction, amount)
   vim.cmd(string.format('vertical resize %s%s', plus_minus, amount))
 end
 
+local function move_cursor(direction)
+  local current_pos = M.win_position(direction)
+  if current_pos == win_pos.start and (direction == 'left' or direction == 'up') then
+    local wincmd = 'wincmd ' .. (direction == 'left' and 'l' or 'j')
+    for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
+      vim.cmd(wincmd)
+    end
+    return
+  end
+
+  if current_pos == win_pos.last and (direction == 'right' or direction == 'down') then
+    local wincmd = 'wincmd ' .. (direction == 'right' and 'h' or 'k')
+    for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
+      vim.cmd(wincmd)
+    end
+    return
+  end
+
+  local wincmd_direction
+  if direction == 'left' or direction == 'right' then
+    wincmd_direction = direction == 'left' and 'h' or 'l'
+  else
+    wincmd_direction = direction == 'up' and 'k' or 'j'
+  end
+
+  vim.cmd('wincmd ' .. wincmd_direction)
+end
+
 vim.tbl_map(function(direction)
   M[string.format('resize_%s', direction)] = function(amount)
     resize(direction, amount)
+  end
+  M[string.format('move_cursor_%s', direction)] = function()
+    move_cursor(direction)
   end
 end, {
   'left',
