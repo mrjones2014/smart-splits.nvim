@@ -25,7 +25,7 @@ width, so resizing the split beside it feels unnatural unless we ignore
 Defaults are shown below:
 
 ```lua
-require('smart-splits').ignored_filetypes = { 'NvimTree' }
+require('smart-splits').ignored_buftypes = { 'NvimTree' }
 require('smart-splits').ignored_filetypes = {
   'nofile',
   'quickfix',
