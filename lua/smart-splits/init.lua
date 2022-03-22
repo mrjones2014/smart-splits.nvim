@@ -1,13 +1,22 @@
 local M = {}
 
+----------
+-- CONFIG
+----------
+
 M.ignored_buftypes = {
   'nofile',
   'quickfix',
   'prompt',
 }
+
 M.ignored_filetypes = {
   'NvimTree',
 }
+
+----------
+-- PLUGIN
+----------
 
 local win_pos = {
   start = 0,
