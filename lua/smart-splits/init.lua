@@ -91,8 +91,13 @@ end
 
 local function resize(direction, amount)
   amount = amount or 3
-  -- account for bufferline, status line, and cmd line
-  local is_full_height = vim.api.nvim_win_get_height(0) == vim.o.lines - 2 - vim.o.cmdheight
+  -- for vertical height account for tabline, status line, and cmd line
+  local window_height = vim.o.lines - 1 - vim.o.cmdheight
+  if (vim.o.showtabline == 1 and #vim.api.nvim_list_tabpages() > 1) or vim.o.showtabline == 2 then
+    window_height = window_height - 1
+  end
+
+  local is_full_height = vim.api.nvim_win_get_height(0) == window_height
   local is_full_width = vim.api.nvim_win_get_width(0) == vim.o.columns
 
   -- don't try to horizontally resize a full width window

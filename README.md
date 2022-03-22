@@ -1,8 +1,11 @@
 # smart-splits.nvim
 
 Smart, directional Neovim split resizing and navigation.
-Think about split resizing in terms of up, down, left, and right edge movements.
-Move cyclicly through splits (moving left at the left edge jumps to the right edge).
+`smart-splits.nvim` lets you think about split resizing in terms of
+"move the divider to the left/right/up/down" which can feel much more
+natural. It also allows you to move through splits in a circular fashion
+(e.g. moving left at the left edge jumps to the right edge, and vice versa,
+and same for top and bottom edges).
 
 ![demo](./demo.gif)
 
@@ -18,9 +21,9 @@ use('mrjones2014/smart-splits.nvim')
 
 You can set ignored `buftype`s or `filetype`s which will be ignored when
 figuring out if your cursor is currently at an edge split for resizing.
-This is useful for things like `nvim-tree` which try to maintain its
-width, so resizing the split beside it feels unnatural unless we ignore
-`nvim-tree`'s buffer in our logic.
+This is useful in order to ignore "sidebar" type buffers while resizing,
+such as [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua)
+which tries to maintain its own width unless manually resized.
 
 Defaults are shown below:
 
