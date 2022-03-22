@@ -89,8 +89,6 @@ end
 
 local function compute_direction_horizontal(direction)
   local current_pos = M.win_position(direction, true)
-  print(current_pos)
-  print(direction)
   if current_pos == win_pos.start or current_pos == win_pos.middle then
     return direction == 'right' and '+' or '-'
   end
