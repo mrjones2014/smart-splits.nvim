@@ -84,7 +84,6 @@ With Vimscript:
 :SmartCursorMoveLeft
 :SmartCursorMoveRight
 
-
 " recommended mappings
 " resizing splits
 nmap <A-h> :lua require('smart-splits').resize_left()<CR>
