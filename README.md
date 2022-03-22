@@ -23,7 +23,8 @@ You can set ignored `buftype`s or `filetype`s which will be ignored when
 figuring out if your cursor is currently at an edge split for resizing.
 This is useful in order to ignore "sidebar" type buffers while resizing,
 such as [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua)
-which tries to maintain its own width unless manually resized.
+which tries to maintain its own width unless manually resized. Note that
+nothing is ignored when moving between splits, only when resizing.
 
 Defaults are shown below:
 
