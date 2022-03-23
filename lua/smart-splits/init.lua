@@ -180,15 +180,7 @@ local function move_cursor(direction)
     wincmd_direction = direction == 'up' and 'k' or 'j'
   end
 
-  if wincmd_direction == 'j' or wincmd_direction == 'k' then
-    vim.cmd('wincmd ' .. wincmd_direction)
-    return
-  end
-
-  local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   vim.cmd('wincmd ' .. wincmd_direction)
-  offset = offset - vim.api.nvim_win_get_position(0)[1]
-  vim.cmd('normal! ' .. offset .. 'H')
 end
 
 vim.tbl_map(function(direction)
