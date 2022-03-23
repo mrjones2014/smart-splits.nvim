@@ -83,65 +83,35 @@ local function at_right_edge()
 end
 
 function M.win_position(direction, for_resizing)
-  local directions
   if direction == 'left' or direction == 'right' then
-    directions = { 'h', 'l' }
-  else
-    directions = { 'k', 'j' }
-  end
-
-  local cur_win = vim.api.nvim_get_current_win()
-  local cur_win_ignored = vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype)
-    or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype)
-  move_win(directions[1])
-  if
-    for_resizing
-    and not cur_win_ignored
-    and (vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype))
-  then
-    move_win(directions[2])
-  end
-  local new_win = vim.api.nvim_get_current_win()
-  move_win(directions[1])
-  if
-    for_resizing
-    and not cur_win_ignored
-    and (vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype))
-  then
-    move_win(directions[2])
-  end
-  local new_win2 = vim.api.nvim_get_current_win()
-  for _ = 0, 3, 1 do
-    move_win(directions[2])
-  end
-  if
-    for_resizing
-    and not cur_win_ignored
-    and (vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype))
-  then
-    move_win(directions[1])
-  end
-  local new_win3 = vim.api.nvim_get_current_win()
-  vim.api.nvim_set_current_win(cur_win)
-
-  if new_win == cur_win then
-    return win_pos.start
-  end
-
-  -- at left or op edge, or in one of the middle of > 2 splits
-  if cur_win ~= new_win and cur_win ~= new_win3 and new_win2 ~= new_win3 then
-    if for_resizing and (direction == 'left' or direction == 'right') and not is_full_height(cur_win) then
-      return win_pos.middle_middle
+    if at_left_edge() then
+      return win_pos.start
     end
 
-    if for_resizing and (direction == 'up' or direction == 'down') and not is_full_width(cur_win) then
+    if at_right_edge() then
+      return win_pos.last
+    end
+
+    if at_top_edge() or at_bottom_edge() then
       return win_pos.middle_middle
     end
 
     return win_pos.middle
   end
 
-  return win_pos.last
+  if at_top_edge() then
+    return win_pos.start
+  end
+
+  if at_bottom_edge() then
+    return win_pos.last
+  end
+
+  if at_left_edge() or at_right_edge() then
+    return win_pos.middle_middle
+  end
+
+  return win_pos.middle
 end
 
 local function compute_direction_vertical(direction)
