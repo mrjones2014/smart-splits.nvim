@@ -21,8 +21,34 @@ M.ignored_filetypes = {
 local win_pos = {
   start = 0,
   middle = 1,
-  last = 2,
+  middle_middle = 2,
+  last = 3,
 }
+
+local function is_full_height(winnr)
+  -- for vertical height account for tabline, status line, and cmd line
+  local window_height = vim.o.lines - 1 - vim.o.cmdheight
+  if (vim.o.showtabline == 1 and #vim.api.nvim_list_tabpages() > 1) or vim.o.showtabline == 2 then
+    window_height = window_height - 1
+  end
+  return vim.api.nvim_win_get_height(winnr or 0) == window_height
+end
+
+local function is_full_width(winnr)
+  return vim.api.nvim_win_get_width(winnr or 0) == vim.o.columns
+end
+
+local function move_win(direction)
+  if direction == 'j' or direction == 'k' then
+    vim.cmd('wincmd ' .. direction)
+    return
+  end
+
+  local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
+  vim.cmd('wincmd ' .. direction)
+  offset = offset - vim.api.nvim_win_get_position(0)[1]
+  vim.cmd('normal! ' .. offset .. 'H')
+end
 
 function M.win_position(direction, for_resizing)
   local directions
@@ -35,33 +61,33 @@ function M.win_position(direction, for_resizing)
   local cur_win = vim.api.nvim_get_current_win()
   local cur_win_ignored = vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype)
     or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype)
-  vim.cmd('wincmd ' .. directions[1])
+  move_win(directions[1])
   if
     for_resizing
     and not cur_win_ignored
     and (vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype))
   then
-    vim.cmd('wincmd ' .. directions[2])
+    move_win(directions[2])
   end
   local new_win = vim.api.nvim_get_current_win()
-  vim.cmd('wincmd ' .. directions[1])
+  move_win(directions[1])
   if
     for_resizing
     and not cur_win_ignored
     and (vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype))
   then
-    vim.cmd('wincmd ' .. directions[2])
+    move_win(directions[2])
   end
   local new_win2 = vim.api.nvim_get_current_win()
   for _ = 0, 3, 1 do
-    vim.cmd('wincmd ' .. directions[2])
+    move_win(directions[2])
   end
   if
     for_resizing
     and not cur_win_ignored
     and (vim.tbl_contains(M.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.ignored_filetypes, vim.bo.filetype))
   then
-    vim.cmd('wincmd ' .. directions[1])
+    move_win(directions[1])
   end
   local new_win3 = vim.api.nvim_get_current_win()
   vim.api.nvim_set_current_win(cur_win)
@@ -72,6 +98,14 @@ function M.win_position(direction, for_resizing)
 
   -- at left or op edge, or in one of the middle of > 2 splits
   if cur_win ~= new_win and cur_win ~= new_win3 and new_win2 ~= new_win3 then
+    if for_resizing and (direction == 'left' or direction == 'right') and not is_full_height(cur_win) then
+      return win_pos.middle_middle
+    end
+
+    if for_resizing and (direction == 'up' or direction == 'down') and not is_full_width(cur_win) then
+      return win_pos.middle_middle
+    end
+
     return win_pos.middle
   end
 
@@ -98,22 +132,14 @@ end
 
 local function resize(direction, amount)
   amount = amount or 3
-  -- for vertical height account for tabline, status line, and cmd line
-  local window_height = vim.o.lines - 1 - vim.o.cmdheight
-  if (vim.o.showtabline == 1 and #vim.api.nvim_list_tabpages() > 1) or vim.o.showtabline == 2 then
-    window_height = window_height - 1
-  end
-
-  local is_full_height = vim.api.nvim_win_get_height(0) == window_height
-  local is_full_width = vim.api.nvim_win_get_width(0) == vim.o.columns
 
   -- don't try to horizontally resize a full width window
-  if (direction == 'left' or direction == 'right') and is_full_width then
+  if (direction == 'left' or direction == 'right') and is_full_width() then
     return
   end
 
   -- don't try to vertically resize a full height window
-  if (direction == 'down' or direction == 'up') and is_full_height then
+  if (direction == 'down' or direction == 'up') and is_full_height() then
     return
   end
 
@@ -154,7 +180,15 @@ local function move_cursor(direction)
     wincmd_direction = direction == 'up' and 'k' or 'j'
   end
 
+  if wincmd_direction == 'j' or wincmd_direction == 'k' then
+    vim.cmd('wincmd ' .. wincmd_direction)
+    return
+  end
+
+  local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   vim.cmd('wincmd ' .. wincmd_direction)
+  offset = offset - vim.api.nvim_win_get_position(0)[1]
+  vim.cmd('normal! ' .. offset .. 'H')
 end
 
 vim.tbl_map(function(direction)
