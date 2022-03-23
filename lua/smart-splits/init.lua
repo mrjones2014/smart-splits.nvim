@@ -106,7 +106,10 @@ function M.win_position(direction)
       return win_pos.last
     end
 
-    if at_top_edge() or at_bottom_edge() then
+    local is_top_edge = at_top_edge()
+    local is_bottom_edge = at_bottom_edge()
+
+    if (is_top_edge and not is_bottom_edge) or (is_bottom_edge and not is_top_edge) then
       return win_pos.middle_middle
     end
 
@@ -135,6 +138,7 @@ end
 
 local function compute_direction_horizontal(direction)
   local current_pos = M.win_position(direction)
+  print(current_pos)
   if current_pos == win_pos.start or current_pos == win_pos.middle then
     return direction == 'right' and '+' or '-'
   end
