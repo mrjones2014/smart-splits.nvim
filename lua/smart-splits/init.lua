@@ -50,6 +50,38 @@ local function move_win(direction)
   vim.cmd('normal! ' .. offset .. 'H')
 end
 
+local function at_top_edge()
+  local cur_win = vim.api.nvim_get_current_win()
+  move_win('k')
+  local is_at_top = vim.api.nvim_get_current_win() == cur_win
+  vim.api.nvim_set_current_win(cur_win)
+  return is_at_top
+end
+
+local function at_bottom_edge()
+  local cur_win = vim.api.nvim_get_current_win()
+  move_win('j')
+  local is_at_bottom = vim.api.nvim_get_current_win() == cur_win
+  vim.api.nvim_set_current_win(cur_win)
+  return is_at_bottom
+end
+
+local function at_left_edge()
+  local cur_win = vim.api.nvim_get_current_win()
+  move_win('h')
+  local is_at_left = vim.api.nvim_get_current_win() == cur_win
+  vim.api.nvim_set_current_win(cur_win)
+  return is_at_left
+end
+
+local function at_right_edge()
+  local cur_win = vim.api.nvim_get_current_win()
+  move_win('l')
+  local is_at_right = vim.api.nvim_get_current_win() == cur_win
+  vim.api.nvim_set_current_win(cur_win)
+  return is_at_right
+end
+
 function M.win_position(direction, for_resizing)
   local directions
   if direction == 'left' or direction == 'right' then
