@@ -25,6 +25,14 @@ local win_pos = {
   last = 3,
 }
 
+local dir_keys = {
+  ['h'] = 'left',
+  ['j'] = 'down',
+  ['k'] = 'up',
+  ['l'] = 'right',
+}
+vim.tbl_add_reverse_lookup(dir_keys)
+
 local function is_full_height(winnr)
   -- for vertical height account for tabline, status line, and cmd line
   local window_height = vim.o.lines - 1 - vim.o.cmdheight
@@ -39,7 +47,7 @@ local function is_full_width(winnr)
 end
 
 local function move_win(direction)
-  if direction == 'j' or direction == 'k' then
+  if direction == dir_keys.down or direction == dir_keys.up then
     vim.cmd('wincmd ' .. direction)
     return
   end
@@ -52,7 +60,7 @@ end
 
 local function at_top_edge()
   local cur_win = vim.api.nvim_get_current_win()
-  move_win('k')
+  move_win(dir_keys.up)
   local is_at_top = vim.api.nvim_get_current_win() == cur_win
   vim.api.nvim_set_current_win(cur_win)
   return is_at_top
@@ -60,7 +68,7 @@ end
 
 local function at_bottom_edge()
   local cur_win = vim.api.nvim_get_current_win()
-  move_win('j')
+  move_win(dir_keys.down)
   local is_at_bottom = vim.api.nvim_get_current_win() == cur_win
   vim.api.nvim_set_current_win(cur_win)
   return is_at_bottom
@@ -68,7 +76,7 @@ end
 
 local function at_left_edge()
   local cur_win = vim.api.nvim_get_current_win()
-  move_win('h')
+  move_win(dir_keys.left)
   local is_at_left = vim.api.nvim_get_current_win() == cur_win
   vim.api.nvim_set_current_win(cur_win)
   return is_at_left
@@ -76,7 +84,7 @@ end
 
 local function at_right_edge()
   local cur_win = vim.api.nvim_get_current_win()
-  move_win('l')
+  move_win(dir_keys.right)
   local is_at_right = vim.api.nvim_get_current_win() == cur_win
   vim.api.nvim_set_current_win(cur_win)
   return is_at_right
