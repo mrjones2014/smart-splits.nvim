@@ -1,3 +1,19 @@
+if vim.api.nvim_add_user_command == nil then
+  vim.cmd([[
+    " resizing
+    command! -nargs=* SmartResizeLeft :lua require('smart-splits').resize_left(<args>)<CR>
+    command! -nargs=* SmartResizeRight :lua require('smart-splits').resize_right(<args>)<CR>
+    command! -nargs=* SmartResizeUp :lua require('smart-splits').resize_up(<args>)<CR>
+    command! -nargs=* SmartResizeDown :lua require('smart-splits').resize_down(<args>)<CR>
+    " movements
+    command! SmartCursorMoveLeft :lua require('smart-splits').move_cursor_left()<CR>
+    command! SmartCursorMoveRight :lua require('smart-splits').move_cursor_right()<CR>
+    command! SmartCursorMoveUp :lua require('smart-splits').move_cursor_up()<CR>
+    command! SmartCursorMoveDown :lua require('smart-splits').move_cursor_down()<CR>
+  ]])
+  return
+end
+
 local function resize_handler(direction)
   return function(args)
     local amount
