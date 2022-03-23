@@ -54,38 +54,44 @@ local function move_win(direction)
 
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   vim.cmd('wincmd ' .. direction)
+  local view = vim.fn.winsaveview()
   offset = offset - vim.api.nvim_win_get_position(0)[1]
   vim.cmd('normal! ' .. offset .. 'H')
+  return view
 end
 
 local function at_top_edge()
   local cur_win = vim.api.nvim_get_current_win()
-  move_win(dir_keys.up)
+  local view = move_win(dir_keys.up)
   local is_at_top = vim.api.nvim_get_current_win() == cur_win
+  pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
   return is_at_top
 end
 
 local function at_bottom_edge()
   local cur_win = vim.api.nvim_get_current_win()
-  move_win(dir_keys.down)
+  local view = move_win(dir_keys.down)
   local is_at_bottom = vim.api.nvim_get_current_win() == cur_win
+  pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
   return is_at_bottom
 end
 
 local function at_left_edge()
   local cur_win = vim.api.nvim_get_current_win()
-  move_win(dir_keys.left)
+  local view = move_win(dir_keys.left)
   local is_at_left = vim.api.nvim_get_current_win() == cur_win
+  pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
   return is_at_left
 end
 
 local function at_right_edge()
   local cur_win = vim.api.nvim_get_current_win()
-  move_win(dir_keys.right)
+  local view = move_win(dir_keys.right)
   local is_at_right = vim.api.nvim_get_current_win() == cur_win
+  pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
   return is_at_right
 end
