@@ -82,7 +82,7 @@ local function at_right_edge()
   return is_at_right
 end
 
-function M.win_position(direction, for_resizing)
+function M.win_position(direction)
   if direction == 'left' or direction == 'right' then
     if at_left_edge() then
       return win_pos.start
@@ -107,15 +107,11 @@ function M.win_position(direction, for_resizing)
     return win_pos.last
   end
 
-  if at_left_edge() or at_right_edge() then
-    return win_pos.middle_middle
-  end
-
   return win_pos.middle
 end
 
 local function compute_direction_vertical(direction)
-  local current_pos = M.win_position(direction, true)
+  local current_pos = M.win_position(direction)
   if current_pos == win_pos.start or current_pos == win_pos.middle then
     return direction == 'down' and '+' or '-'
   end
@@ -124,7 +120,7 @@ local function compute_direction_vertical(direction)
 end
 
 local function compute_direction_horizontal(direction)
-  local current_pos = M.win_position(direction, true)
+  local current_pos = M.win_position(direction)
   if current_pos == win_pos.start or current_pos == win_pos.middle then
     return direction == 'right' and '+' or '-'
   end
@@ -158,31 +154,37 @@ local function resize(direction, amount)
 end
 
 local function move_cursor(direction)
-  local current_pos = M.win_position(direction)
-  if current_pos == win_pos.start and (direction == 'left' or direction == 'up') then
-    local wincmd = 'wincmd ' .. (direction == 'left' and 'l' or 'j')
-    for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-      vim.cmd(wincmd)
+  if direction == 'left' then
+    if at_left_edge() then
+      for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
+        vim.cmd('wincmd l')
+      end
+    else
+      vim.cmd('wincmd h')
     end
-    return
-  end
-
-  if current_pos == win_pos.last and (direction == 'right' or direction == 'down') then
-    local wincmd = 'wincmd ' .. (direction == 'right' and 'h' or 'k')
-    for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-      vim.cmd(wincmd)
+  elseif direction == 'right' then
+    if at_right_edge() then
+      for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
+        vim.cmd('wincmd h')
+      end
+    else
+      vim.cmd('wincmd l')
     end
-    return
-  end
-
-  local wincmd_direction
-  if direction == 'left' or direction == 'right' then
-    wincmd_direction = direction == 'left' and 'h' or 'l'
+  elseif direction == 'up' then
+    if at_top_edge() then
+      for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
+        vim.cmd('wincmd j')
+      end
+    else
+      vim.cmd('wincmd k')
+    end
+  elseif at_bottom_edge() then
+    for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
+      vim.cmd('wincmd k')
+    end
   else
-    wincmd_direction = direction == 'up' and 'k' or 'j'
+    vim.cmd('wincmd j')
   end
-
-  vim.cmd('wincmd ' .. wincmd_direction)
 end
 
 vim.tbl_map(function(direction)
