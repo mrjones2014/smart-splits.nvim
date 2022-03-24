@@ -173,7 +173,6 @@ local function resize(direction, amount)
     return
   end
 
-  local cur_win_id = vim.api.nvim_get_current_win()
   if direction == 'down' or direction == 'up' then
     -- vertically
     local plus_minus = compute_direction_vertical(direction)
