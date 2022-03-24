@@ -254,8 +254,11 @@ end
 
 vim.tbl_map(function(direction)
   M[string.format('resize_%s', direction)] = function(amount)
+    local cur_win_id = vim.api.nvim_get_current_win(0)
     edge_cache = {}
     resize(direction, amount)
+    -- guarantee we haven't moved the cursor by accident
+    vim.api.nvim_set_current_win(cur_win_id)
   end
   M[string.format('move_cursor_%s', direction)] = function()
     edge_cache = {}
