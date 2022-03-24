@@ -254,7 +254,7 @@ end
 
 vim.tbl_map(function(direction)
   M[string.format('resize_%s', direction)] = function(amount)
-    local cur_win_id = vim.api.nvim_get_current_win(0)
+    local cur_win_id = vim.api.nvim_get_current_win()
     edge_cache = {}
     resize(direction, amount)
     -- guarantee we haven't moved the cursor by accident
