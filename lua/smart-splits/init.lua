@@ -25,12 +25,11 @@ local win_pos = {
 }
 
 local dir_keys = {
-  ['h'] = 'left',
-  ['j'] = 'down',
-  ['k'] = 'up',
-  ['l'] = 'right',
+  left = 'h',
+  right = 'l',
+  up = 'k',
+  down = 'j',
 }
-vim.tbl_add_reverse_lookup(dir_keys)
 
 local edge_cache = {}
 
@@ -47,7 +46,7 @@ local function is_full_width(winnr)
   return vim.api.nvim_win_get_width(winnr or 0) == vim.o.columns
 end
 
-local function move_win(direction)
+local function next_window(direction)
   if direction == dir_keys.down or direction == dir_keys.up then
     vim.cmd('wincmd ' .. direction)
     return
@@ -67,7 +66,7 @@ local function at_top_edge()
   end
 
   local cur_win = vim.api.nvim_get_current_win()
-  local view = move_win(dir_keys.up)
+  local view = next_window(dir_keys.up)
   local is_at_top = vim.api.nvim_get_current_win() == cur_win
   pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
@@ -81,7 +80,7 @@ local function at_bottom_edge()
   end
 
   local cur_win = vim.api.nvim_get_current_win()
-  local view = move_win(dir_keys.down)
+  local view = next_window(dir_keys.down)
   local is_at_bottom = vim.api.nvim_get_current_win() == cur_win
   pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
@@ -95,7 +94,7 @@ local function at_left_edge()
   end
 
   local cur_win = vim.api.nvim_get_current_win()
-  local view = move_win(dir_keys.left)
+  local view = next_window(dir_keys.left)
   local is_at_left = vim.api.nvim_get_current_win() == cur_win
   pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
@@ -109,7 +108,7 @@ local function at_right_edge()
   end
 
   local cur_win = vim.api.nvim_get_current_win()
-  local view = move_win(dir_keys.right)
+  local view = next_window(dir_keys.right)
   local is_at_right = vim.api.nvim_get_current_win() == cur_win
   pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
@@ -191,9 +190,9 @@ local function resize(direction, amount)
     end
     if adjustment_plus_minus ~= nil then
       vim.cmd(string.format('resize %s%s', adjustment_plus_minus, amount))
-      vim.cmd('wincmd k')
+      next_window(dir_keys.up)
       vim.cmd(string.format('resize %s%s', adjustment_plus_minus, amount))
-      vim.cmd('wincmd j')
+      next_window(dir_keys.down)
     end
   else
     -- horizontally
@@ -213,9 +212,9 @@ local function resize(direction, amount)
     end
     if adjustment_plus_minus ~= nil then
       vim.cmd(string.format('vertical resize %s%s', adjustment_plus_minus, amount))
-      vim.cmd('wincmd l')
+      next_window(dir_keys.right)
       vim.cmd(string.format('vertical resize %s%s', adjustment_plus_minus, amount))
-      vim.cmd('wincmd h')
+      next_window(dir_keys.left)
     end
   end
 end
