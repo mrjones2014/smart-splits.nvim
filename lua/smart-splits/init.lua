@@ -32,6 +32,8 @@ local dir_keys = {
 }
 vim.tbl_add_reverse_lookup(dir_keys)
 
+local edge_cache = {}
+
 local function is_full_height(winnr)
   -- for vertical height account for tabline, status line, and cmd line
   local window_height = vim.o.lines - 1 - vim.o.cmdheight
@@ -60,38 +62,58 @@ local function move_win(direction)
 end
 
 local function at_top_edge()
+  if edge_cache.top ~= nil then
+    return edge_cache.top
+  end
+
   local cur_win = vim.api.nvim_get_current_win()
   local view = move_win(dir_keys.up)
   local is_at_top = vim.api.nvim_get_current_win() == cur_win
   pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
+  edge_cache.top = is_at_top
   return is_at_top
 end
 
 local function at_bottom_edge()
+  if edge_cache.bottom ~= nil then
+    return edge_cache.bottom
+  end
+
   local cur_win = vim.api.nvim_get_current_win()
   local view = move_win(dir_keys.down)
   local is_at_bottom = vim.api.nvim_get_current_win() == cur_win
   pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
+  edge_cache.bottom = is_at_bottom
   return is_at_bottom
 end
 
 local function at_left_edge()
+  if edge_cache.left ~= nil then
+    return edge_cache.left
+  end
+
   local cur_win = vim.api.nvim_get_current_win()
   local view = move_win(dir_keys.left)
   local is_at_left = vim.api.nvim_get_current_win() == cur_win
   pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
+  edge_cache.left = is_at_left
   return is_at_left
 end
 
 local function at_right_edge()
+  if edge_cache.right ~= nil then
+    return edge_cache.right
+  end
+
   local cur_win = vim.api.nvim_get_current_win()
   local view = move_win(dir_keys.right)
   local is_at_right = vim.api.nvim_get_current_win() == cur_win
   pcall(vim.fn.winrestview, view)
   vim.api.nvim_set_current_win(cur_win)
+  edge_cache.right = is_at_right
   return is_at_right
 end
 
@@ -151,28 +173,51 @@ local function resize(direction, amount)
     return
   end
 
-  -- vertically
+  local cur_win_id = vim.api.nvim_get_current_win()
   if direction == 'down' or direction == 'up' then
+    -- vertically
     local plus_minus = compute_direction_vertical(direction)
+    local cur_win_pos = vim.api.nvim_win_get_position(0)
     vim.cmd(string.format('resize %s%s', plus_minus, amount))
-    return
-  end
+    if M.win_position(direction) ~= win_pos.middle then
+      return
+    end
 
-  -- horizontally
-  local plus_minus = compute_direction_horizontal(direction)
-  local cur_win_pos = vim.api.nvim_win_get_position(0)
-  vim.cmd(string.format('vertical resize %s%s', plus_minus, amount))
-  local new_win_pos = vim.api.nvim_win_get_position(0)
-  if cur_win_pos[2] < new_win_pos[2] and plus_minus == '-' then
-    vim.cmd(string.format('vertical resize +%s', amount))
-    vim.cmd('wincmd l')
-    vim.cmd(string.format('vertical resize +%s', amount))
-    vim.cmd('wincmd h')
-  elseif cur_win_pos[2] > new_win_pos[2] and plus_minus == '+' then
-    vim.cmd(string.format('vertical resize -%s', amount))
-    vim.cmd('wincmd l')
-    vim.cmd(string.format('vertical resize -%s', amount))
-    vim.cmd('wincmd h')
+    local new_win_pos = vim.api.nvim_win_get_position(0)
+    local adjustment_plus_minus
+    if cur_win_pos[1] < new_win_pos[1] and plus_minus == '-' then
+      adjustment_plus_minus = '+'
+    elseif cur_win_pos[1] > new_win_pos[1] and plus_minus == '+' then
+      adjustment_plus_minus = '-'
+    end
+    if adjustment_plus_minus ~= nil then
+      vim.cmd(string.format('resize %s%s', adjustment_plus_minus, amount))
+      vim.cmd('wincmd k')
+      vim.cmd(string.format('resize %s%s', adjustment_plus_minus, amount))
+      vim.cmd('wincmd j')
+    end
+  else
+    -- horizontally
+    local plus_minus = compute_direction_horizontal(direction)
+    local cur_win_pos = vim.api.nvim_win_get_position(0)
+    vim.cmd(string.format('vertical resize %s%s', plus_minus, amount))
+    if M.win_position(direction) ~= win_pos.middle then
+      return
+    end
+
+    local new_win_pos = vim.api.nvim_win_get_position(0)
+    local adjustment_plus_minus
+    if cur_win_pos[2] < new_win_pos[2] and plus_minus == '-' then
+      adjustment_plus_minus = '+'
+    elseif cur_win_pos[2] > new_win_pos[2] and plus_minus == '+' then
+      adjustment_plus_minus = '-'
+    end
+    if adjustment_plus_minus ~= nil then
+      vim.cmd(string.format('vertical resize %s%s', adjustment_plus_minus, amount))
+      vim.cmd('wincmd l')
+      vim.cmd(string.format('vertical resize %s%s', adjustment_plus_minus, amount))
+      vim.cmd('wincmd h')
+    end
   end
 end
 
@@ -212,9 +257,11 @@ end
 
 vim.tbl_map(function(direction)
   M[string.format('resize_%s', direction)] = function(amount)
+    edge_cache = {}
     resize(direction, amount)
   end
   M[string.format('move_cursor_%s', direction)] = function()
+    edge_cache = {}
     move_cursor(direction)
   end
 end, {
