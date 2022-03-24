@@ -21,8 +21,7 @@ M.ignored_filetypes = {
 local win_pos = {
   start = 0,
   middle = 1,
-  middle_middle = 2,
-  last = 3,
+  last = 2,
 }
 
 local dir_keys = {
@@ -106,13 +105,6 @@ function M.win_position(direction)
       return win_pos.last
     end
 
-    local is_top_edge = at_top_edge()
-    local is_bottom_edge = at_bottom_edge()
-
-    if (is_top_edge and not is_bottom_edge) or (is_bottom_edge and not is_top_edge) then
-      return win_pos.middle_middle
-    end
-
     return win_pos.middle
   end
 
@@ -168,7 +160,20 @@ local function resize(direction, amount)
 
   -- horizontally
   local plus_minus = compute_direction_horizontal(direction)
+  local cur_win_pos = vim.api.nvim_win_get_position(0)
   vim.cmd(string.format('vertical resize %s%s', plus_minus, amount))
+  local new_win_pos = vim.api.nvim_win_get_position(0)
+  if cur_win_pos[2] < new_win_pos[2] and plus_minus == '-' then
+    vim.cmd(string.format('vertical resize +%s', amount))
+    vim.cmd('wincmd l')
+    vim.cmd(string.format('vertical resize +%s', amount))
+    vim.cmd('wincmd h')
+  elseif cur_win_pos[2] > new_win_pos[2] and plus_minus == '+' then
+    vim.cmd(string.format('vertical resize -%s', amount))
+    vim.cmd('wincmd l')
+    vim.cmd(string.format('vertical resize -%s', amount))
+    vim.cmd('wincmd h')
+  end
 end
 
 local function move_cursor(direction)
