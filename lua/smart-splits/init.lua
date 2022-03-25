@@ -43,6 +43,8 @@ local dir_keys = {
 
 local edge_cache = {}
 
+local is_resizing = false
+
 local function is_full_height(winnr)
   -- for vertical height account for tabline, status line, and cmd line
   local window_height = vim.o.lines - 1 - vim.o.cmdheight
@@ -57,13 +59,27 @@ local function is_full_width(winnr)
 end
 
 local function next_window(direction)
+  local cur_win = vim.api.nvim_get_current_win()
   if direction == dir_keys.down or direction == dir_keys.up then
     vim.cmd('wincmd ' .. direction)
+    if
+      is_resizing
+      and (vim.tbl_contains(M.config.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.config.ignored_filetypes))
+    then
+      vim.api.nvim_set_current_win(cur_win)
+    end
     return
   end
 
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   vim.cmd('wincmd ' .. direction)
+  if
+    is_resizing
+    and (vim.tbl_contains(M.config.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(M.config.ignored_filetypes))
+  then
+    vim.api.nvim_set_current_win(cur_win)
+    return nil
+  end
   local view = vim.fn.winsaveview()
   offset = offset - vim.api.nvim_win_get_position(0)[1]
   vim.cmd('normal! ' .. offset .. 'H')
@@ -274,10 +290,12 @@ end
 vim.tbl_map(function(direction)
   M[string.format('resize_%s', direction)] = function(amount)
     local cur_win_id = vim.api.nvim_get_current_win()
+    is_resizing = true
     edge_cache = {}
     resize(direction, amount)
     -- guarantee we haven't moved the cursor by accident
     vim.api.nvim_set_current_win(cur_win_id)
+    is_resizing = false
   end
   M[string.format('move_cursor_%s', direction)] = function(same_row)
     edge_cache = {}
