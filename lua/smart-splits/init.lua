@@ -204,6 +204,7 @@ local function resize(direction, amount)
     -- vertically
     local plus_minus = compute_direction_vertical(direction)
     local cur_win_pos = vim.api.nvim_win_get_position(0)
+    local cur_win = vim.api.nvim_get_current_win()
     vim.cmd(string.format('resize %s%s', plus_minus, amount))
     if M.win_position(direction) ~= win_pos.middle then
       return
@@ -216,6 +217,23 @@ local function resize(direction, amount)
     elseif cur_win_pos[1] > new_win_pos[1] and plus_minus == '+' then
       adjustment_plus_minus = '-'
     end
+
+    next_window(dir_keys.down)
+    next_window(dir_keys.up)
+    if vim.api.nvim_get_current_win() ~= cur_win then
+      vim.api.nvim_set_current_win(cur_win)
+      if plus_minus == '+' then
+        vim.cmd(string.format('resize -%s', amount))
+        next_window(dir_keys.down)
+        vim.cmd(string.format('resize -%s', amount))
+      else
+        vim.cmd(string.format('resize +%s', amount))
+        next_window(dir_keys.down)
+        vim.cmd(string.format('resize +%s', amount))
+      end
+      return
+    end
+
     if adjustment_plus_minus ~= nil then
       vim.cmd(string.format('resize %s%s', adjustment_plus_minus, amount))
       next_window(dir_keys.up)
