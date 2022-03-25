@@ -29,12 +29,21 @@ nothing is ignored when moving between splits, only when resizing.
 Defaults are shown below:
 
 ```lua
-require('smart-splits').ignored_buftypes = { 'NvimTree' }
-require('smart-splits').ignored_filetypes = {
-  'nofile',
-  'quickfix',
-  'prompt',
-}
+require('smart-splits').setup({
+  -- Ignored filetypes (only while resizing)
+  ignored_filetypes = {
+    'nofile',
+    'quickfix',
+    'prompt',
+  },
+  -- Ignored buffer types (only while resizing)
+  ignored_buftypes = { 'NvimTree' },
+  -- when moving cursor between splits left or right,
+  -- place the cursor on the same row of the *screen*
+  -- regardless of line numbers. False by default.
+  -- Can be overridden via function parameter, see Usage.
+  move_cursor_same_row = false,
+})
 ```
 
 ## Usage
@@ -50,10 +59,13 @@ require('smart-splits').resize_down(amount)
 require('smart-splits').resize_left(amount)
 require('smart-splits').resize_right(amount)
 -- moving between splits
+-- pass same_row as a boolean to override the default
+-- for the move_cursor_same_row config option.
+-- See Configuration.
 require('smart-splits').move_cursor_up()
 require('smart-splits').move_cursor_down()
-require('smart-splits').move_cursor_left()
-require('smart-splits').move_cursor_right()
+require('smart-splits').move_cursor_left(same_row)
+require('smart-splits').move_cursor_right(same_row)
 
 -- recommended mappings
 -- resizing splits
@@ -81,8 +93,8 @@ With Vimscript:
 " moving between splits
 :SmartCursorMoveUp
 :SmartCursorMoveDown
-:SmartCursorMoveLeft
-:SmartCursorMoveRight
+:SmartCursorMoveLeft [same_row]
+:SmartCursorMoveRight [same_row]
 
 " recommended mappings
 " resizing splits

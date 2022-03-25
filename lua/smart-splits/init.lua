@@ -4,15 +4,25 @@ local M = {}
 -- CONFIG
 ----------
 
-M.ignored_buftypes = {
-  'nofile',
-  'quickfix',
-  'prompt',
+M.config = {
+  ignored_buftypes = {
+    'nofile',
+    'quickfix',
+    'prompt',
+  },
+  ignored_filetypes = {
+    'NvimTree',
+  },
+  move_cursor_same_row = false,
 }
 
-M.ignored_filetypes = {
-  'NvimTree',
-}
+function M.setup(config)
+  M.config.ignored_buftypes = config.ignored_buftypes or M.config.ignored_buftypes
+  M.config.ignored_filetypes = config.ignored_filetypes or M.config.ignored_filetypes
+  if config.move_cursor_same_row ~= nil then
+    M.config.move_cursor_same_row = config.move_cursor_same_row
+  end
+end
 
 ----------
 -- PLUGIN
@@ -218,37 +228,46 @@ local function resize(direction, amount)
   end
 end
 
-local function move_cursor(direction)
+local function move_cursor(direction, same_row)
+  local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   if direction == 'left' then
     if at_left_edge() then
       for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-        vim.cmd('wincmd l')
+        vim.cmd('wincmd ' .. dir_keys.right)
       end
     else
-      vim.cmd('wincmd h')
+      vim.cmd('wincmd ' .. dir_keys.left)
     end
   elseif direction == 'right' then
     if at_right_edge() then
       for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-        vim.cmd('wincmd h')
+        vim.cmd('wincmd ' .. dir_keys.left)
       end
     else
-      vim.cmd('wincmd l')
+      vim.cmd('wincmd ' .. dir_keys.right)
     end
   elseif direction == 'up' then
     if at_top_edge() then
       for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-        vim.cmd('wincmd j')
+        vim.cmd('wincmd ' .. dir_keys.down)
       end
     else
-      vim.cmd('wincmd k')
+      vim.cmd('wincmd ' .. dir_keys.up)
     end
   elseif at_bottom_edge() then
     for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-      vim.cmd('wincmd k')
+      vim.cmd('wincmd ' .. dir_keys.up)
     end
   else
-    vim.cmd('wincmd j')
+    vim.cmd('wincmd ' .. dir_keys.down)
+  end
+
+  if
+    (direction == 'left' or direction == 'right')
+    and (same_row or (same_row == nil and M.config.move_cursor_same_row))
+  then
+    offset = offset - vim.api.nvim_win_get_position(0)[1]
+    vim.cmd('normal! ' .. offset .. 'H')
   end
 end
 
@@ -260,9 +279,9 @@ vim.tbl_map(function(direction)
     -- guarantee we haven't moved the cursor by accident
     vim.api.nvim_set_current_win(cur_win_id)
   end
-  M[string.format('move_cursor_%s', direction)] = function()
+  M[string.format('move_cursor_%s', direction)] = function(same_row)
     edge_cache = {}
-    move_cursor(direction)
+    move_cursor(direction, same_row)
   end
 end, {
   'left',
