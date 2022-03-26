@@ -1,6 +1,6 @@
 local M = {}
 
-local config = require('smart-splits').config
+local config = require('smart-splits.config')
 
 local win_pos = {
   start = 0,
