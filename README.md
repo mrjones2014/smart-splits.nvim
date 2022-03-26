@@ -66,6 +66,11 @@ require('smart-splits').move_cursor_up()
 require('smart-splits').move_cursor_down()
 require('smart-splits').move_cursor_left(same_row)
 require('smart-splits').move_cursor_right(same_row)
+-- persistent resize mode
+-- temporarily remap 'h', 'j', 'k', and 'l' to
+-- smart resize left, down, up, and right, respectively,
+-- press <ESC> to stop resize mode
+require('smart-splits').start_resize_mode()
 
 -- recommended mappings
 -- resizing splits
@@ -95,6 +100,8 @@ With Vimscript:
 :SmartCursorMoveDown
 :SmartCursorMoveLeft [same_row]
 :SmartCursorMoveRight [same_row]
+" persistent resize mode
+:SmartResizeMode
 
 " recommended mappings
 " resizing splits
