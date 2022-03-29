@@ -10,6 +10,8 @@ if vim.api.nvim_add_user_command == nil then
     command! -nargs=* SmartCursorMoveRight :lua require('smart-splits').move_cursor_right(<args>)<CR>
     command! SmartCursorMoveUp :lua require('smart-splits').move_cursor_up()<CR>
     command! SmartCursorMoveDown :lua require('smart-splits').move_cursor_down()<CR>
+    " persistent resize mode
+    command! SmartResizeMode :lua require('smart-splits').start_resize_mode()<CR>
   ]])
   return
 end
@@ -65,4 +67,11 @@ vim.api.nvim_add_user_command(
   'SmartCursorMoveDown',
   require('smart-splits').move_cursor_down,
   { desc = '"Smart" resize down' }
+)
+
+-- persistent resize mode
+vim.api.nvim_add_user_command(
+  'SmartResizeMode',
+  require('smart-splits').start_resize_mode,
+  { desc = 'Start persistent resize mode, press <ESC> to exit resize mode' }
 )
