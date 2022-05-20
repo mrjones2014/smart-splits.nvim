@@ -32,12 +32,13 @@ local function is_full_width(winnr)
   return vim.api.nvim_win_get_width(winnr or 0) == vim.o.columns
 end
 
-local function next_window(direction)
+local function next_window(direction, skip_ignore_lists)
   local cur_win = vim.api.nvim_get_current_win()
   if direction == dir_keys.down or direction == dir_keys.up then
     vim.cmd('wincmd ' .. direction)
     if
-      is_resizing
+      not skip_ignore_lists
+      and is_resizing
       and (
         vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
         or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
@@ -51,7 +52,8 @@ local function next_window(direction)
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   vim.cmd('wincmd ' .. direction)
   if
-    is_resizing
+    not skip_ignore_lists
+    and is_resizing
     and (vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(config.ignored_filetypes))
   then
     vim.api.nvim_set_current_win(cur_win)
@@ -154,11 +156,49 @@ end
 
 local function compute_direction_horizontal(direction)
   local current_pos = M.win_position(direction)
+  local result
   if current_pos == win_pos.start or current_pos == win_pos.middle then
-    return direction == 'right' and '+' or '-'
+    result = direction == 'right' and '+' or '-'
+  else
+    result = direction == 'right' and '-' or '+'
   end
 
-  return direction == 'right' and '-' or '+'
+  print(direction)
+  print(result)
+  print(at_left_edge())
+  print('\n')
+  local at_left = at_left_edge()
+  local at_right = at_right_edge()
+  -- special case - check if there is an ignored window to the left
+  if direction == 'right' and result == '+' and at_left and at_right then
+    print('hit here')
+    local cur_win = vim.api.nvim_get_current_win()
+    next_window(dir_keys.left, true)
+    print(vim.bo.buftype)
+    print(vim.bo.filetype)
+    if
+      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
+      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
+    then
+      vim.api.nvim_set_current_win(cur_win)
+      result = '-'
+    end
+  elseif direction == 'left' and result == '-' and at_left and at_right then
+    print('hit here')
+    local cur_win = vim.api.nvim_get_current_win()
+    next_window(dir_keys.left, true)
+    print(vim.bo.buftype)
+    print(vim.bo.filetype)
+    if
+      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
+      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
+    then
+      vim.api.nvim_set_current_win(cur_win)
+      result = '+'
+    end
+  end
+
+  return result
 end
 
 local function resize(direction, amount)
