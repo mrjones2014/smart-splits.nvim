@@ -163,19 +163,12 @@ local function compute_direction_horizontal(direction)
     result = direction == 'right' and '-' or '+'
   end
 
-  print(direction)
-  print(result)
-  print(at_left_edge())
-  print('\n')
   local at_left = at_left_edge()
   local at_right = at_right_edge()
   -- special case - check if there is an ignored window to the left
   if direction == 'right' and result == '+' and at_left and at_right then
-    print('hit here')
     local cur_win = vim.api.nvim_get_current_win()
     next_window(dir_keys.left, true)
-    print(vim.bo.buftype)
-    print(vim.bo.filetype)
     if
       vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
       or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
@@ -184,11 +177,8 @@ local function compute_direction_horizontal(direction)
       result = '-'
     end
   elseif direction == 'left' and result == '-' and at_left and at_right then
-    print('hit here')
     local cur_win = vim.api.nvim_get_current_win()
     next_window(dir_keys.left, true)
-    print(vim.bo.buftype)
-    print(vim.bo.filetype)
     if
       vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
       or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
