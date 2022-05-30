@@ -43,6 +43,11 @@ require('smart-splits').setup({
   -- regardless of line numbers. False by default.
   -- Can be overridden via function parameter, see Usage.
   move_cursor_same_row = false,
+  -- key to exit persistent resize mode
+  resize_mode_quit_key = '<ESC>',
+  -- set to true to silence the notifications
+  -- when entering/exiting persistent resize mode
+  resize_mode_silent = false,
 })
 ```
 
@@ -69,7 +74,7 @@ require('smart-splits').move_cursor_right(same_row)
 -- persistent resize mode
 -- temporarily remap 'h', 'j', 'k', and 'l' to
 -- smart resize left, down, up, and right, respectively,
--- press <ESC> to stop resize mode
+-- press <ESC> to stop resize mode (unless you've set a different key in config)
 require('smart-splits').start_resize_mode()
 
 -- recommended mappings
