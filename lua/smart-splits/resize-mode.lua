@@ -23,7 +23,6 @@ function M.start_resize_mode()
   end
 
   local msg = string.format('Persistent resize mode enabled. Use h/j/k/l to resize, and %s to finish.', quit_key)
-  print(msg)
   vim.notify(msg, vim.log.levels.INFO)
 end
 
@@ -40,7 +39,6 @@ function M.end_resize_mode()
   end
 
   local msg = 'Persistent resize mode disabled. Normal keymaps have been restored.'
-  print(msg)
   vim.notify(msg, vim.log.levels.INFO)
 end
 
