@@ -1,9 +1,15 @@
 local M = {}
+local on_enter = require('smart-splits.config').resize_mode.hooks.on_enter
+local on_leave = require('smart-splits.config').resize_mode.hooks.on_leave
 
 function M.start_resize_mode()
   if vim.fn.mode() ~= 'n' then
     vim.notify('Resize mode must be triggered from normal mode', vim.log.levels.ERROR)
     return
+  end
+
+  if type(on_enter) == 'function' then
+    on_enter()
   end
 
   local quit_key = require('smart-splits.config').resize_mode_quit_key
@@ -40,6 +46,10 @@ function M.end_resize_mode()
 
   local msg = 'Persistent resize mode disabled. Normal keymaps have been restored.'
   vim.notify(msg, vim.log.levels.INFO)
+end
+
+if type(on_leave) == 'function' then
+  on_enter()
 end
 
 return M
