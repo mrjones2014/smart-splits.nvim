@@ -1,4 +1,5 @@
-local M = {
+local M = {}
+M.config = {
   ignored_buftypes = {
     'nofile',
     'quickfix',
@@ -19,7 +20,7 @@ local M = {
 }
 
 function M.setup(config)
-  M = vim.tbl_deep_extend('force', M, config)
+  M.config = vim.tbl_deep_extend('force', M.config, config)
 end
 
 return M
