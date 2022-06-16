@@ -1,16 +1,13 @@
 local M = {}
 
 function M.start_resize_mode()
-  local config = require('smart-splits.config').config
+  local config = require('smart-splits.config')
   if vim.fn.mode() ~= 'n' then
     vim.notify('Resize mode must be triggered from normal mode', vim.log.levels.ERROR)
     return
   end
 
-  local on_enter = config.resize_mode.hooks.on_enter
-  if type(on_enter) == 'function' then
-    on_enter()
-  end
+  pcall(config.resize_mode.hooks.on_enter)
 
   local quit_key = config.resize_mode.quit_key
   vim.api.nvim_set_keymap('n', 'h', ":lua require('smart-splits').resize_left()<CR>", { silent = true })
@@ -33,7 +30,7 @@ function M.start_resize_mode()
 end
 
 function M.end_resize_mode()
-  local config = require('smart-splits.config').config
+  local config = require('smart-splits.config')
   local quit_key = config.resize_mode.quit_key
   vim.api.nvim_del_keymap('n', 'h')
   vim.api.nvim_del_keymap('n', 'l')
@@ -41,10 +38,7 @@ function M.end_resize_mode()
   vim.api.nvim_del_keymap('n', 'k')
   vim.api.nvim_del_keymap('n', quit_key)
 
-  local on_leave = config.resize_mode.hooks.on_leave
-  if type(on_leave) == 'function' then
-    on_leave()
-  end
+  pcall(config.resize_mode.hooks.on_leave)
 
   if config.resize_mode.silent then
     return
