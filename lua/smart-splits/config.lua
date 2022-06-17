@@ -31,8 +31,8 @@ function M.setup(config)
   M.move_cursor_same_row = default_bool(config.move_cursor_same_row, M.move_cursor_same_row)
   M.resize_mode.quit_key = config.resize_mode.quit_key or M.resize_mode.quit_key
   M.resize_mode.silent = default_bool(config.resize_mode.silent, M.resize_mode.silent)
-  M.resize_mode.hooks.on_enter = config.resize_mode.hooks.on_enter or nil
-  M.resize_mode.hooks.on_leave = config.resize_mode.hooks.on_leave or nil
+  M.resize_mode.hooks.on_enter = config.resize_mode.hooks.on_enter or M.resize_mode.hooks.on_enter
+  M.resize_mode.hooks.on_leave = config.resize_mode.hooks.on_leave or M.resize_mode.hooks.on_leave
 
   -- TODO: Remove this code block in the next commits
   if config.resize_mode_quit_key then
