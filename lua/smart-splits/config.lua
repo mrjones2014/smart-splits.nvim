@@ -55,11 +55,15 @@ function M.setup(config)
   -- TODO: Remove this code block in the next commits
   if config.resize_mode_quit_key then
     M.resize_mode.quit_key = config.resize_mode_quit_key
-    vim.notify('smart-splits: resize_mode_quit_key has been changed to resize_mode.quit_key', vim.log.levels.WARN)
+    local msg = 'smart-splits: resize_mode_quit_key has been changed to resize_mode.quit_key,\n'
+      .. 'please update your config. See README.md for details.'
+    vim.notify(msg, vim.log.levels.WARN)
   end
   if config.resize_mode_silent then
     M.resize_mode.silent = config.resize_mode_silent
-    vim.notify('smart-splits: resize_mode_silent has been changed to resize_mode.silent', vim.log.levels.WARN)
+    local msg = 'smart-splits: resize_mode_silent has been changed to resize_mode.silent,\n'
+      .. 'please update your config. See README.md for details.'
+    vim.notify(msg, vim.log.levels.WARN)
   end
 end
 

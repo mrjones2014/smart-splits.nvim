@@ -63,11 +63,11 @@ require('smart-splits').setup({
 resize_mode_silent are still supported, but will be discontinued soon.
 
 ### Hooks
-The hook table allows you to define callbacks for the on_enter and on_leave events of the resize mode.
+The hook table allows you to define callbacks for the `on_enter` and `on_leave` events of the resize mode.
 
 ##### Examples:
 
-Integration with [bufresize.nvim](https://github.com/kwkarlwang/bufresize.nvim).
+Integration with [bufresize.nvim](https://github.com/kwkarlwang/bufresize.nvim):
 ```lua
 require('smart-splits').setup({
   resize_mode = {
@@ -78,7 +78,7 @@ require('smart-splits').setup({
 })
 ```
 
-Custom messages when using resize mode.
+Custom messages when using resize mode:
 ```lua
 require('smart-splits').setup({
   resize_mode = {
