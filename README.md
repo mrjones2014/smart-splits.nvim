@@ -43,11 +43,51 @@ require('smart-splits').setup({
   -- regardless of line numbers. False by default.
   -- Can be overridden via function parameter, see Usage.
   move_cursor_same_row = false,
-  -- key to exit persistent resize mode
-  resize_mode_quit_key = '<ESC>',
-  -- set to true to silence the notifications
-  -- when entering/exiting persistent resize mode
-  resize_mode_silent = false,
+  -- resize mode options
+  resize_mode = {
+    -- key to exit persistent resize mode
+    quit_key = '<ESC>',
+    -- set to true to silence the notifications
+    -- when entering/exiting persistent resize mode
+    silent = false,
+    -- must be functions, they will be executed when
+    -- entering or exiting the resize mode
+    hooks = {
+      on_enter = nil,
+      on_leave = nil
+    }
+  }
+})
+```
+> Note: The old way of configuring resize_mode_quit_key and
+resize_mode_silent are still supported, but will be discontinued soon.
+
+### Hooks
+The hook table allows you to define callbacks for the `on_enter` and `on_leave` events of the resize mode.
+
+##### Examples:
+
+Integration with [bufresize.nvim](https://github.com/kwkarlwang/bufresize.nvim):
+```lua
+require('smart-splits').setup({
+  resize_mode = {
+    hooks = {
+      on_leave = require('bufresize').register
+    }
+  }
+})
+```
+
+Custom messages when using resize mode:
+```lua
+require('smart-splits').setup({
+  resize_mode = {
+    silent = true,
+    hooks = {
+      on_enter = function() vim.notify('Entering resize mode') end,
+      on_leave = function() vim.notify('Exiting resize mode, bye') end
+    }
+  }
 })
 ```
 
