@@ -10,16 +10,13 @@ function M.start_resize_mode()
   pcall(config.resize_mode.hooks.on_enter)
 
   local quit_key = config.resize_mode.quit_key
-  vim.api.nvim_set_keymap('n', 'h', ":lua require('smart-splits').resize_left()<CR>", { silent = true })
-  vim.api.nvim_set_keymap('n', 'l', ":lua require('smart-splits').resize_right()<CR>", { silent = true })
-  vim.api.nvim_set_keymap('n', 'j', ":lua require('smart-splits').resize_down()<CR>", { silent = true })
-  vim.api.nvim_set_keymap('n', 'k', ":lua require('smart-splits').resize_up()<CR>", { silent = true })
-  vim.api.nvim_set_keymap(
-    'n',
-    quit_key,
-    ":lua require('smart-splits.resize-mode').end_resize_mode()<CR>",
-    { silent = true }
-  )
+  local resize_keys = config.resize_mode.resize_keys
+  print(vim.inspect(resize_keys))
+  vim.keymap.set('n', resize_keys[1], require('smart-splits').resize_left, { silent = true })
+  vim.keymap.set('n', resize_keys[2], require('smart-splits').resize_down, { silent = true })
+  vim.keymap.set('n', resize_keys[3], require('smart-splits').resize_up, { silent = true })
+  vim.keymap.set('n', resize_keys[4], require('smart-splits').resize_right, { silent = true })
+  vim.keymap.set('n', quit_key, ":lua require('smart-splits.resize-mode').end_resize_mode()<CR>", { silent = true })
 
   if config.resize_mode.silent then
     return
@@ -32,10 +29,11 @@ end
 function M.end_resize_mode()
   local config = require('smart-splits.config')
   local quit_key = config.resize_mode.quit_key
-  vim.api.nvim_del_keymap('n', 'h')
-  vim.api.nvim_del_keymap('n', 'l')
-  vim.api.nvim_del_keymap('n', 'j')
-  vim.api.nvim_del_keymap('n', 'k')
+  local resize_keys = config.resize_mode.resize_keys
+  vim.api.nvim_del_keymap('n', resize_keys[1])
+  vim.api.nvim_del_keymap('n', resize_keys[2])
+  vim.api.nvim_del_keymap('n', resize_keys[3])
+  vim.api.nvim_del_keymap('n', resize_keys[4])
   vim.api.nvim_del_keymap('n', quit_key)
 
   pcall(config.resize_mode.hooks.on_leave)

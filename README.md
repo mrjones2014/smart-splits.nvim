@@ -47,6 +47,9 @@ require('smart-splits').setup({
   resize_mode = {
     -- key to exit persistent resize mode
     quit_key = '<ESC>',
+    -- keys to use for moving in resize mode
+    -- in order of left, down, up' right
+    resize_keys = { 'h', 'j', 'k', 'l' },
     -- set to true to silence the notifications
     -- when entering/exiting persistent resize mode
     silent = false,
@@ -59,15 +62,15 @@ require('smart-splits').setup({
   }
 })
 ```
-> Note: The old way of configuring resize_mode_quit_key and
-resize_mode_silent are still supported, but will be discontinued soon.
 
 ### Hooks
+
 The hook table allows you to define callbacks for the `on_enter` and `on_leave` events of the resize mode.
 
 ##### Examples:
 
 Integration with [bufresize.nvim](https://github.com/kwkarlwang/bufresize.nvim):
+
 ```lua
 require('smart-splits').setup({
   resize_mode = {
@@ -79,6 +82,7 @@ require('smart-splits').setup({
 ```
 
 Custom messages when using resize mode:
+
 ```lua
 require('smart-splits').setup({
   resize_mode = {
