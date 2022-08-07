@@ -11,7 +11,6 @@ function M.start_resize_mode()
 
   local quit_key = config.resize_mode.quit_key
   local resize_keys = config.resize_mode.resize_keys
-  print(vim.inspect(resize_keys))
   vim.keymap.set('n', resize_keys[1], require('smart-splits').resize_left, { silent = true })
   vim.keymap.set('n', resize_keys[2], require('smart-splits').resize_down, { silent = true })
   vim.keymap.set('n', resize_keys[3], require('smart-splits').resize_up, { silent = true })
@@ -22,7 +21,11 @@ function M.start_resize_mode()
     return
   end
 
-  local msg = string.format('Persistent resize mode enabled. Use h/j/k/l to resize, and %s to finish.', quit_key)
+  local msg = string.format(
+    'Persistent resize mode enabled. Use %s to resize, and %s to finish.',
+    vim.inspect(resize_keys),
+    quit_key
+  )
   vim.notify(msg, vim.log.levels.INFO)
 end
 

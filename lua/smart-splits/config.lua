@@ -50,12 +50,11 @@ local function default_resize_mode(new_config)
   end
   return {
     quit_key = new_config.quit_key or M.resize_mode.quit_key,
-    resize_keys = default_resize_keys(vim.tbl_get(new_config, 'resize_mode', 'resize_keys')),
+    resize_keys = default_resize_keys(vim.tbl_get(new_config, 'resize_keys')),
     silent = default_bool(new_config.silent, M.resize_mode.silent),
     hooks = default_hooks(new_config.hooks),
   }
 end
-
 
 function M.setup(config)
   M.ignored_buftypes = config.ignored_buftypes or M.ignored_buftypes
