@@ -17,6 +17,10 @@ local M = {
       on_leave = nil,
     },
   },
+  ignored_events = {
+    'BufEnter',
+    'WinEnter',
+  }
 }
 
 local function default_bool(value, default)

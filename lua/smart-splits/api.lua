@@ -312,20 +312,35 @@ local function move_cursor(direction, same_row)
   end
 end
 
+local function set_eventignore()
+  local eventignore = vim.o.eventignore
+  if #eventignore > 0 and not vim.endswith(eventignore, ',') then
+    eventignore = eventignore .. ','
+  end
+  eventignore = eventignore .. table.concat(config.ignored_events or {}, ',')
+  vim.o.eventignore = eventignore
+end
+
 vim.tbl_map(function(direction)
   M[string.format('resize_%s', direction)] = function(amount)
+    local eventignore_orig = vim.deepcopy(vim.o.eventignore)
+    set_eventignore()
     local cur_win_id = vim.api.nvim_get_current_win()
     is_resizing = true
     edge_cache = {}
-    resize(direction, amount)
+    pcall(resize, direction, amount)
     -- guarantee we haven't moved the cursor by accident
     vim.api.nvim_set_current_win(cur_win_id)
     is_resizing = false
+    vim.o.eventignore = eventignore_orig
   end
   M[string.format('move_cursor_%s', direction)] = function(same_row)
+    local eventignore_orig = vim.deepcopy(vim.o.eventignore)
+    set_eventignore()
     is_resizing = false
     edge_cache = {}
-    move_cursor(direction, same_row)
+    pcall(move_cursor, direction, same_row)
+    vim.o.eventignore = eventignore_orig
   end
 end, {
   'left',

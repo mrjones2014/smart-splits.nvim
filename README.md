@@ -59,6 +59,14 @@ require('smart-splits').setup({
       on_enter = nil,
       on_leave = nil
     }
+  },
+  -- ignore these autocmd events (via :h eventignore) while processing
+  -- smart-splits.nvim computations, which involve visiting different
+  -- buffers and windows. These events will be ignored during processing,
+  -- and un-ignored on completed.
+  ignored_events = {
+    'BufEnter',
+    'WinEnter',
   }
 })
 ```
