@@ -335,12 +335,9 @@ vim.tbl_map(function(direction)
     vim.o.eventignore = eventignore_orig
   end
   M[string.format('move_cursor_%s', direction)] = function(same_row)
-    local eventignore_orig = vim.deepcopy(vim.o.eventignore)
-    set_eventignore()
     is_resizing = false
     edge_cache = {}
     pcall(move_cursor, direction, same_row)
-    vim.o.eventignore = eventignore_orig
   end
 end, {
   'left',

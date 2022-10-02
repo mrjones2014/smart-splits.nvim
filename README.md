@@ -63,7 +63,8 @@ require('smart-splits').setup({
   -- ignore these autocmd events (via :h eventignore) while processing
   -- smart-splits.nvim computations, which involve visiting different
   -- buffers and windows. These events will be ignored during processing,
-  -- and un-ignored on completed.
+  -- and un-ignored on completed. This only applies to resize events,
+  -- not cursor movement events.
   ignored_events = {
     'BufEnter',
     'WinEnter',
