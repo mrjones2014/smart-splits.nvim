@@ -15,8 +15,6 @@ local dir_keys = {
   down = 'j',
 }
 
-local edge_cache = {}
-
 local is_resizing = false
 
 local function is_full_height(winnr)
@@ -66,59 +64,19 @@ local function next_window(direction, skip_ignore_lists)
 end
 
 local function at_top_edge()
-  if edge_cache.top ~= nil then
-    return edge_cache.top
-  end
-
-  local cur_win = vim.api.nvim_get_current_win()
-  local view = next_window(dir_keys.up)
-  local is_at_top = vim.api.nvim_get_current_win() == cur_win
-  pcall(vim.fn.winrestview, view)
-  vim.api.nvim_set_current_win(cur_win)
-  edge_cache.top = is_at_top
-  return is_at_top
+  return vim.fn.winnr() == vim.fn.winnr('k')
 end
 
 local function at_bottom_edge()
-  if edge_cache.bottom ~= nil then
-    return edge_cache.bottom
-  end
-
-  local cur_win = vim.api.nvim_get_current_win()
-  local view = next_window(dir_keys.down)
-  local is_at_bottom = vim.api.nvim_get_current_win() == cur_win
-  pcall(vim.fn.winrestview, view)
-  vim.api.nvim_set_current_win(cur_win)
-  edge_cache.bottom = is_at_bottom
-  return is_at_bottom
+  return vim.fn.winnr() == vim.fn.winnr('j')
 end
 
 local function at_left_edge()
-  if edge_cache.left ~= nil then
-    return edge_cache.left
-  end
-
-  local cur_win = vim.api.nvim_get_current_win()
-  local view = next_window(dir_keys.left)
-  local is_at_left = vim.api.nvim_get_current_win() == cur_win
-  pcall(vim.fn.winrestview, view)
-  vim.api.nvim_set_current_win(cur_win)
-  edge_cache.left = is_at_left
-  return is_at_left
+  return vim.fn.winnr() == vim.fn.winnr('h')
 end
 
 local function at_right_edge()
-  if edge_cache.right ~= nil then
-    return edge_cache.right
-  end
-
-  local cur_win = vim.api.nvim_get_current_win()
-  local view = next_window(dir_keys.right)
-  local is_at_right = vim.api.nvim_get_current_win() == cur_win
-  pcall(vim.fn.winrestview, view)
-  vim.api.nvim_set_current_win(cur_win)
-  edge_cache.right = is_at_right
-  return is_at_right
+  return vim.fn.winnr() == vim.fn.winnr('l')
 end
 
 function M.win_position(direction)
@@ -327,7 +285,6 @@ vim.tbl_map(function(direction)
     set_eventignore()
     local cur_win_id = vim.api.nvim_get_current_win()
     is_resizing = true
-    edge_cache = {}
     pcall(resize, direction, amount)
     -- guarantee we haven't moved the cursor by accident
     vim.api.nvim_set_current_win(cur_win_id)
@@ -336,7 +293,6 @@ vim.tbl_map(function(direction)
   end
   M[string.format('move_cursor_%s', direction)] = function(same_row)
     is_resizing = false
-    edge_cache = {}
     pcall(move_cursor, direction, same_row)
   end
 end, {
