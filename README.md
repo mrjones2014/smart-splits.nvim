@@ -1,13 +1,15 @@
 # smart-splits.nvim
 
-Smart, directional Neovim split resizing and navigation.
+Smart, directional Neovim split resizing and navigation, with `tmux` pane navigation.
 `smart-splits.nvim` lets you think about split resizing in terms of
 "move the divider to the left/right/up/down" which can feel much more
 natural. It also allows you to move through splits in a circular fashion
 (e.g. moving left at the left edge jumps to the right edge, and vice versa,
-and same for top and bottom edges).
+and same for top and bottom edges). Additionally, if enabled, it can
+provide seamless navigation between Neovim splits and `tmux` panes.
+See [Tmux Integration](#tmux-integration)
 
-![demo](https://user-images.githubusercontent.com/8648891/159472445-ef680c42-f0fc-4c21-9ab7-0590a89da95b.gif)
+![demo](https://user-images.githubusercontent.com/8648891/195688897-993d1ef1-c81e-44d0-98e1-57b00e588b56.gif)
 
 ## Install
 
@@ -68,7 +70,9 @@ require('smart-splits').setup({
   ignored_events = {
     'BufEnter',
     'WinEnter',
-  }
+  },
+  -- set to true to enable tmux integration
+  tmux_integration = false,
 })
 ```
 
@@ -143,35 +147,41 @@ vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
 vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
 ```
 
-With Vimscript:
+### Tmux Integration
 
-```VimL
-" resizing splits
-" amount defaults to 3 if not specified
-" use absolute values, no + or -
-:SmartResizeUp [amount]
-:SmartResizeDown [amount]
-:SmartResizeLeft [amount]
-:SmartResizeRight [amount]
-" moving between splits
-:SmartCursorMoveUp
-:SmartCursorMoveDown
-:SmartCursorMoveLeft [same_row]
-:SmartCursorMoveRight [same_row]
-" persistent resize mode
-:SmartResizeMode
+`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux` panes.
+You will need to set up keymaps in your tmux config to match the Neovim keymaps.
 
-" recommended mappings
-" resizing splits
-nmap <A-h> :lua require('smart-splits').resize_left()<CR>
-nmap <A-j> :lua require('smart-splits').resize_down()<CR>
-nmap <A-k> :lua require('smart-splits').resize_up()<CR>
-nmap <A-l> :lua require('smart-splits').resize_right()<CR>
-" moving between splits
-nmap <C-h> :lua require('smart-splits').move_cursor_left()<CR>
-nmap <C-j> :lua require('smart-splits').move_cursor_down()<CR>
-nmap <C-k> :lua require('smart-splits').move_cursor_up()<CR>
-nmap <C-l> :lua require('smart-splits').move_cursor_right()<CR>
+You can either add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys if desired):
+
+```tmux
+# Smart pane switching with awareness of Vim splits.
+# See: https://github.com/christoomey/vim-tmux-navigator
+is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
+    | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
+bind-key -n 'C-h' if-shell "$is_vim" 'send-keys C-h'  'select-pane -L'
+bind-key -n 'C-j' if-shell "$is_vim" 'send-keys C-j'  'select-pane -D'
+bind-key -n 'C-k' if-shell "$is_vim" 'send-keys C-k'  'select-pane -U'
+bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l'  'select-pane -R'
+tmux_version='$(tmux -V | sed -En "s/^tmux ([0-9]+(.[0-9]+)?).*/\1/p")'
+if-shell -b '[ "$(echo "$tmux_version < 3.0" | bc)" = 1 ]' \
+    "bind-key -n 'C-\\' if-shell \"$is_vim\" 'send-keys C-\\'  'select-pane -l'"
+if-shell -b '[ "$(echo "$tmux_version >= 3.0" | bc)" = 1 ]' \
+    "bind-key -n 'C-\\' if-shell \"$is_vim\" 'send-keys C-\\\\'  'select-pane -l'"
+
+bind-key -T copy-mode-vi 'C-h' select-pane -L
+bind-key -T copy-mode-vi 'C-j' select-pane -D
+bind-key -T copy-mode-vi 'C-k' select-pane -U
+bind-key -T copy-mode-vi 'C-l' select-pane -R
+bind-key -T copy-mode-vi 'C-\' select-pane -l
+```
+
+Or, alternatively, install the [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator#tmux) `tmux` plugin
+with [Tmux Plugin Manager (TPM)](https://github.com/tmux-plugins/tpm):
+
+```tmux
+set -g @plugin 'christoomey/vim-tmux-navigator'
+run '~/.tmux/plugins/tpm/tpm'
 ```
 
 ### Getting the Option Key Working on MacOS

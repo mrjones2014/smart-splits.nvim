@@ -15,6 +15,27 @@ local dir_keys = {
   down = 'j',
 }
 
+local dir_keys_tmux = {
+  left = 'L',
+  right = 'R',
+  up = 'U',
+  down = 'D',
+}
+
+local dir_keys_reverse = {
+  left = 'l',
+  right = 'h',
+  up = 'j',
+  down = 'k',
+}
+
+local dir_keys_tmux_reverse = {
+  left = 'R',
+  right = 'L',
+  up = 'D',
+  down = 'U',
+}
+
 local is_resizing = false
 
 local function is_full_height(winnr)
@@ -223,39 +244,77 @@ local function resize(direction, amount)
   end
 end
 
+local function move_tmux_inner(dir_key)
+  local tmux = require('smart-splits.tmux')
+  local current_pane = tmux.current_pane_id()
+  if not current_pane then
+    vim.notify('[smart-splits.nvim] Failed to get tmux pane ID', vim.log.levels.ERROR)
+    return false
+  end
+
+  local ok = tmux.next_pane(dir_key)
+  if not ok then
+    vim.notify('[smart-splits.nvim] Failed to select tmux pane', vim.log.levels.ERROR)
+    return false
+  end
+  local new_pane = tmux.current_pane_id()
+  if not new_pane then
+    vim.notify('[smart-splits.nvim] Failed to get tmux pane ID', vim.log.levels.ERROR)
+    return false
+  end
+
+  -- we've moved to a new tmux pane, finish
+  if current_pane ~= new_pane then
+    return true
+  end
+
+  return false
+end
+
+---Try moving with tmux
+---@param direction string direction to move
+---@return boolean whether we moved with tmux or not
+local function move_cursor_tmux(direction, at_edge_and_moving_to_edge)
+  local dir_key = dir_keys_tmux[direction]
+  local tmux_moved = move_tmux_inner(dir_key)
+  if tmux_moved or not at_edge_and_moving_to_edge then
+    return tmux_moved
+  end
+
+  return move_tmux_inner(dir_keys_tmux_reverse[direction])
+end
+
 local function move_cursor(direction, same_row)
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
-  if direction == 'left' then
-    if at_left_edge() then
-      for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-        vim.cmd('wincmd ' .. dir_keys.right)
-      end
-    else
-      vim.cmd('wincmd ' .. dir_keys.left)
+  local dir_key = dir_keys[direction]
+
+  local at_right = at_right_edge()
+  local at_left = at_left_edge()
+  local at_top = at_top_edge()
+  local at_bottom = at_bottom_edge()
+
+  -- are we at an edge and attempting to move in the direction of the edge we're already at?
+  local at_edge_and_moving_to_edge = (direction == 'left' and at_left)
+    or (direction == 'right' and at_right)
+    or (direction == 'up' and at_top)
+    or (direction == 'down' and at_bottom)
+
+  local at_any_edge = at_right or at_left or at_top or at_bottom
+
+  if config.tmux_integration and at_any_edge and at_edge_and_moving_to_edge then
+    if move_cursor_tmux(direction, at_edge_and_moving_to_edge) then
+      return
     end
-  elseif direction == 'right' then
-    if at_right_edge() then
-      for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-        vim.cmd('wincmd ' .. dir_keys.left)
-      end
-    else
-      vim.cmd('wincmd ' .. dir_keys.right)
-    end
-  elseif direction == 'up' then
-    if at_top_edge() then
-      for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-        vim.cmd('wincmd ' .. dir_keys.down)
-      end
-    else
-      vim.cmd('wincmd ' .. dir_keys.up)
-    end
-  elseif at_bottom_edge() then
-    for _ = 0, #vim.api.nvim_tabpage_list_wins(0), 1 do
-      vim.cmd('wincmd ' .. dir_keys.up)
-    end
-  else
-    vim.cmd('wincmd ' .. dir_keys.down)
   end
+
+  if at_edge_and_moving_to_edge then
+    dir_key = dir_keys_reverse[direction]
+  end
+
+  -- if someone has more than 99999 windows then just LOL
+  vim.api.nvim_set_current_win(
+    vim.fn.win_getid(vim.fn.winnr(string.format('%s%s', at_edge_and_moving_to_edge and '99999' or '1', dir_key)))
+  )
 
   if
     (direction == 'left' or direction == 'right')
