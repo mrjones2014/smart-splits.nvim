@@ -9,7 +9,7 @@ and same for top and bottom edges). Additionally, if enabled, it can
 provide seamless navigation between Neovim splits and `tmux` panes.
 See [Tmux Integration](#tmux-integration)
 
-![demo](https://user-images.githubusercontent.com/8648891/159472445-ef680c42-f0fc-4c21-9ab7-0590a89da95b.gif)
+![demo](https://user-images.githubusercontent.com/8648891/195688897-993d1ef1-c81e-44d0-98e1-57b00e588b56.gif)
 
 ## Install
 
