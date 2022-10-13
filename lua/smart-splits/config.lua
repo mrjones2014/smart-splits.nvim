@@ -20,7 +20,8 @@ local M = {
   ignored_events = {
     'BufEnter',
     'WinEnter',
-  }
+  },
+  tmux_integration = false,
 }
 
 local function default_bool(value, default)
@@ -65,6 +66,7 @@ function M.setup(config)
   M.ignored_filetypes = config.ignored_filetypes or M.ignored_filetypes
   M.move_cursor_same_row = default_bool(config.move_cursor_same_row, M.move_cursor_same_row)
   M.resize_mode = default_resize_mode(config.resize_mode)
+  M.tmux_integration = default_bool(config.tmux_integration, M.tmux_integration)
 end
 
 return M
