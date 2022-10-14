@@ -19,6 +19,10 @@ local function tmux_exec(cmd)
   return vim.fn.system(cmd_str)
 end
 
+function M.current_session_is_tmux()
+  return get_socket_path() ~= nil
+end
+
 ---Try to get current tmux pane ID
 ---returns nil if failed or not in a tmux session.
 ---@return string|nil
