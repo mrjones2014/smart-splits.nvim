@@ -71,8 +71,8 @@ require('smart-splits').setup({
     'BufEnter',
     'WinEnter',
   },
-  -- set to true to enable tmux integration
-  tmux_integration = false,
+  -- enable or disable the tmux Integration
+  tmux_integration = true,
 })
 ```
 

@@ -21,7 +21,7 @@ local M = {
     'BufEnter',
     'WinEnter',
   },
-  tmux_integration = false,
+  tmux_integration = true,
 }
 
 local function default_bool(value, default)
