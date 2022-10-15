@@ -7,6 +7,7 @@ local M = {
   ignored_filetypes = {
     'NvimTree',
   },
+  default_amount = 3,
   move_cursor_same_row = false,
   resize_mode = {
     quit_key = '<ESC>',

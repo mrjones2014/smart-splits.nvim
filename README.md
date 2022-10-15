@@ -40,6 +40,8 @@ require('smart-splits').setup({
   },
   -- Ignored buffer types (only while resizing)
   ignored_buftypes = { 'NvimTree' },
+  -- the default number of lines/columns to resize by at a time
+  default_amount = 3,
   -- when moving cursor between splits left or right,
   -- place the cursor on the same row of the *screen*
   -- regardless of line numbers. False by default.
@@ -129,9 +131,10 @@ require('smart-splits').move_cursor_down()
 require('smart-splits').move_cursor_left(same_row)
 require('smart-splits').move_cursor_right(same_row)
 -- persistent resize mode
--- temporarily remap 'h', 'j', 'k', and 'l' to
+-- temporarily remap your configured resize keys to
 -- smart resize left, down, up, and right, respectively,
 -- press <ESC> to stop resize mode (unless you've set a different key in config)
+-- resize keys also accept a range, e.e. pressing `5j` will resize down 5 times the default_amount
 require('smart-splits').start_resize_mode()
 
 -- recommended mappings
@@ -152,7 +155,7 @@ vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
 `smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux` panes.
 You will need to set up keymaps in your tmux config to match the Neovim keymaps.
 
-You can either add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys if desired):
+You can either add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys and resize amount if desired):
 
 ```tmux
 # Smart pane switching with awareness of Vim splits.
