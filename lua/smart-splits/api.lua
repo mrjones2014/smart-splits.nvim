@@ -1,6 +1,7 @@
 local M = {}
 
 local config = require('smart-splits.config')
+local tmux = require('smart-splits.tmux')
 
 local win_pos = {
   start = 0,
@@ -245,7 +246,6 @@ local function resize(direction, amount)
 end
 
 local function move_tmux_inner(dir_key)
-  local tmux = require('smart-splits.tmux')
   local current_pane = tmux.current_pane_id()
   if not current_pane then
     vim.notify('[smart-splits.nvim] Failed to get tmux pane ID', vim.log.levels.ERROR)
@@ -275,11 +275,6 @@ end
 ---@param direction string direction to move
 ---@return boolean whether we moved with tmux or not
 local function move_cursor_tmux(direction, at_edge_and_moving_to_edge)
-  local tmux = require('smart-splits.tmux')
-  if not tmux.current_session_is_tmux() then
-    return
-  end
-
   local dir_key = dir_keys_tmux[direction]
   local tmux_moved = move_tmux_inner(dir_key)
   if tmux_moved or not at_edge_and_moving_to_edge then
@@ -306,7 +301,7 @@ local function move_cursor(direction, same_row)
 
   local at_any_edge = at_right or at_left or at_top or at_bottom
 
-  if config.tmux_integration and at_any_edge and at_edge_and_moving_to_edge then
+  if config.tmux_integration and tmux.current_session_is_tmux() and at_any_edge and at_edge_and_moving_to_edge then
     if move_cursor_tmux(direction, at_edge_and_moving_to_edge) then
       return
     end
