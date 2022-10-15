@@ -275,6 +275,11 @@ end
 ---@param direction string direction to move
 ---@return boolean whether we moved with tmux or not
 local function move_cursor_tmux(direction, at_edge_and_moving_to_edge)
+  local tmux = require('smart-splits.tmux')
+  if not tmux.current_session_is_tmux() then
+    return
+  end
+
   local dir_key = dir_keys_tmux[direction]
   local tmux_moved = move_tmux_inner(dir_key)
   if tmux_moved or not at_edge_and_moving_to_edge then
