@@ -171,7 +171,7 @@ local function compute_direction_horizontal(direction)
 end
 
 local function resize(direction, amount)
-  amount = amount or 3
+  amount = amount or config.default_amount
 
   -- don't try to horizontally resize a full width window
   if (direction == 'left' or direction == 'right') and is_full_width() then
