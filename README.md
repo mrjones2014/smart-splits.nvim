@@ -1,4 +1,4 @@
-# smart-splits.nvim
+# 🧠 smart-splits.nvim
 
 Smart, directional Neovim split resizing and navigation, with `tmux` pane navigation.
 `smart-splits.nvim` lets you think about split resizing in terms of
@@ -73,7 +73,7 @@ require('smart-splits').setup({
     'BufEnter',
     'WinEnter',
   },
-  -- enable or disable the tmux Integration
+  -- enable or disable the tmux integration
   tmux_integration = true,
 })
 ```
