@@ -8,6 +8,7 @@ local M = {
     'NvimTree',
   },
   default_amount = 3,
+  wrap_at_edge = true,
   move_cursor_same_row = false,
   resize_mode = {
     quit_key = '<ESC>',
@@ -65,6 +66,7 @@ end
 function M.setup(config)
   M.ignored_buftypes = config.ignored_buftypes or M.ignored_buftypes
   M.ignored_filetypes = config.ignored_filetypes or M.ignored_filetypes
+  M.wrap_at_edge = default_bool(config.wrap_at_edge, M.wrap_at_edge)
   M.move_cursor_same_row = default_bool(config.move_cursor_same_row, M.move_cursor_same_row)
   M.resize_mode = default_resize_mode(config.resize_mode)
   M.tmux_integration = default_bool(config.tmux_integration, M.tmux_integration)
