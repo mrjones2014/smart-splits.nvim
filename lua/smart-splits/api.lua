@@ -276,6 +276,10 @@ end
 ---@return boolean whether we moved with tmux or not
 local function move_cursor_tmux(direction, at_edge_and_moving_to_edge)
   local dir_key = dir_keys_tmux[direction]
+  if config.wrap_at_edge == false and tmux.current_pane_at_edge(dir_key) then
+    return false
+  end
+
   local tmux_moved = move_tmux_inner(dir_key)
   if tmux_moved or not at_edge_and_moving_to_edge then
     return tmux_moved
@@ -293,17 +297,6 @@ local function move_cursor(direction, same_row)
   local at_top = at_top_edge()
   local at_bottom = at_bottom_edge()
 
-  if config.wrap_at_edge == false then
-    if
-      (at_right and direction == 'right')
-      or (at_left and direction == 'left')
-      or (at_top and direction == 'up')
-      or (at_bottom and direction == 'down')
-    then
-      return
-    end
-  end
-
   -- are we at an edge and attempting to move in the direction of the edge we're already at?
   local at_edge_and_moving_to_edge = (direction == 'left' and at_left)
     or (direction == 'right' and at_right)
@@ -314,6 +307,17 @@ local function move_cursor(direction, same_row)
 
   if config.tmux_integration and tmux.current_session_is_tmux() and at_any_edge and at_edge_and_moving_to_edge then
     if move_cursor_tmux(direction, at_edge_and_moving_to_edge) then
+      return
+    end
+  end
+
+  if config.wrap_at_edge == false then
+    if
+      (at_right and direction == 'right')
+      or (at_left and direction == 'left')
+      or (at_top and direction == 'up')
+      or (at_bottom and direction == 'down')
+    then
       return
     end
   end
