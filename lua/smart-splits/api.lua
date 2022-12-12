@@ -280,6 +280,10 @@ local function move_cursor_tmux(direction, at_edge_and_moving_to_edge)
     return false
   end
 
+  if config.disable_tmux_nav_when_zoomed and tmux.current_pane_is_zoomed() then
+    return false
+  end
+
   local tmux_moved = move_tmux_inner(dir_key)
   if tmux_moved or not at_edge_and_moving_to_edge then
     return tmux_moved

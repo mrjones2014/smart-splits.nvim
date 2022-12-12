@@ -79,6 +79,8 @@ require('smart-splits').setup({
   },
   -- enable or disable the tmux integration
   tmux_integration = true,
+  -- disable tmux navigation if current tmux pane is zoomed
+  disable_tmux_nav_when_zoomed = true,
 })
 ```
 
