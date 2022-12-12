@@ -120,6 +120,27 @@ function M.current_pane_id()
   end
 end
 
+function M.current_pane_is_zoomed()
+  local ok, is_zoomed = pcall(function()
+    -- '#F' format strings outputs pane creation flags,
+    -- if it it includes 'Z' then it's zoomed. A '*' indicates
+    -- current pane, and since we're only listing current pane flags,
+    -- we're expecting to see '*Z' if the current pane is zoomed
+    local output = tmux_exec("display-message -p '#F'")
+    if output then
+      output = vim.trim(output --[[@as string]])
+    end
+
+    return output == '*Z'
+  end)
+
+  if ok then
+    return is_zoomed
+  else
+    return ok
+  end
+end
+
 ---Move to tmux pane directionally
 ---@param direction 'h'|'j'|'k'|'l'
 ---@return boolean true if command succeeded, false otherwise

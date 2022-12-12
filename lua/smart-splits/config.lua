@@ -24,6 +24,7 @@ local M = {
     'WinEnter',
   },
   tmux_integration = true,
+  disable_tmux_nav_when_zoomed = true,
 }
 
 local function default_bool(value, default)
