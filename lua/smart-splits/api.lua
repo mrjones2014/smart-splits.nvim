@@ -359,6 +359,7 @@ vim.tbl_map(function(direction)
     set_eventignore()
     local cur_win_id = vim.api.nvim_get_current_win()
     is_resizing = true
+    amount = amount or (vim.v.count1 * config.default_amount)
     pcall(resize, direction, amount)
     -- guarantee we haven't moved the cursor by accident
     vim.api.nvim_set_current_win(cur_win_id)

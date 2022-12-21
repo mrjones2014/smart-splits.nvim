@@ -65,8 +65,8 @@ require('smart-splits').setup({
     -- entering or exiting the resize mode
     hooks = {
       on_enter = nil,
-      on_leave = nil
-    }
+      on_leave = nil,
+    },
   },
   -- ignore these autocmd events (via :h eventignore) while processing
   -- smart-splits.nvim computations, which involve visiting different
@@ -96,9 +96,9 @@ Integration with [bufresize.nvim](https://github.com/kwkarlwang/bufresize.nvim):
 require('smart-splits').setup({
   resize_mode = {
     hooks = {
-      on_leave = require('bufresize').register
-    }
-  }
+      on_leave = require('bufresize').register,
+    },
+  },
 })
 ```
 
@@ -109,10 +109,14 @@ require('smart-splits').setup({
   resize_mode = {
     silent = true,
     hooks = {
-      on_enter = function() vim.notify('Entering resize mode') end,
-      on_leave = function() vim.notify('Exiting resize mode, bye') end
-    }
-  }
+      on_enter = function()
+        vim.notify('Entering resize mode')
+      end,
+      on_leave = function()
+        vim.notify('Exiting resize mode, bye')
+      end,
+    },
+  },
 })
 ```
 
@@ -124,6 +128,9 @@ With Lua:
 -- resizing splits
 -- amount defaults to 3 if not specified
 -- use absolute values, no + or -
+-- the functions also check for a range,
+-- so for example if you bind `<A-h>` to `resize_left`,
+-- then `10<A-h>` will `resize_left` by `(10 * config.default_amount)`
 require('smart-splits').resize_up(amount)
 require('smart-splits').resize_down(amount)
 require('smart-splits').resize_left(amount)
@@ -145,6 +152,8 @@ require('smart-splits').start_resize_mode()
 
 -- recommended mappings
 -- resizing splits
+-- these keymaps will also accept a range,
+-- for example `10<A-h>` will `resize_left` by `(10 * config.default_amount)`
 vim.keymap.set('n', '<A-h>', require('smart-splits').resize_left)
 vim.keymap.set('n', '<A-j>', require('smart-splits').resize_down)
 vim.keymap.set('n', '<A-k>', require('smart-splits').resize_up)
@@ -221,15 +230,4 @@ Add the following key bindings to `~/.config/alacritty/alacritty.yml`:
 # for Alt+h/j/k/l
 key_bindings:
   - { key: J, mods: Alt, chars: "\x1bj" }
-  - { key: K, mods: Alt, chars: "\x1bk" }
-  - { key: H, mods: Alt, chars: "\x1bh" }
-  - { key: L, mods: Alt, chars: "\x1bl" }
 ```
-
-#### iTerm2
-
-Press <kbd>⌘</kbd>+<kbd>,</kbd> to open preferences, go to the "Profiles" top tab,
-then go to the "Keys" tab and change "Left Option key" and/or "Right Option key"
-to "Esc+".
-
-![iTerm2 settings](https://user-images.githubusercontent.com/8648891/159472029-a521a345-61bd-453c-8230-9a563b9c56c1.png)
