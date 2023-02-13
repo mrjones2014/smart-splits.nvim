@@ -292,6 +292,13 @@ local function move_cursor_tmux(direction, at_edge_and_moving_to_edge)
   return move_tmux_inner(dir_keys_tmux_reverse[direction])
 end
 
+local function move_to_edge(at_edge_and_moving_to_edge, dir_key)
+  -- if someone has more than 99999 windows then just LOL
+  vim.api.nvim_set_current_win(
+    vim.fn.win_getid(vim.fn.winnr(string.format('%s%s', at_edge_and_moving_to_edge and '99999' or '1', dir_key)))
+  )
+end
+
 local function move_cursor(direction, same_row)
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   local dir_key = dir_keys[direction]
@@ -330,10 +337,7 @@ local function move_cursor(direction, same_row)
     dir_key = dir_keys_reverse[direction]
   end
 
-  -- if someone has more than 99999 windows then just LOL
-  vim.api.nvim_set_current_win(
-    vim.fn.win_getid(vim.fn.winnr(string.format('%s%s', at_edge_and_moving_to_edge and '99999' or '1', dir_key)))
-  )
+  move_to_edge(at_edge_and_moving_to_edge, dir_key)
 
   if
     (direction == 'left' or direction == 'right')
@@ -353,6 +357,28 @@ local function set_eventignore()
   vim.o.eventignore = eventignore
 end
 
+local function swap_bufs(direction)
+  local buf_1 = vim.api.nvim_get_current_buf()
+  local win_1 = vim.api.nvim_get_current_win()
+
+  local dir_key = dir_keys[direction]
+  local at_edge_and_moving_to_edge = (direction == 'right' and at_right_edge())
+    or (direction == 'left' and at_left_edge())
+    or (direction == 'up' and at_top_edge())
+    or (direction == 'down' and at_bottom_edge())
+  if at_edge_and_moving_to_edge then
+    dir_key = dir_keys_reverse[direction]
+  end
+
+  move_to_edge(at_edge_and_moving_to_edge, dir_key)
+  local buf_2 = vim.api.nvim_get_current_buf()
+  local win_2 = vim.api.nvim_get_current_win()
+
+  vim.api.nvim_win_set_buf(win_2, buf_1)
+  vim.api.nvim_win_set_buf(win_1, buf_2)
+  vim.api.nvim_set_current_win(win_1)
+end
+
 vim.tbl_map(function(direction)
   M[string.format('resize_%s', direction)] = function(amount)
     local eventignore_orig = vim.deepcopy(vim.o.eventignore)
@@ -369,6 +395,10 @@ vim.tbl_map(function(direction)
   M[string.format('move_cursor_%s', direction)] = function(same_row)
     is_resizing = false
     pcall(move_cursor, direction, same_row)
+  end
+  M[string.format('swap_buf_%s', direction)] = function()
+    is_resizing = false
+    swap_bufs(direction)
   end
 end, {
   'left',
