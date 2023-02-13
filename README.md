@@ -143,6 +143,11 @@ require('smart-splits').move_cursor_up()
 require('smart-splits').move_cursor_down()
 require('smart-splits').move_cursor_left(same_row)
 require('smart-splits').move_cursor_right(same_row)
+-- Swapping buffers directionally with the window to the specified direction
+require('smart-splits').swap_buf_up()
+require('smart-splits').swap_buf_down()
+require('smart-splits').swap_buf_left()
+require('smart-splits').swap_buf_right()
 -- persistent resize mode
 -- temporarily remap your configured resize keys to
 -- smart resize left, down, up, and right, respectively,
@@ -163,6 +168,11 @@ vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
 vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
 vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
 vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
+-- swapping buffers between windows
+vim.keymap.set('n', '<leader><leader>h', require('smart-splits').swap_buf_left)
+vim.keymap.set('n', '<leader><leader>j', require('smart-splits').swap_buf_down)
+vim.keymap.set('n', '<leader><leader>k', require('smart-splits').swap_buf_up)
+vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
 ```
 
 ### Tmux Integration
