@@ -51,6 +51,11 @@ require('smart-splits').setup({
   -- regardless of line numbers. False by default.
   -- Can be overridden via function parameter, see Usage.
   move_cursor_same_row = false,
+  -- whether the cursor should follow the buffer when swapping
+  -- buffers by default; it can also be controlled by passing
+  -- `{ move_cursor = true }` or `{ move_cursor = false }`
+  -- when calling the Lua function.
+  cursor_follows_swapped_bufs = false,
   -- resize mode options
   resize_mode = {
     -- key to exit persistent resize mode
@@ -148,6 +153,9 @@ require('smart-splits').swap_buf_up()
 require('smart-splits').swap_buf_down()
 require('smart-splits').swap_buf_left()
 require('smart-splits').swap_buf_right()
+-- the buffer swap functions can also take an `opts` table to override the
+-- default behavior of whether or not the cursor follows the buffer
+require('smart-splits').swap_buf_right({ move_cursor = true })
 -- persistent resize mode
 -- temporarily remap your configured resize keys to
 -- smart resize left, down, up, and right, respectively,
@@ -201,43 +209,5 @@ tmux_version='$(tmux -V | sed -En "s/^tmux ([0-9]+(.[0-9]+)?).*/\1/p")'
 if-shell -b '[ "$(echo "$tmux_version < 3.0" | bc)" = 1 ]' \
     "bind-key -n 'C-\\' if-shell \"$is_vim\" 'send-keys C-\\'  'select-pane -l'"
 if-shell -b '[ "$(echo "$tmux_version >= 3.0" | bc)" = 1 ]' \
-    "bind-key -n 'C-\\' if-shell \"$is_vim\" 'send-keys C-\\\\'  'select-pane -l'"
-
-bind-key -T copy-mode-vi 'C-h' select-pane -L
-bind-key -T copy-mode-vi 'C-j' select-pane -D
-bind-key -T copy-mode-vi 'C-k' select-pane -U
-bind-key -T copy-mode-vi 'C-l' select-pane -R
-bind-key -T copy-mode-vi 'C-\' select-pane -l
-```
-
-Or, alternatively, install the [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator#tmux) `tmux` plugin
-with [Tmux Plugin Manager (TPM)](https://github.com/tmux-plugins/tpm):
-
-```tmux
-set -g @plugin 'christoomey/vim-tmux-navigator'
-run '~/.tmux/plugins/tpm/tpm'
-```
-
-### Getting the Option Key Working on MacOS
-
-Note that to use the alt/option key in keymaps on macOS,
-you may need to change some terminal settings for Neovim
-to recognize the key properly.
-
-#### Kitty
-
-Add the following configuration option to `~/.config/kitty/kitty.conf`:
-
-```conf
-macos_option_as_alt both
-```
-
-#### Alacritty
-
-Add the following key bindings to `~/.config/alacritty/alacritty.yml`:
-
-```yaml
-# for Alt+h/j/k/l
-key_bindings:
-  - { key: J, mods: Alt, chars: "\x1bj" }
+    "bind-key -n 'C-\\' if-shell \
 ```

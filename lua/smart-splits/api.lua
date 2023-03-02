@@ -357,7 +357,8 @@ local function set_eventignore()
   vim.o.eventignore = eventignore
 end
 
-local function swap_bufs(direction)
+local function swap_bufs(direction, opts)
+  opts = opts or {}
   local buf_1 = vim.api.nvim_get_current_buf()
   local win_1 = vim.api.nvim_get_current_win()
 
@@ -376,7 +377,13 @@ local function swap_bufs(direction)
 
   vim.api.nvim_win_set_buf(win_2, buf_1)
   vim.api.nvim_win_set_buf(win_1, buf_2)
-  vim.api.nvim_set_current_win(win_1)
+  local move_cursor_with_buf = opts.move_cursor
+  if move_cursor_with_buf == nil then
+    move_cursor_with_buf = config.cursor_follows_swapped_bufs
+  end
+  if not move_cursor_with_buf then
+    vim.api.nvim_set_current_win(win_1)
+  end
 end
 
 vim.tbl_map(function(direction)
@@ -396,9 +403,9 @@ vim.tbl_map(function(direction)
     is_resizing = false
     pcall(move_cursor, direction, same_row)
   end
-  M[string.format('swap_buf_%s', direction)] = function()
+  M[string.format('swap_buf_%s', direction)] = function(opts)
     is_resizing = false
-    swap_bufs(direction)
+    swap_bufs(direction, opts)
   end
 end, {
   'left',
