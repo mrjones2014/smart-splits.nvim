@@ -2,6 +2,7 @@ local M = {}
 
 local config = require('smart-splits.config')
 local tmux = require('smart-splits.tmux')
+local wezterm = require('smart-splits.wezterm')
 
 local win_pos = {
   start = 0,
@@ -16,13 +17,6 @@ local dir_keys = {
   down = 'j',
 }
 
-local dir_keys_tmux = {
-  left = 'L',
-  right = 'R',
-  up = 'U',
-  down = 'D',
-}
-
 local dir_keys_reverse = {
   left = 'l',
   right = 'h',
@@ -30,14 +24,24 @@ local dir_keys_reverse = {
   down = 'k',
 }
 
-local dir_keys_tmux_reverse = {
-  left = 'R',
-  right = 'L',
-  up = 'D',
-  down = 'U',
+local directions_reverse = {
+  left = 'right',
+  right = 'left',
+  up = 'down',
+  down = 'up',
 }
 
 local is_resizing = false
+
+local function get_multiplexer()
+  if config.multiplexer_integration == 'tmux' then
+    return tmux
+  elseif config.multiplexer_integration == 'wezterm' then
+    return wezterm
+  else
+    return nil
+  end
+end
 
 local function is_full_height(winnr)
   -- for vertical height account for tabline, status line, and cmd line
@@ -245,51 +249,54 @@ local function resize(direction, amount)
   end
 end
 
-local function move_tmux_inner(dir_key)
-  local current_pane = tmux.current_pane_id()
+local function move_multiplexer_inner(direction, multiplexer)
+  local current_pane = multiplexer.current_pane_id()
   if not current_pane then
-    vim.notify('[smart-splits.nvim] Failed to get tmux pane ID', vim.log.levels.ERROR)
+    vim.notify('[smart-splits.nvim] Failed to get multiplexer pane ID', vim.log.levels.ERROR)
     return false
   end
 
-  local ok = tmux.next_pane(dir_key)
+  local ok = multiplexer.next_pane(direction)
   if not ok then
-    vim.notify('[smart-splits.nvim] Failed to select tmux pane', vim.log.levels.ERROR)
+    vim.notify('[smart-splits.nvim] Failed to select multiplexer pane', vim.log.levels.ERROR)
     return false
   end
-  local new_pane = tmux.current_pane_id()
+  local new_pane = multiplexer.current_pane_id()
   if not new_pane then
-    vim.notify('[smart-splits.nvim] Failed to get tmux pane ID', vim.log.levels.ERROR)
+    vim.notify('[smart-splits.nvim] Failed to get multiplexer pane ID', vim.log.levels.ERROR)
     return false
   end
 
-  -- we've moved to a new tmux pane, finish
-  if current_pane ~= new_pane then
+  -- we've moved to a new multiplexer pane, finish
+  -- or if using wezterm because wezterm doesn't have a way to tell dynamically
+  -- what the currently focused pane is
+  if config.multiplexer_integration == 'wezterm' or current_pane ~= new_pane then
     return true
   end
 
   return false
 end
 
----Try moving with tmux
+---Try moving with multiplexer
 ---@param direction string direction to move
----@return boolean whether we moved with tmux or not
-local function move_cursor_tmux(direction, at_edge_and_moving_to_edge)
-  local dir_key = dir_keys_tmux[direction]
-  if config.wrap_at_edge == false and tmux.current_pane_at_edge(dir_key) then
+---@param at_edge_and_moving_to_edge boolean whether to wrap around edge
+---@param multiplexer table the multiplexer API to use
+---@return boolean whether we moved with multiplexer or not
+local function move_cursor_multiplexer(direction, at_edge_and_moving_to_edge, multiplexer)
+  if config.wrap_at_edge == false and multiplexer.current_pane_at_edge(direction) then
     return false
   end
 
-  if config.disable_tmux_nav_when_zoomed and tmux.current_pane_is_zoomed() then
+  if config.disable_multiplexer_nav_when_zoomed and multiplexer.current_pane_is_zoomed() then
     return false
   end
 
-  local tmux_moved = move_tmux_inner(dir_key)
-  if tmux_moved or not at_edge_and_moving_to_edge then
-    return tmux_moved
+  local multiplexer_moved = move_multiplexer_inner(direction, multiplexer)
+  if multiplexer_moved or not at_edge_and_moving_to_edge then
+    return multiplexer_moved
   end
 
-  return move_tmux_inner(dir_keys_tmux_reverse[direction])
+  return move_multiplexer_inner(directions_reverse[direction], multiplexer)
 end
 
 local function move_to_edge(at_edge_and_moving_to_edge, dir_key)
@@ -316,8 +323,16 @@ local function move_cursor(direction, same_row)
 
   local at_any_edge = at_right or at_left or at_top or at_bottom
 
-  if config.tmux_integration and tmux.current_session_is_tmux() and at_any_edge and at_edge_and_moving_to_edge then
-    if move_cursor_tmux(direction, at_edge_and_moving_to_edge) then
+  local multiplexer = get_multiplexer()
+
+  if
+    config.multiplexer_integration ~= nil
+    and multiplexer
+    and multiplexer.is_in_session()
+    and at_any_edge
+    and at_edge_and_moving_to_edge
+  then
+    if move_cursor_multiplexer(direction, at_edge_and_moving_to_edge, multiplexer) then
       return
     end
   end

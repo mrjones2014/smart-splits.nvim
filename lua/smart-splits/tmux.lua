@@ -2,6 +2,13 @@
 
 local M = {}
 
+local dir_keys_tmux = {
+  left = 'L',
+  right = 'R',
+  up = 'U',
+  down = 'D',
+}
+
 local function get_socket_path()
   local tmux = vim.env.TMUX
   if not tmux or #tmux == 0 then
@@ -25,9 +32,11 @@ local function tmux_exec(cmd, as_list)
 end
 
 function M.current_pane_at_edge(direction)
-  if not M.current_session_is_tmux() then
+  if not M.is_in_session() then
     return false
   end
+
+  direction = dir_keys_tmux[direction]
 
   local edge
   local op
@@ -91,7 +100,7 @@ function M.current_pane_at_edge(direction)
   end
 end
 
-function M.current_session_is_tmux()
+function M.is_in_session()
   return get_socket_path() ~= nil
 end
 
@@ -99,7 +108,7 @@ end
 ---returns nil if failed or not in a tmux session.
 ---@return string|nil
 function M.current_pane_id()
-  if not M.current_session_is_tmux() then
+  if not M.is_in_session() then
     return nil
   end
 
@@ -142,13 +151,14 @@ function M.current_pane_is_zoomed()
 end
 
 ---Move to tmux pane directionally
----@param direction 'h'|'j'|'k'|'l'
+---@param direction 'left'|'right'|'up'|'down'
 ---@return boolean true if command succeeded, false otherwise
 function M.next_pane(direction)
-  if not M.current_session_is_tmux() then
+  if not M.is_in_session() then
     return false
   end
 
+  direction = dir_keys_tmux[direction] ---@diagnostic disable-line
   direction = string.upper(direction)
   local ok, _ = pcall(function()
     tmux_exec(string.format('select-pane -%s', direction))

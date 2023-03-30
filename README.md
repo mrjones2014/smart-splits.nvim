@@ -6,8 +6,8 @@ Smart, directional Neovim split resizing and navigation, with `tmux` pane naviga
 natural. It also allows you to move through splits in a circular fashion
 (e.g. moving left at the left edge jumps to the right edge, and vice versa,
 and same for top and bottom edges). Additionally, if enabled, it can
-provide seamless navigation between Neovim splits and `tmux` panes.
-See [Tmux Integration](#tmux-integration)
+provide seamless navigation between Neovim splits and `tmux` or `wezterm` panes.
+See [Multiplexer Integrations](#multiplexer-integrations)
 
 ![demo](https://user-images.githubusercontent.com/8648891/201928611-4338e3cb-cca9-4e15-92c6-0405b7072279.gif)
 
@@ -82,10 +82,16 @@ require('smart-splits').setup({
     'BufEnter',
     'WinEnter',
   },
-  -- enable or disable the tmux integration
-  tmux_integration = true,
-  -- disable tmux navigation if current tmux pane is zoomed
-  disable_tmux_nav_when_zoomed = true,
+  -- enable or disable a multiplexer integration
+  -- set to false to disable, otherwise
+  -- it will default to tmux if $TMUX is set,
+  -- then wezterm if $WEZTERM_PANE is set,
+  -- otherwise false
+  multiplexer_integration = nil,
+  -- disable multiplexer navigation if current multiplexer pane is zoomed
+  -- this functionality is only supported on tmux due to wezterm
+  -- not having a way to check if a pane is zoomed
+  disable_multiplexer_nav_when_zoomed = true,
 })
 ```
 
@@ -183,12 +189,14 @@ vim.keymap.set('n', '<leader><leader>k', require('smart-splits').swap_buf_up)
 vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
 ```
 
-### Tmux Integration
+### Multiplexer Integrations
 
-`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux` panes.
-You will need to set up keymaps in your tmux config to match the Neovim keymaps.
+`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux` or `wezterm` panes.
+You will need to set up keymaps in your `tmux` or `wezterm` configs to match the Neovim keymaps.
 
-You can either add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys and resize amount if desired):
+#### Tmux
+
+Add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys and resize amount if desired):
 
 ```tmux
 # Smart pane switching with awareness of Vim splits.
@@ -203,11 +211,73 @@ bind-key -n C-l if-shell "$is_vim" 'send-keys C-l'  'select-pane -R'
 bind-key -n M-h if-shell "$is_vim" 'send-keys M-h' 'resize-pane -L 3'
 bind-key -n M-j if-shell "$is_vim" 'send-keys M-j' 'resize-pane -D 3'
 bind-key -n M-k if-shell "$is_vim" 'send-keys M-k' 'resize-pane -U 3'
-bind-key -n M-l if-shell "$is_vim" 'send-keys M-l' 'resize-pane -R 3'
+bind-key -n M-l i
+```
 
-tmux_version='$(tmux -V | sed -En "s/^tmux ([0-9]+(.[0-9]+)?).*/\1/p")'
-if-shell -b '[ "$(echo "$tmux_version < 3.0" | bc)" = 1 ]' \
-    "bind-key -n 'C-\\' if-shell \"$is_vim\" 'send-keys C-\\'  'select-pane -l'"
-if-shell -b '[ "$(echo "$tmux_version >= 3.0" | bc)" = 1 ]' \
-    "bind-key -n 'C-\\' if-shell \
+#### Wezterm
+
+Add the following snippet to your `~/.config/wezterm/wezterm.lua`:
+
+```lua
+local w = require('wezterm')
+
+-- Equivalent to POSIX basename(3)
+-- Given "/foo/bar" returns "bar"
+-- Given "c:\\foo\\bar" returns "bar"
+local function basename(s)
+  return string.gsub(s, '(.*[/\\])(.*)', '%2')
+end
+
+local function is_vim(pane)
+  local process_name = basename(pane:get_foreground_process_name())
+  return process_name == 'nvim' or process_name == 'vim'
+end
+
+local direction_keys = {
+  Left = 'h',
+  Down = 'j',
+  Up = 'k',
+  Right = 'l',
+  -- reverse lookup
+  h = 'Left',
+  j = 'Down',
+  k = 'Up',
+  l = 'Right',
+}
+
+local function split_nav(resize_or_move, key)
+  return {
+    key = key,
+    mods = resize_or_move == 'resize' and 'META' or 'CTRL',
+    action = w.action_callback(function(win, pane)
+      if is_vim(pane) then
+        -- pass the keys through to vim/nvim
+        win:perform_action({
+          SendKey = { key = key, mods = resize_or_move == 'resize' and 'META' or 'CTRL' },
+        }, pane)
+      else
+        if resize_or_move == 'resize' then
+          win:perform_action({ AdjustPaneSize = { direction_keys[key], 3 } }, pane)
+        else
+          win:perform_action({ ActivatePaneDirection = direction_keys[key] }, pane)
+        end
+      end
+    end),
+  }
+end
+
+return {
+  keys = {
+    -- move between split panes
+    split_nav('move', 'h'),
+    split_nav('move', 'j'),
+    split_nav('move', 'k'),
+    split_nav('move', 'l'),
+    -- resize panes
+    split_nav('resize', 'h'),
+    split_nav('resize', 'j'),
+    split_nav('resize', 'k'),
+    split_nav('resize', 'l'),
+  },
+}
 ```
