@@ -37,6 +37,17 @@ local M = setmetatable({}, {
   end,
 })
 
+function M.set_default_multiplexer()
+  -- unless explicitly disabled, try to determine it automatically
+  if config.multiplexer_integration ~= false then
+    if vim.env.TMUX ~= nil then
+      config.multiplexer_integration = 'tmux'
+    elseif vim.env.WEZTERM_PANE ~= nil then
+      config.multiplexer_integration = 'wezterm'
+    end
+  end
+end
+
 function M.setup(new_config)
   config = vim.tbl_deep_extend('force', config, new_config or {})
 
@@ -54,15 +65,6 @@ function M.setup(new_config)
       'smart-splits.nvim'
     )
     config.disable_multiplexer_nav_when_zoomed = true
-  end
-
-  -- unless explicitly disabled, try to determine it automatically
-  if config.multiplexer_integration ~= false then
-    if vim.env.TMUX ~= nil then
-      config.multiplexer_integration = 'tmux'
-    elseif vim.env.WEZTERM_PANE ~= nil then
-      config.multiplexer_integration = 'wezterm'
-    end
   end
 end
 
