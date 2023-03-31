@@ -11,20 +11,22 @@ local function wezterm_exec(cmd)
   local command = vim.deepcopy(cmd)
   table.insert(command, 1, 'wezterm')
   table.insert(command, 2, 'cli')
-  vim.fn.system(command)
+  return vim.fn.system(command)
 end
 
 function M.current_pane_id()
-  local pane_str = vim.env.WEZTERM_PANE
-  if not pane_str then
+  local output = wezterm_exec({ 'list-clients', '--format=json' })
+  local data = vim.json.decode(output)
+  if #data == 0 then
     return nil
   end
-  local ok, id = pcall(tonumber, pane_str)
-  if ok then
-    return id
-  else
-    return nil
+  -- if more than one client, get the active one
+  if #data > 1 then
+    table.sort(data, function(a, b)
+      return a.idle_time.nanos < b.idle_time.nanos
+    end)
   end
+  return data[1].focused_pane_id
 end
 
 function M.current_pane_at_edge(direction)

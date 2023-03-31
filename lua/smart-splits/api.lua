@@ -268,9 +268,7 @@ local function move_multiplexer_inner(direction, multiplexer)
   end
 
   -- we've moved to a new multiplexer pane, finish
-  -- or if using wezterm because wezterm doesn't have a way to tell dynamically
-  -- what the currently focused pane is
-  if config.multiplexer_integration == 'wezterm' or current_pane ~= new_pane then
+  if current_pane ~= new_pane then
     return true
   end
 
