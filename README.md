@@ -6,8 +6,10 @@ Smart, directional Neovim split resizing and navigation, with `tmux` pane naviga
 natural. It also allows you to move through splits in a circular fashion
 (e.g. moving left at the left edge jumps to the right edge, and vice versa,
 and same for top and bottom edges). Additionally, if enabled, it can
-provide seamless navigation between Neovim splits and `tmux` or `wezterm` panes.
+provide seamless navigation between Neovim splits and `tmux`, `wezterm`, or `kitty`\* panes.
 See [Multiplexer Integrations](#multiplexer-integrations)
+
+\* Directional resizing not supported in Kitty due to lack of CLI support to do so.
 
 ![demo](https://user-images.githubusercontent.com/8648891/201928611-4338e3cb-cca9-4e15-92c6-0405b7072279.gif)
 
@@ -17,6 +19,16 @@ With Packer.nvim:
 
 ```lua
 use('mrjones2014/smart-splits.nvim')
+-- to use Kitty multiplexer support, run the post install hook
+use({ 'mrjones2014/smart-splits.nvim', run = './install-kitty.sh' })
+```
+
+With Lazy.nvim:
+
+```lua
+{ 'mrjones2014/smart-splits.nvim' }
+-- to use Kitty multiplexer support, run the post install hook
+{ 'mrjones2014/smart-splits.nvim', run = './install-kitty.sh' }
 ```
 
 ## Configuration
@@ -86,10 +98,11 @@ require('smart-splits').setup({
   -- set to false to disable, otherwise
   -- it will default to tmux if $TMUX is set,
   -- then wezterm if $WEZTERM_PANE is set,
+  -- then kitty if $KITTY_LISTEN_ON is set,
   -- otherwise false
   multiplexer_integration = nil,
   -- disable multiplexer navigation if current multiplexer pane is zoomed
-  -- this functionality is only supported on tmux due to wezterm
+  -- this functionality is only supported on tmux due to wezterm and kitty
   -- not having a way to check if a pane is zoomed
   disable_multiplexer_nav_when_zoomed = true,
 })
@@ -191,8 +204,10 @@ vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
 
 ### Multiplexer Integrations
 
-`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux` or `wezterm` panes.
-You will need to set up keymaps in your `tmux` or `wezterm` configs to match the Neovim keymaps.
+`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `wezterm`, or `kitty`\* panes.
+You will need to set up keymaps in your `tmux`, `wezterm`, or `kitty` configs to match the Neovim keymaps.
+
+\* Directional resizing not supported in Kitty due to lack of CLI support to do so.
 
 #### Tmux
 
@@ -293,3 +308,52 @@ return {
   },
 }
 ```
+
+#### Kitty
+
+Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the keymaps as desired.
+
+```
+map ctrl+j kitten pass_keys.py neighboring_window bottom ctrl+j
+map ctrl+k kitten pass_keys.py neighboring_window top    ctrl+k
+map ctrl+h kitten pass_keys.py neighboring_window left   ctrl+h
+map ctrl+l kitten pass_keys.py neighboring_window right  ctrl+l
+```
+
+By default, it matches against the name of the current foreground process to detect if `vim`/`nvim` is running.
+If that doesn't work for you, or you want to include other CLI/TUI programs in the exclusion, you can provide
+an additional regex argument:
+
+```
+map ctrl+j kitten pass_keys.py neighboring_window bottom ctrl+j "^.* - nvim$"
+map ctrl+k kitten pass_keys.py neighboring_window top    ctrl+k "^.* - nvim$"
+map ctrl+h kitten pass_keys.py neighboring_window left   ctrl+h "^.* - nvim$"
+map ctrl+l kitten pass_keys.py neighboring_window right  ctrl+l "^.* - nvim$"
+```
+
+Then, you must allow Kitty to listen for remote commands on a socket. You can do this
+either by running Kitty with the following command:
+
+```bash
+# For linux only:
+kitty -o allow_remote_control=yes --single-instance --listen-on unix:@mykitty
+
+# Other unix systems:
+kitty -o allow_remote_control=yes --single-instance --listen-on unix:/tmp/mykitty
+```
+
+Or, by adding the following to `~/.config/kitty/kitty.conf`:
+
+```
+# For linux only:
+allow_remote_control yes
+listen_on unix:@mykitty
+
+# Other unix systems:
+allow_remote_control yes
+listen_on unix:/tmp/mykitty
+```
+
+##### Credits
+
+Thanks @knubie for inspiration for the Kitty implementation from [vim-kitty-navigator](https://github.com/knubie/vim-kitty-navigator).
