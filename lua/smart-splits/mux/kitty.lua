@@ -38,7 +38,8 @@ function M.current_pane_id()
   end
 
   local active_tab = utils.tbl_find(active_client.tabs, function(tab)
-    return tab.is_active_tab
+    -- different versions of Kitty have different output for this
+    return (tab.is_active or tab.is_active_tab) and tab.is_focused
   end)
 
   if not active_tab then
@@ -46,7 +47,8 @@ function M.current_pane_id()
   end
 
   local active_pane = utils.tbl_find(active_tab.windows, function(window)
-    return window.is_active_window and window.is_focused
+    -- different versions of Kitty have different output for this
+    return (window.is_active and window.is_active_window) and window.is_focused
   end)
 
   if not active_pane then
