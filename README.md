@@ -98,10 +98,11 @@ require('smart-splits').setup({
   -- set to false to disable, otherwise
   -- it will default to tmux if $TMUX is set,
   -- then wezterm if $WEZTERM_PANE is set,
+  -- then kitty if $KITTY_LISTEN_ON is set,
   -- otherwise false
   multiplexer_integration = nil,
   -- disable multiplexer navigation if current multiplexer pane is zoomed
-  -- this functionality is only supported on tmux due to wezterm
+  -- this functionality is only supported on tmux due to wezterm and kitty
   -- not having a way to check if a pane is zoomed
   disable_multiplexer_nav_when_zoomed = true,
 })
