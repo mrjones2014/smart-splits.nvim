@@ -44,6 +44,8 @@ function M.set_default_multiplexer()
       config.multiplexer_integration = 'tmux'
     elseif vim.env.WEZTERM_PANE ~= nil then
       config.multiplexer_integration = 'wezterm'
+    elseif vim.env.KITTY_LISTEN_ON ~= nil then
+      config.multiplexer_integration = 'kitty'
     end
   end
 end

@@ -159,7 +159,6 @@ function M.next_pane(direction)
   end
 
   direction = dir_keys_tmux[direction] ---@diagnostic disable-line
-  direction = string.upper(direction)
   local ok, _ = pcall(function()
     tmux_exec(string.format('select-pane -%s', direction))
   end)

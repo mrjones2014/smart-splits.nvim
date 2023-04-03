@@ -1,8 +1,6 @@
 local M = {}
 
 local config = require('smart-splits.config')
-local tmux = require('smart-splits.tmux')
-local wezterm = require('smart-splits.wezterm')
 
 local win_pos = {
   start = 0,
@@ -32,16 +30,6 @@ local directions_reverse = {
 }
 
 local is_resizing = false
-
-local function get_multiplexer()
-  if config.multiplexer_integration == 'tmux' then
-    return tmux
-  elseif config.multiplexer_integration == 'wezterm' then
-    return wezterm
-  else
-    return nil
-  end
-end
 
 local function is_full_height(winnr)
   -- for vertical height account for tabline, status line, and cmd line
@@ -321,15 +309,9 @@ local function move_cursor(direction, same_row)
 
   local at_any_edge = at_right or at_left or at_top or at_bottom
 
-  local multiplexer = get_multiplexer()
+  local multiplexer = require('smart-splits.mux').get()
 
-  if
-    config.multiplexer_integration ~= nil
-    and multiplexer
-    and multiplexer.is_in_session()
-    and at_any_edge
-    and at_edge_and_moving_to_edge
-  then
+  if multiplexer and multiplexer.is_in_session() and at_any_edge and at_edge_and_moving_to_edge then
     if move_cursor_multiplexer(direction, at_edge_and_moving_to_edge, multiplexer) then
       return
     end
