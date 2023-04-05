@@ -1,5 +1,3 @@
-local M = {}
-
 local dir_keys_wezterm = {
   left = 'Left',
   right = 'Right',
@@ -13,6 +11,9 @@ local function wezterm_exec(cmd)
   table.insert(command, 2, 'cli')
   return vim.fn.system(command)
 end
+
+---@type Multiplexer
+local M = {}
 
 function M.current_pane_id()
   local output = wezterm_exec({ 'list-clients', '--format=json' })
@@ -46,9 +47,6 @@ function M.current_pane_is_zoomed()
   return false
 end
 
----Move to wezterm pane directionally
----@param direction 'left'|'right'|'up'|'down'
----@return boolean true if command succeeded, false otherwise
 function M.next_pane(direction)
   if not M.is_in_session() then
     return false

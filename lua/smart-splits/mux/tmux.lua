@@ -1,7 +1,3 @@
--- helper scripts
-
-local M = {}
-
 local dir_keys_tmux = {
   left = 'L',
   right = 'R',
@@ -26,10 +22,13 @@ local function tmux_exec(cmd, as_list)
 
   local cmd_str = string.format('tmux -S %s %s', socket, cmd)
   if as_list then
-    return vim.fn.systemlist(cmd_str)
+    return vim.fn.systemlist(cmd_str) --[[ @as string[] ]]
   end
   return vim.fn.system(cmd_str)
 end
+
+---@type Multiplexer
+local M = {}
 
 function M.current_pane_at_edge(direction)
   if not M.is_in_session() then
@@ -113,7 +112,7 @@ function M.current_pane_id()
   end
 
   local ok, id = pcall(function()
-    local output = tmux_exec('display-message -p "#{pane_id}"')
+    local output = tmux_exec('display-message -p "#{pane_id}"') --[[@as string]]
     if not output or #output == 0 then
       return nil
     end
@@ -150,9 +149,6 @@ function M.current_pane_is_zoomed()
   end
 end
 
----Move to tmux pane directionally
----@param direction 'left'|'right'|'up'|'down'
----@return boolean true if command succeeded, false otherwise
 function M.next_pane(direction)
   if not M.is_in_session() then
     return false

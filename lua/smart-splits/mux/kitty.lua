@@ -19,6 +19,7 @@ local function kitty_exec(args)
   return vim.fn.system(arguments)
 end
 
+---@type Multiplexer
 local M = {}
 
 function M.current_pane_id()
@@ -71,9 +72,6 @@ function M.current_pane_is_zoomed()
   return false
 end
 
----Move to kitty pane directionally
----@param direction 'left'|'right'|'up'|'down'
----@return boolean true if command succeeded, false otherwise
 function M.next_pane(direction)
   if not M.is_in_session() then
     return false

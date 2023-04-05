@@ -20,7 +20,7 @@ With Packer.nvim:
 ```lua
 use('mrjones2014/smart-splits.nvim')
 -- to use Kitty multiplexer support, run the post install hook
-use({ 'mrjones2014/smart-splits.nvim', run = './install-kitty.sh' })
+use({ 'mrjones2014/smart-splits.nvim', run = './kitty/install-kittens.bash' })
 ```
 
 With Lazy.nvim:
@@ -28,7 +28,7 @@ With Lazy.nvim:
 ```lua
 { 'mrjones2014/smart-splits.nvim' }
 -- to use Kitty multiplexer support, run the post install hook
-{ 'mrjones2014/smart-splits.nvim', build = './install-kitty.sh' }
+{ 'mrjones2014/smart-splits.nvim', build = './kitty/install-kittens.bash' }
 ```
 
 ## Configuration

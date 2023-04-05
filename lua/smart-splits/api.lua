@@ -1,6 +1,7 @@
 local M = {}
 
 local config = require('smart-splits.config')
+local mux = require('smart-splits.mux')
 
 local win_pos = {
   start = 0,
@@ -20,13 +21,6 @@ local dir_keys_reverse = {
   right = 'h',
   up = 'j',
   down = 'k',
-}
-
-local directions_reverse = {
-  left = 'right',
-  right = 'left',
-  up = 'down',
-  down = 'up',
 }
 
 local is_resizing = false
@@ -237,54 +231,6 @@ local function resize(direction, amount)
   end
 end
 
-local function move_multiplexer_inner(direction, multiplexer)
-  local current_pane = multiplexer.current_pane_id()
-  if not current_pane then
-    vim.notify('[smart-splits.nvim] Failed to get multiplexer pane ID', vim.log.levels.ERROR)
-    return false
-  end
-
-  local ok = multiplexer.next_pane(direction)
-  if not ok then
-    vim.notify('[smart-splits.nvim] Failed to select multiplexer pane', vim.log.levels.ERROR)
-    return false
-  end
-  local new_pane = multiplexer.current_pane_id()
-  if not new_pane then
-    vim.notify('[smart-splits.nvim] Failed to get multiplexer pane ID', vim.log.levels.ERROR)
-    return false
-  end
-
-  -- we've moved to a new multiplexer pane, finish
-  if current_pane ~= new_pane then
-    return true
-  end
-
-  return false
-end
-
----Try moving with multiplexer
----@param direction string direction to move
----@param at_edge_and_moving_to_edge boolean whether to wrap around edge
----@param multiplexer table the multiplexer API to use
----@return boolean whether we moved with multiplexer or not
-local function move_cursor_multiplexer(direction, at_edge_and_moving_to_edge, multiplexer)
-  if config.wrap_at_edge == false and multiplexer.current_pane_at_edge(direction) then
-    return false
-  end
-
-  if config.disable_multiplexer_nav_when_zoomed and multiplexer.current_pane_is_zoomed() then
-    return false
-  end
-
-  local multiplexer_moved = move_multiplexer_inner(direction, multiplexer)
-  if multiplexer_moved or not at_edge_and_moving_to_edge then
-    return multiplexer_moved
-  end
-
-  return move_multiplexer_inner(directions_reverse[direction], multiplexer)
-end
-
 local function move_to_edge(at_edge_and_moving_to_edge, dir_key)
   -- if someone has more than 99999 windows then just LOL
   vim.api.nvim_set_current_win(
@@ -309,12 +255,9 @@ local function move_cursor(direction, same_row)
 
   local at_any_edge = at_right or at_left or at_top or at_bottom
 
-  local multiplexer = require('smart-splits.mux').get()
-
-  if multiplexer and multiplexer.is_in_session() and at_any_edge and at_edge_and_moving_to_edge then
-    if move_cursor_multiplexer(direction, at_edge_and_moving_to_edge, multiplexer) then
-      return
-    end
+  -- if at the edge, and moving towards the edge, check if we can move with multiplexer
+  if at_any_edge and at_edge_and_moving_to_edge and mux.move_pane(direction, at_edge_and_moving_to_edge) then
+    return
   end
 
   if config.wrap_at_edge == false then
