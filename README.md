@@ -28,7 +28,7 @@ With Lazy.nvim:
 ```lua
 { 'mrjones2014/smart-splits.nvim' }
 -- to use Kitty multiplexer support, run the post install hook
-{ 'mrjones2014/smart-splits.nvim', run = './install-kittens.bash' }
+{ 'mrjones2014/smart-splits.nvim', build = './kitty/install-kittens.bash' }
 ```
 
 ## Configuration
