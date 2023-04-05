@@ -40,10 +40,11 @@ local M = setmetatable({}, {
 function M.set_default_multiplexer()
   -- unless explicitly disabled, try to determine it automatically
   if config.multiplexer_integration ~= false then
-    if vim.env.TMUX ~= nil then
+    if vim.env.TERM_PROGRAM == 'tmux' then
       config.multiplexer_integration = 'tmux'
-    elseif vim.env.WEZTERM_PANE ~= nil then
+    elseif vim.env.TERM_PROGRAM == 'WezTerm' then
       config.multiplexer_integration = 'wezterm'
+    -- Kitty doesn't use $TERM_PROGRAM
     elseif vim.env.KITTY_LISTEN_ON ~= nil then
       config.multiplexer_integration = 'kitty'
     end
