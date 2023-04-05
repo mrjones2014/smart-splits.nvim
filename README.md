@@ -1,24 +1,42 @@
-# 🧠 smart-splits.nvim
+<div align="center">
 
-Smart, directional Neovim split resizing and navigation, with `tmux` pane navigation.
-`smart-splits.nvim` lets you think about split resizing in terms of
-"move the divider to the left/right/up/down" which can feel much more
-natural. It also allows you to move through splits in a circular fashion
-(e.g. moving left at the left edge jumps to the right edge, and vice versa,
-and same for top and bottom edges). Additionally, if enabled, it can
-provide seamless navigation between Neovim splits and `tmux`, `wezterm`, or `kitty`\* panes.
-See [Multiplexer Integrations](#multiplexer-integrations)
+# 🧠 `smart-splits.nvim`
 
-\* Directional resizing not supported in Kitty due to lack of CLI support to do so.
+</div>
+
+🧠 Smarter and more intuitive split pane management that uses a mental model of left/right/up/down
+instead of wider/narrower/taller/shorter for resizing. Supports seamless navigation between Neovim and terminal
+multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integrations).
 
 ![demo](https://user-images.githubusercontent.com/8648891/201928611-4338e3cb-cca9-4e15-92c6-0405b7072279.gif)
 
+<details>
+<summary>Table of Contents (click to expand)</summary>
+
+- [Install](#install)
+- [Configuration](#configuration)
+  - [Hooks](#hooks)
+    - [Examples:](#examples)
+- [Usage](#usage)
+  - [Multiplexer Integrations](#multiplexer-integrations)
+    - [Tmux](#tmux)
+    - [Wezterm](#wezterm)
+    - [Kitty](#kitty)
+      - [Credits](#credits)
+
+</details>
+
 ## Install
+
+`smart-splits.nvim` now supports semantic versioning via git tags. See [Releases](https://github.com/mrjones2014/smart-splits.nvim/releases)
+for a full list of versions and their changelogs, starting from 1.0.0.
 
 With Packer.nvim:
 
 ```lua
 use('mrjones2014/smart-splits.nvim')
+-- or use a specific version
+use({ 'mrjones2014/smart-splits.nvim', tag = 'v1.0.0' })
 -- to use Kitty multiplexer support, run the post install hook
 use({ 'mrjones2014/smart-splits.nvim', run = './kitty/install-kittens.bash' })
 ```
@@ -27,6 +45,8 @@ With Lazy.nvim:
 
 ```lua
 { 'mrjones2014/smart-splits.nvim' }
+-- or use a specific version, or a range of versions using lazy.nvim's version API
+{ 'mrjones2014/smart-splits.nvim', version = '>=1.0.0' }
 -- to use Kitty multiplexer support, run the post install hook
 { 'mrjones2014/smart-splits.nvim', build = './kitty/install-kittens.bash' }
 ```
