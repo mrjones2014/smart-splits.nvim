@@ -287,7 +287,7 @@ WEZTERM                                                 *smart-splits-wezterm*
   **Note** If you are experiencing performance issues with circular navigation,
   they are solved by wez/wezterm@96f1585
   <https://github.com/wez/wezterm/commit/96f1585b103162b042e2593567884dfcbe32ca21>,
-  so try building the latest Wezterm or using Wezterm nightly for now.
+  so try using Wezterm nightly for now.
 
 Add the following snippet to your `~/.config/wezterm/wezterm.lua`:
 
