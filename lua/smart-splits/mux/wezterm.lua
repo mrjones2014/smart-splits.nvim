@@ -12,11 +12,63 @@ local function wezterm_exec(cmd)
   return vim.fn.system(command)
 end
 
+local tab_id
+
+local function init_tab_id()
+  local output = wezterm_exec({ 'list', '--format', 'json' })
+  if vim.v.shell_error ~= 0 or not output or #output == 0 then
+    -- set to false to avoid trying again
+    tab_id = false
+    return
+  end
+
+  local data = vim.json.decode(output)
+  for _, pane in ipairs(data) do
+    if tostring(pane.pane_id) == tostring(vim.env.WEZTERM_PANE) then
+      tab_id = pane.tab_id
+      return
+    end
+  end
+
+  -- set to false to avoid trying again
+  tab_id = false
+end
+
+local function current_pane_info()
+  if tab_id == nil then
+    init_tab_id()
+  end
+
+  if tab_id == false then
+    return nil
+  end
+
+  local output = wezterm_exec({ 'list', '--format', 'json' })
+  if vim.v.shell_error ~= 0 or not output or #output == 0 then
+    return nil
+  end
+
+  local data = vim.json.decode(output)
+  for _, pane in ipairs(data) do
+    if pane.tab_id == tab_id and pane.is_active then
+      return pane
+    end
+  end
+
+  return nil
+end
+
 ---@type Multiplexer
 local M = {}
 
 function M.current_pane_id()
-  local output = wezterm_exec({ 'list-clients', '--format=json' })
+  local current_pane = current_pane_info()
+  -- uses API that requires newest version of Wezterm
+  if current_pane ~= nil then
+    return current_pane.pane_id
+  end
+
+  local output = wezterm_exec({ 'list-clients', '--format', 'json' })
   local data = vim.json.decode(output)
   if #data == 0 then
     return nil
@@ -49,7 +101,11 @@ function M.is_in_session()
 end
 
 function M.current_pane_is_zoomed()
-  -- wezterm doesn't currently have a way to tell this with the CLI
+  local current_pane = current_pane_info()
+  if current_pane then
+    return current_pane.is_zoomed
+  end
+
   return false
 end
 

@@ -102,7 +102,7 @@ require('smart-splits').setup({
   -- otherwise false
   multiplexer_integration = nil,
   -- disable multiplexer navigation if current multiplexer pane is zoomed
-  -- this functionality is only supported on tmux due to wezterm and kitty
+  -- this functionality is only supported on tmux and Wezterm due to kitty
   -- not having a way to check if a pane is zoomed
   disable_multiplexer_nav_when_zoomed = true,
 })
@@ -242,6 +242,10 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 ```
 
 #### Wezterm
+
+> **Note**
+> If you are experiencing performance issues with circular navigation, they are solved by wez/wezterm@96f1585,
+> so try building the latest Wezterm or using Wezterm nightly for now.
 
 Add the following snippet to your `~/.config/wezterm/wezterm.lua`:
 
