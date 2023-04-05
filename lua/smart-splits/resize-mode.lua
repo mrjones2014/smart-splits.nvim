@@ -15,6 +15,7 @@ function M.start_resize_mode()
   end
 
   pcall(config.resize_mode.hooks.on_enter)
+  -- luacheck:ignore
   vim.g.smart_resize_mode = true
 
   local quit_key = config.resize_mode.quit_key
@@ -48,6 +49,7 @@ function M.end_resize_mode()
   vim.api.nvim_del_keymap('n', quit_key)
 
   pcall(config.resize_mode.hooks.on_leave)
+  -- luacheck:ignore
   vim.g.smart_resize_mode = false
 
   if config.resize_mode.silent then
