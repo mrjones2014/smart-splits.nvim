@@ -292,6 +292,7 @@ local function set_eventignore()
     eventignore = eventignore .. ','
   end
   eventignore = eventignore .. table.concat(config.ignored_events or {}, ',')
+  -- luacheck:ignore
   vim.o.eventignore = eventignore
 end
 
@@ -335,6 +336,7 @@ vim.tbl_map(function(direction)
     -- guarantee we haven't moved the cursor by accident
     vim.api.nvim_set_current_win(cur_win_id)
     is_resizing = false
+    -- luacheck:ignore
     vim.o.eventignore = eventignore_orig
   end
   M[string.format('move_cursor_%s', direction)] = function(same_row)
