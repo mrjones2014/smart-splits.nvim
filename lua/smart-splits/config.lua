@@ -38,16 +38,18 @@ local M = setmetatable({}, {
 })
 
 function M.set_default_multiplexer()
-  -- unless explicitly disabled, try to determine it automatically
-  if config.multiplexer_integration ~= false then
-    if vim.env.TERM_PROGRAM == 'tmux' then
-      config.multiplexer_integration = 'tmux'
-    elseif vim.env.TERM_PROGRAM == 'WezTerm' then
-      config.multiplexer_integration = 'wezterm'
+  -- if explicitly disabled or set to a different value, don't do anything
+  if config.multiplexer_integration == false and config.multiplexer_integration ~= nil then
+    return
+  end
+
+  if vim.env.TERM_PROGRAM == 'tmux' then
+    config.multiplexer_integration = 'tmux'
+  elseif vim.env.TERM_PROGRAM == 'WezTerm' then
+    config.multiplexer_integration = 'wezterm'
     -- Kitty doesn't use $TERM_PROGRAM
-    elseif vim.env.KITTY_LISTEN_ON ~= nil then
-      config.multiplexer_integration = 'kitty'
-    end
+  elseif vim.env.KITTY_LISTEN_ON ~= nil then
+    config.multiplexer_integration = 'kitty'
   end
 end
 

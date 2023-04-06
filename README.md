@@ -114,12 +114,10 @@ require('smart-splits').setup({
     'BufEnter',
     'WinEnter',
   },
-  -- enable or disable a multiplexer integration
-  -- set to false to disable, otherwise
-  -- it will default to tmux if $TMUX is set,
-  -- then wezterm if $WEZTERM_PANE is set,
-  -- then kitty if $KITTY_LISTEN_ON is set,
-  -- otherwise false
+  -- enable or disable a multiplexer integration;
+  -- automatically determined, unless explicitly disabled or set,
+  -- by checking the $TERM_PROGRAM environment variable,
+  -- and the $KITTY_LISTEN_ON environment variable for Kitty
   multiplexer_integration = nil,
   -- disable multiplexer navigation if current multiplexer pane is zoomed
   -- this functionality is only supported on tmux and Wezterm due to kitty
