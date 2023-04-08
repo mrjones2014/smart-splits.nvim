@@ -57,7 +57,7 @@ function M.is_enabled()
 end
 
 ---Try moving with multiplexer
----@param direction string direction to move
+---@param direction Direction direction to move
 ---@param will_wrap boolean whether to wrap around edge
 ---@return boolean whether we moved with multiplexer or not
 function M.move_pane(direction, will_wrap)
@@ -80,6 +80,28 @@ function M.move_pane(direction, will_wrap)
   end
 
   return move_multiplexer_inner(directions_reverse[direction], multiplexer)
+end
+
+---Try resizing with multiplexer
+---@param direction Direction direction to resize
+---@param amount number amount to resize
+---@return boolean whether we resized with multiplexer or not
+function M.resize_pane(direction, amount)
+  local multiplexer = M.get()
+  if not multiplexer or not multiplexer.is_in_session() then
+    return false
+  end
+  if config.disable_multiplexer_nav_when_zoomed and multiplexer.current_pane_is_zoomed() then
+    return false
+  end
+
+  local ok = multiplexer.resize_pane(direction, amount)
+  if not ok then
+    vim.notify('[smart-splits.nvim] Failed to resize multiplexer pane', vim.log.levels.ERROR)
+    return false
+  end
+
+  return true
 end
 
 return M
