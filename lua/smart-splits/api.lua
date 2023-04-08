@@ -160,13 +160,13 @@ end
 local function resize(direction, amount)
   amount = amount or config.default_amount
 
-  -- don't try to horizontally resize a full width window
-  if (direction == 'left' or direction == 'right') and is_full_width() then
+  -- if a full width window and horizontall resize check if we can resize with multiplexer
+  if (direction == 'left' or direction == 'right') and is_full_width() and mux.resize_pane(direction, amount) then
     return
   end
 
-  -- don't try to vertically resize a full height window
-  if (direction == 'down' or direction == 'up') and is_full_height() then
+  -- if a full height window and vertical resize check if we can resize with multiplexer
+  if (direction == 'down' or direction == 'up') and is_full_height() and mux.resize_pane(direction, amount) then
     return
   end
 

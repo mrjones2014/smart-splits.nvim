@@ -122,4 +122,14 @@ function M.next_pane(direction)
   return ok
 end
 
+function M.resize_pane(_, _)
+  if not M.is_in_session() then
+    return false
+  end
+
+  -- TODO implement when possible
+  -- https://github.com/wez/wezterm/issues/3471
+  return false
+end
+
 return M

@@ -11,7 +11,7 @@ local function get_socket_path()
     return nil
   end
 
-  return vim.split(tmux, ',')[1]
+  return vim.split(tmux, ',', { trimempty = true })[1]
 end
 
 local function tmux_exec(cmd, as_list)
@@ -157,6 +157,19 @@ function M.next_pane(direction)
   direction = dir_keys_tmux[direction] ---@diagnostic disable-line
   local ok, _ = pcall(function()
     tmux_exec(string.format('select-pane -%s', direction))
+  end)
+
+  return ok
+end
+
+function M.resize_pane(direction)
+  if not M.is_in_session() then
+    return false
+  end
+
+  direction = dir_keys_tmux[direction] ---@diagnostic disable-line
+  local ok, _ = pcall(function()
+    tmux_exec(string.format('resize-pane -%s 5', direction))
   end)
 
   return ok
