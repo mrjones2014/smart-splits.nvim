@@ -162,4 +162,17 @@ function M.next_pane(direction)
   return ok
 end
 
+function M.resize_pane(direction)
+  if not M.is_in_session() then
+    return false
+  end
+
+  direction = dir_keys_tmux[direction] ---@diagnostic disable-line
+  local ok, _ = pcall(function()
+    tmux_exec(string.format('resize-pane -%s 5', direction))
+  end)
+
+  return ok
+end
+
 return M

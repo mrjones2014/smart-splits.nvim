@@ -82,4 +82,23 @@ function M.move_pane(direction, will_wrap)
   return move_multiplexer_inner(directions_reverse[direction], multiplexer)
 end
 
+---Try resizing with multiplexer
+function M.resize_pane(direction)
+  local multiplexer = M.get()
+  if not multiplexer or not multiplexer.is_in_session() then
+    return false
+  end
+  if config.disable_multiplexer_nav_when_zoomed and multiplexer.current_pane_is_zoomed() then
+    return false
+  end
+
+  local ok = multiplexer.resize_pane(direction)
+  if not ok then
+    vim.notify('[smart-splits.nvim] Failed to resize multiplexer pane', vim.log.levels.ERROR)
+    return false
+  end
+
+  return true
+end
+
 return M

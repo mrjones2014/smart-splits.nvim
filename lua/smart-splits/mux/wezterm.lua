@@ -122,4 +122,8 @@ function M.next_pane(direction)
   return ok
 end
 
+function M.resize_pane()
+    vim.notify('[smart-splits.nvim] Resize pane not supported', vim.log.levels.ERROR)
+end
+
 return M
