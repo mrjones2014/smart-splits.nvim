@@ -85,14 +85,16 @@ function M.next_pane(direction)
   return ok
 end
 
-function M.resize_pane(_, _)
+function M.resize_pane(direction, amount)
   if not M.is_in_session() then
     return false
   end
 
-  -- not possible with Kitty, since Kitty uses wider/narrower/taller/shorter
-  -- instead of up/down/left/right
-  return false
+  local ok, _ = pcall(function()
+    kitty_exec({ 'kitten', 'relative_resize.py', direction, amount })
+  end)
+
+  return ok
 end
 
 return M
