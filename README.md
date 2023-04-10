@@ -60,6 +60,8 @@ such as [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua)
 which tries to maintain its own width unless manually resized. Note that
 nothing is ignored when moving between splits, only when resizing.
 
+> **NOTE:** `smart-splits.nvim` does not map any keys on it's own. See [Usage](#usage).
+
 Defaults are shown below:
 
 ```lua
@@ -164,7 +166,72 @@ require('smart-splits').setup({
 
 ## Usage
 
-With Lua:
+### Key Mappings
+
+If you are a [legendary.nvim](https://github.com/mrjones2014/legendary.nvim) (>= v2.10.0) user, you can
+quickly easily and easily create with the `legendary.nvim` extension for `smart-splits.nvim`. See more
+option in the [extension documentation in `legendary.nvim`](https://github.com/mrjones2014/legendary.nvim/blob/master/doc/EXTENSIONS.md#smart-splitsnvim).
+
+```lua
+require('legendary').setup({
+  extensions = {
+    -- to use default settings:
+    smart_splits = {},
+    -- default settings shown below:
+    smart_splits = {
+      directions = { 'h', 'j', 'k', 'l' },
+      mods = {
+        -- for moving cursor between windows
+        move = '<C>',
+        -- for resizing windows
+        resize = '<M>',
+        -- for swapping window buffers
+        swap = false, -- false disables creating a binding
+      },
+    },
+    -- or, customize the mappings
+    smart_splits = {
+      mods = {
+        -- any of the mods can also be a table of the following form
+        swap = {
+          -- this will create the mapping like
+          -- <leader><C-h>
+          -- <leader><C-j>
+          -- <leader><C-k>
+          -- <leader><C-l>
+          mod = '<C>',
+          prefix = '<leader>',
+        },
+      },
+    },
+  },
+})
+```
+
+Otherwise, here are some recommended mappings.
+
+```lua
+-- recommended mappings
+-- resizing splits
+-- these keymaps will also accept a range,
+-- for example `10<A-h>` will `resize_left` by `(10 * config.default_amount)`
+vim.keymap.set('n', '<A-h>', require('smart-splits').resize_left)
+vim.keymap.set('n', '<A-j>', require('smart-splits').resize_down)
+vim.keymap.set('n', '<A-k>', require('smart-splits').resize_up)
+vim.keymap.set('n', '<A-l>', require('smart-splits').resize_right)
+-- moving between splits
+vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
+vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
+vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
+vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
+-- swapping buffers between windows
+vim.keymap.set('n', '<leader><leader>h', require('smart-splits').swap_buf_left)
+vim.keymap.set('n', '<leader><leader>j', require('smart-splits').swap_buf_down)
+vim.keymap.set('n', '<leader><leader>k', require('smart-splits').swap_buf_up)
+vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
+```
+
+### Lua API:
 
 ```lua
 -- resizing splits
@@ -199,25 +266,6 @@ require('smart-splits').swap_buf_right({ move_cursor = true })
 -- press <ESC> to stop resize mode (unless you've set a different key in config)
 -- resize keys also accept a range, e.e. pressing `5j` will resize down 5 times the default_amount
 require('smart-splits').start_resize_mode()
-
--- recommended mappings
--- resizing splits
--- these keymaps will also accept a range,
--- for example `10<A-h>` will `resize_left` by `(10 * config.default_amount)`
-vim.keymap.set('n', '<A-h>', require('smart-splits').resize_left)
-vim.keymap.set('n', '<A-j>', require('smart-splits').resize_down)
-vim.keymap.set('n', '<A-k>', require('smart-splits').resize_up)
-vim.keymap.set('n', '<A-l>', require('smart-splits').resize_right)
--- moving between splits
-vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
-vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
-vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
-vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
--- swapping buffers between windows
-vim.keymap.set('n', '<leader><leader>h', require('smart-splits').swap_buf_left)
-vim.keymap.set('n', '<leader><leader>j', require('smart-splits').swap_buf_down)
-vim.keymap.set('n', '<leader><leader>k', require('smart-splits').swap_buf_up)
-vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
 ```
 
 ### Multiplexer Integrations
