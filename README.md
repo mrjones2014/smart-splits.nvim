@@ -222,10 +222,8 @@ vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
 
 ### Multiplexer Integrations
 
-`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `wezterm`, or `kitty`\* panes.
+`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `wezterm`, or `kitty` panes.
 You will need to set up keymaps in your `tmux`, `wezterm`, or `kitty` configs to match the Neovim keymaps.
-
-\* Directional resizing not supported in Kitty due to lack of CLI support to do so.
 
 #### Tmux
 
@@ -333,13 +331,19 @@ return {
 
 #### Kitty
 
-Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the keymaps as desired.
+Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the keymaps and resize amount as desired.
 
 ```
 map ctrl+j kitten pass_keys.py neighboring_window bottom ctrl+j
 map ctrl+k kitten pass_keys.py neighboring_window top    ctrl+k
 map ctrl+h kitten pass_keys.py neighboring_window left   ctrl+h
 map ctrl+l kitten pass_keys.py neighboring_window right  ctrl+l
+
+# the 3 here is the resize amount, adjust as needed
+map alt+j kitten pass_keys.py relative_resize down  3 alt+j
+map alt+k kitten pass_keys.py relative_resize up    3 alt+k
+map alt+h kitten pass_keys.py relative_resize left  3 alt+h
+map alt+l kitten pass_keys.py relative_resize right 3 alt+l
 ```
 
 By default, it matches against the name of the current foreground process to detect if `vim`/`nvim` is running.
@@ -351,6 +355,12 @@ map ctrl+j kitten pass_keys.py neighboring_window bottom ctrl+j "^.* - nvim$"
 map ctrl+k kitten pass_keys.py neighboring_window top    ctrl+k "^.* - nvim$"
 map ctrl+h kitten pass_keys.py neighboring_window left   ctrl+h "^.* - nvim$"
 map ctrl+l kitten pass_keys.py neighboring_window right  ctrl+l "^.* - nvim$"
+
+# the 3 here is the resize amount, adjust as needed
+map alt+j kitten pass_keys.py relative_resize down  3 alt+j "^.* - nvim$"
+map alt+k kitten pass_keys.py relative_resize up    3 alt+k "^.* - nvim$"
+map alt+h kitten pass_keys.py relative_resize left  3 alt+h "^.* - nvim$"
+map alt+l kitten pass_keys.py relative_resize right 3 alt+l "^.* - nvim$"
 ```
 
 Then, you must allow Kitty to listen for remote commands on a socket. You can do this
@@ -379,3 +389,5 @@ listen_on unix:/tmp/mykitty
 ##### Credits
 
 Thanks @knubie for inspiration for the Kitty implementation from [vim-kitty-navigator](https://github.com/knubie/vim-kitty-navigator).
+
+Thanks to @chancez for the relative resize [Python kitten](https://github.com/chancez/dotfiles/blob/badc69d3895a6a942285126b8c372a55d77533e1/kitty/.config/kitty/relative_resize.py).
