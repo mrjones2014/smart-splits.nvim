@@ -1,0 +1,27 @@
+name: 🤖 Meta
+description: File an issue related to repository configuration, documentation, CI/CD, organization, etc.
+title: "[Meta]: "
+labels: ["meta"]
+assignees:
+  - mrjones2014
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - CI
+        - Docs
+        - Issue/PR templates
+        - Repository configuration
+        - Testing
+        - Tooling
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: desc
+    attributes:
+      label: Description
+    validations:
+      required: true
