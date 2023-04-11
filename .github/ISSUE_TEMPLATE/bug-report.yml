@@ -1,0 +1,46 @@
+name: 🐛 Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+  - mrjones2014
+body:
+  - type: checkboxes
+    id: similar-issues
+    attributes:
+      label: Similar Issues
+      options:
+        - label: Before filing, I have searched for similar issues.
+          required: true
+    validations:
+      required: true
+  - type: textarea
+    id: nvim-version
+    attributes:
+      label: Neovim Version
+      description: "`nvim --version` output, please use a code block"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+    validations:
+      required: true
+  - type: textarea
+    id: min-config
+    attributes:
+      label: Minimal Configuration to Reproduce
+      description: "MINIMAL `init.lua` or `init.vim` to reproduce, please use a code fence with `lua` syntax specified (e.g. ```lua). All unrelated config and plugins should be removed. See [minimal init.lua template](https://github.com/mrjones2014/smart-splits.nvim/discussions/72)"
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Additional Details and/or Screenshots

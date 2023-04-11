@@ -1,0 +1,22 @@
+name: ⚙️ Feature Request
+description: Request a feature
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees:
+  - mrjones2014
+body:
+  - type: checkboxes
+    id: similar-issues
+    attributes:
+      label: Similar Issues
+      options:
+        - label: Before filing, I have searched for similar issues.
+          required: true
+    validations:
+      required: true
+  - type: textarea
+    id: desc
+    attributes:
+      label: Description
+    validations:
+      required: true
