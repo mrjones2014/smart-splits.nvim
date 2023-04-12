@@ -21,6 +21,33 @@ body:
       description: "`nvim --version` output, please use a code block"
     validations:
       required: true
+  - type: dropdown
+    attributes:
+      label: Multiplexer Integration
+      description: Which multiplexer integration are you using?
+      multiple: false
+      options:
+        - tmux
+        - Wezterm
+        - Kitty
+        - None
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Multiplexer Version
+      description: "If using a multiplexer, output from `tmux -V` or `wezterm --version` or `kitty --version`, please use a code block"
+  - type: textarea
+    id: reproduction-steps
+    validations:
+      required: true
+    attributes:
+      label: Steps to Reproduce
+      value: |
+        1. Open finder
+        2. Select an item
+        3. ...
+        4. Profit?
   - type: textarea
     id: expected
     attributes:
