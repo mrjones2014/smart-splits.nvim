@@ -44,8 +44,8 @@ body:
     attributes:
       label: Steps to Reproduce
       value: |
-        1. Open finder
-        2. Select an item
+        1. Create vertical split
+        2. Adjust size of split
         3. ...
         4. Profit?
   - type: textarea
