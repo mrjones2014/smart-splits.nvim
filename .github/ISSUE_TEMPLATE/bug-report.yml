@@ -30,7 +30,7 @@ body:
         - tmux
         - Wezterm
         - Kitty
-        - None
+        - I don't use one
     validations:
       required: true
   - type: textarea
