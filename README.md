@@ -381,7 +381,7 @@ return {
 
 #### Kitty
 
-> **Note:** `config.wrap_at_edge = false` is not supoprted in Kitty terminal multiplexer due to inability to determine
+> **Note** `config.wrap_at_edge = false` is not supoprted in Kitty terminal multiplexer due to inability to determine
 > pane layout from CLI.
 
 Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the keymaps and resize amount as desired.
