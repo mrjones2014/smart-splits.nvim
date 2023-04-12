@@ -37,20 +37,22 @@ function M.current_pane_at_edge(direction)
 
   direction = dir_keys_tmux[direction]
 
+  local wrap_at_edge = require('smart-splits.config').wrap_at_edge
+
   local edge
   local op
   if direction == 'U' then
     edge = 'top'
-    op = '<='
+    op = wrap_at_edge and '<=' or '<'
   elseif direction == 'D' then
     edge = 'bottom'
-    op = '>='
+    op = wrap_at_edge and '>' or '>='
   elseif direction == 'L' then
     edge = 'left'
-    op = '<='
+    op = wrap_at_edge and '<=' or '<'
   elseif direction == 'R' then
     edge = 'right'
-    op = '>='
+    op = wrap_at_edge and '>' or '>='
   else
     return false
   end
@@ -85,11 +87,8 @@ function M.current_pane_at_edge(direction)
   local top_coord = pane_coords[1]
 
   local ok, value = pcall(function()
-    if op == '>=' then
-      return tonumber(active_pane_coord) >= tonumber(top_coord)
-    else
-      return tonumber(active_pane_coord) <= tonumber(top_coord)
-    end
+    local expr = string.format('return %s %s %s', tonumber(active_pane_coord), op, tonumber(top_coord))
+    return loadstring(expr)()
   end)
 
   if not ok then
