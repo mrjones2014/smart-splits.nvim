@@ -79,6 +79,8 @@ require('smart-splits').setup({
   -- whether to wrap to opposite side when cursor is at an edge
   -- e.g. by default, moving left at the left edge will jump
   -- to the rightmost window, and vice versa, same for up/down.
+  -- NOTE: `wrap_at_edge = false` is not supported on Kitty terminal
+  -- multiplexer, as there is no way to determine layout via the CLI
   wrap_at_edge = true,
   -- when moving cursor between splits left or right,
   -- place the cursor on the same row of the *screen*
@@ -378,6 +380,9 @@ return {
 ```
 
 #### Kitty
+
+> **Note** `config.wrap_at_edge = false` is not supoprted in Kitty terminal multiplexer due to inability to determine
+> pane layout from CLI.
 
 Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the keymaps and resize amount as desired.
 

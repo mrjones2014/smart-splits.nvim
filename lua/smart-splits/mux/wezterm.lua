@@ -87,7 +87,7 @@ function M.current_pane_at_edge(direction)
   local output = wezterm_exec({ 'get-pane-direction', direction })
   if vim.v.shell_error == 0 then
     local ok, value = pcall(tonumber, output)
-    return ok and value ~= nil
+    return ok and value == nil
   end
   local pane_id = M.current_pane_id()
   wezterm_exec({ 'activate-pane-direction', direction })
