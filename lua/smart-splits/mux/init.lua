@@ -42,16 +42,8 @@ local M = {}
 ---Get the currently configured multiplexer
 ---@return Multiplexer|nil
 function M.get()
-  local mux = config.multiplexer_integration
-  if mux == Multiplexer.tmux then
-    return require('smart-splits.mux.tmux')
-  elseif mux == Multiplexer.wezterm then
-    return require('smart-splits.mux.wezterm')
-  elseif mux == Multiplexer.kitty then
-    return require('smart-splits.mux.kitty')
-  else
-    return nil
-  end
+  local ok, mux = pcall(require, string.format('smart-splits.mux.%s', config.multiplexer_integration))
+  return ok and mux or nil
 end
 
 ---Check if any multiplexer is enabled

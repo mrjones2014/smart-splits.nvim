@@ -91,8 +91,12 @@ function M.setup(new_config)
   -- check deprecated settings
 
   if config.tmux_integration then
-    vim.deprecate('config.tmux_integration = true', "config.multiplexer_integration = 'tmux'", 'smart-splits.nvim')
-    config.multiplexer_integration = 'tmux'
+    vim.deprecate(
+      'config.tmux_integration = true',
+      "config.multiplexer_integration = 'tmux'|'wezterm'|'kitty'",
+      'smart-splits.nvim'
+    )
+    config.multiplexer_integration = Multiplexer.tmux
   elseif config.tmux_integration == false then
     config.multiplexer_integration = false
   end
