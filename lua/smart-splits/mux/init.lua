@@ -1,7 +1,6 @@
 local config = require('smart-splits.config')
 local types = require('smart-splits.types')
 local Direction = types.Direction
-local Multiplexer = types.Multiplexer
 local AtEdgeBehavior = types.AtEdgeBehavior
 
 local directions_reverse = {
