@@ -71,7 +71,7 @@ function M.move_pane(direction, will_wrap, at_edge)
     return false
   end
 
-  if at_edge == 'stop' and multiplexer.current_pane_at_edge(direction) then
+  if at_edge ~= 'wrap' and multiplexer.current_pane_at_edge(direction) then
     return false
   end
 
