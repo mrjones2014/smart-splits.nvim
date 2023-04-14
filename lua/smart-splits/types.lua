@@ -28,7 +28,7 @@ local M = {
     tmux = 'tmux',
     wezterm = 'wezterm',
     kitty = 'kitty',
-  }
+  },
 }
 
 return M
