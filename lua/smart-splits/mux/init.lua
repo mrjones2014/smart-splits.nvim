@@ -2,6 +2,7 @@ local config = require('smart-splits.config')
 local types = require('smart-splits.types')
 local Direction = types.Direction
 local Multiplexer = types.Multiplexer
+local AtEdgeBehavior = types.AtEdgeBehavior
 
 local directions_reverse = {
   [Direction.left] = Direction.right,
@@ -71,7 +72,7 @@ function M.move_pane(direction, will_wrap, at_edge)
     return false
   end
 
-  if at_edge ~= 'wrap' and multiplexer.current_pane_at_edge(direction) then
+  if at_edge ~= AtEdgeBehavior.wrap and multiplexer.current_pane_at_edge(direction) then
     return false
   end
 

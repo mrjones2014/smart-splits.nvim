@@ -38,7 +38,7 @@ local config = {
     'NvimTree',
   },
   default_amount = 3,
-  at_edge = 'wrap',
+  at_edge = AtEdgeBehavior.wrap,
   move_cursor_same_row = false,
   cursor_follows_swapped_bufs = false,
   resize_mode = {
