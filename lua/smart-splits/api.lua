@@ -7,28 +7,39 @@ local M = {}
 local config = require('smart-splits.config')
 local mux = require('smart-splits.mux')
 
-local win_pos = {
+---@enum WinPosition
+local WinPosition = {
   start = 0,
   middle = 1,
   last = 2,
 }
 
-local dir_keys = {
+---@enum DirectionKeys
+local DirectionKeys = {
   left = 'h',
   right = 'l',
   up = 'k',
   down = 'j',
 }
 
-local dir_keys_reverse = {
+---@enum DirectionKeysReverse
+local DirectionKeysReverse = {
   left = 'l',
   right = 'h',
   up = 'j',
   down = 'k',
 }
 
+---@enum WincmdResizeDirection
+local WincmdResizeDirection = {
+  bigger = '+',
+  smaller = '-',
+}
+
 local is_resizing = false
 
+---@param winnr number|nil window ID, defaults to current window
+---@return boolean
 local function is_full_height(winnr)
   -- for vertical height account for tabline, status line, and cmd line
   local window_height = vim.o.lines - 1 - vim.o.cmdheight
@@ -38,13 +49,17 @@ local function is_full_height(winnr)
   return vim.api.nvim_win_get_height(winnr or 0) == window_height
 end
 
+---@param winnr number|nil window ID, defaults to current window
+---@return boolean
 local function is_full_width(winnr)
   return vim.api.nvim_win_get_width(winnr or 0) == vim.o.columns
 end
 
+---@param direction DirectionKeys
+---@param skip_ignore_lists boolean|nil defaults to false
 local function next_window(direction, skip_ignore_lists)
   local cur_win = vim.api.nvim_get_current_win()
-  if direction == dir_keys.down or direction == dir_keys.up then
+  if direction == DirectionKeys.down or direction == DirectionKeys.up then
     vim.cmd('wincmd ' .. direction)
     if
       not skip_ignore_lists
@@ -75,92 +90,104 @@ local function next_window(direction, skip_ignore_lists)
   return view
 end
 
+---@return boolean
 local function at_top_edge()
   return vim.fn.winnr() == vim.fn.winnr('k')
 end
 
+---@return boolean
 local function at_bottom_edge()
   return vim.fn.winnr() == vim.fn.winnr('j')
 end
 
+---@return boolean
 local function at_left_edge()
   return vim.fn.winnr() == vim.fn.winnr('h')
 end
 
+---@return boolean
 local function at_right_edge()
   return vim.fn.winnr() == vim.fn.winnr('l')
 end
 
+---@param direction Direction
+---@return WinPosition
 function M.win_position(direction)
   if direction == Direction.left or direction == Direction.right then
     if at_left_edge() then
-      return win_pos.start
+      return WinPosition.start
     end
 
     if at_right_edge() then
-      return win_pos.last
+      return WinPosition.last
     end
 
-    return win_pos.middle
+    return WinPosition.middle
   end
 
   if at_top_edge() then
-    return win_pos.start
+    return WinPosition.start
   end
 
   if at_bottom_edge() then
-    return win_pos.last
+    return WinPosition.last
   end
 
-  return win_pos.middle
+  return WinPosition.middle
 end
 
+---@param direction Direction
+---@return WincmdResizeDirection
 local function compute_direction_vertical(direction)
   local current_pos = M.win_position(direction)
-  if current_pos == win_pos.start or current_pos == win_pos.middle then
-    return direction == Direction.down and '+' or '-'
+  if current_pos == WinPosition.start or current_pos == WinPosition.middle then
+    return direction == Direction.down and WincmdResizeDirection.bigger or WincmdResizeDirection.smaller
   end
 
-  return direction == Direction.down and '-' or '+'
+  return direction == Direction.down and WincmdResizeDirection.smaller or WincmdResizeDirection.bigger
 end
 
+---@param direction Direction
+---@return WincmdResizeDirection
 local function compute_direction_horizontal(direction)
   local current_pos = M.win_position(direction)
   local result
-  if current_pos == win_pos.start or current_pos == win_pos.middle then
-    result = direction == Direction.right and '+' or '-'
+  if current_pos == WinPosition.start or current_pos == WinPosition.middle then
+    result = direction == Direction.right and WincmdResizeDirection.bigger or WincmdResizeDirection.smaller
   else
-    result = direction == Direction.right and '-' or '+'
+    result = direction == Direction.right and WincmdResizeDirection.smaller or WincmdResizeDirection.bigger
   end
 
   local at_left = at_left_edge()
   local at_right = at_right_edge()
   -- special case - check if there is an ignored window to the left
-  if direction == Direction.right and result == '+' and at_left and at_right then
+  if direction == Direction.right and result == WincmdResizeDirection.bigger and at_left and at_right then
     local cur_win = vim.api.nvim_get_current_win()
-    next_window(dir_keys.left, true)
+    next_window(DirectionKeys.left, true)
     if
       vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
       or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
     then
       vim.api.nvim_set_current_win(cur_win)
-      result = '-'
+      result = WincmdResizeDirection.smaller
     end
-  elseif direction == Direction.left and result == '-' and at_left and at_right then
+  elseif direction == Direction.left and result == WincmdResizeDirection.smaller and at_left and at_right then
     local cur_win = vim.api.nvim_get_current_win()
-    next_window(dir_keys.left, true)
+    next_window(DirectionKeys.left, true)
     if
       vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
       or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
     then
       vim.api.nvim_set_current_win(cur_win)
-      result = '+'
+      result = WincmdResizeDirection.bigger
     end
   end
 
   return result
 end
 
+---@param direction Direction
+---@param amount number
 local function resize(direction, amount)
   amount = amount or config.default_amount
 
@@ -187,26 +214,26 @@ local function resize(direction, amount)
     local plus_minus = compute_direction_vertical(direction)
     local cur_win_pos = vim.api.nvim_win_get_position(0)
     vim.cmd(string.format('resize %s%s', plus_minus, amount))
-    if M.win_position(direction) ~= win_pos.middle then
+    if M.win_position(direction) ~= WinPosition.middle then
       return
     end
 
     local new_win_pos = vim.api.nvim_win_get_position(0)
     local adjustment_plus_minus
-    if cur_win_pos[1] < new_win_pos[1] and plus_minus == '-' then
-      adjustment_plus_minus = '+'
-    elseif cur_win_pos[1] > new_win_pos[1] and plus_minus == '+' then
-      adjustment_plus_minus = '-'
+    if cur_win_pos[1] < new_win_pos[1] and plus_minus == WincmdResizeDirection.smaller then
+      adjustment_plus_minus = WincmdResizeDirection.bigger
+    elseif cur_win_pos[1] > new_win_pos[1] and plus_minus == WincmdResizeDirection.bigger then
+      adjustment_plus_minus = WincmdResizeDirection.smaller
     end
 
     if at_bottom_edge() then
-      if plus_minus == '+' then
+      if plus_minus == WincmdResizeDirection.bigger then
         vim.cmd(string.format('resize -%s', amount))
-        next_window(dir_keys.down)
+        next_window(DirectionKeys.down)
         vim.cmd(string.format('resize -%s', amount))
       else
         vim.cmd(string.format('resize +%s', amount))
-        next_window(dir_keys.down)
+        next_window(DirectionKeys.down)
         vim.cmd(string.format('resize +%s', amount))
       end
       return
@@ -214,35 +241,37 @@ local function resize(direction, amount)
 
     if adjustment_plus_minus ~= nil then
       vim.cmd(string.format('resize %s%s', adjustment_plus_minus, amount))
-      next_window(dir_keys.up)
+      next_window(DirectionKeys.up)
       vim.cmd(string.format('resize %s%s', adjustment_plus_minus, amount))
-      next_window(dir_keys.down)
+      next_window(DirectionKeys.down)
     end
   else
     -- horizontally
     local plus_minus = compute_direction_horizontal(direction)
     local cur_win_pos = vim.api.nvim_win_get_position(0)
     vim.cmd(string.format('vertical resize %s%s', plus_minus, amount))
-    if M.win_position(direction) ~= win_pos.middle then
+    if M.win_position(direction) ~= WinPosition.middle then
       return
     end
 
     local new_win_pos = vim.api.nvim_win_get_position(0)
     local adjustment_plus_minus
-    if cur_win_pos[2] < new_win_pos[2] and plus_minus == '-' then
-      adjustment_plus_minus = '+'
-    elseif cur_win_pos[2] > new_win_pos[2] and plus_minus == '+' then
-      adjustment_plus_minus = '-'
+    if cur_win_pos[2] < new_win_pos[2] and plus_minus == WincmdResizeDirection.smaller then
+      adjustment_plus_minus = WincmdResizeDirection.bigger
+    elseif cur_win_pos[2] > new_win_pos[2] and plus_minus == WincmdResizeDirection.bigger then
+      adjustment_plus_minus = WincmdResizeDirection.smaller
     end
     if adjustment_plus_minus ~= nil then
       vim.cmd(string.format('vertical resize %s%s', adjustment_plus_minus, amount))
-      next_window(dir_keys.right)
+      next_window(DirectionKeys.right)
       vim.cmd(string.format('vertical resize %s%s', adjustment_plus_minus, amount))
-      next_window(dir_keys.left)
+      next_window(DirectionKeys.left)
     end
   end
 end
 
+---@param at_edge_and_moving_to_edge boolean
+---@param dir_key DirectionKeys
 local function move_to_edge(at_edge_and_moving_to_edge, dir_key)
   -- if someone has more than 99999 windows then just LOL
   vim.api.nvim_set_current_win(
@@ -250,6 +279,8 @@ local function move_to_edge(at_edge_and_moving_to_edge, dir_key)
   )
 end
 
+---@param direction Direction
+---@param opts table
 local function move_cursor(direction, opts)
   -- backwards compatibility, if opts is a boolean, treat it as historical `same_row` argument
   local same_row = config.move_cursor_same_row
@@ -272,7 +303,7 @@ local function move_cursor(direction, opts)
   end
 
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
-  local dir_key = dir_keys[direction]
+  local dir_key = DirectionKeys[direction]
 
   local at_right = at_right_edge()
   local at_left = at_left_edge()
@@ -313,7 +344,7 @@ local function move_cursor(direction, opts)
   end
 
   if at_edge_and_moving_to_edge then
-    dir_key = dir_keys_reverse[direction]
+    dir_key = DirectionKeysReverse[direction]
   end
 
   move_to_edge(at_edge_and_moving_to_edge, dir_key)
@@ -337,18 +368,20 @@ local function set_eventignore()
   vim.o.eventignore = eventignore
 end
 
+---@param direction Direction
+---@param opts table
 local function swap_bufs(direction, opts)
   opts = opts or {}
   local buf_1 = vim.api.nvim_get_current_buf()
   local win_1 = vim.api.nvim_get_current_win()
 
-  local dir_key = dir_keys[direction]
+  local dir_key = DirectionKeys[direction]
   local at_edge_and_moving_to_edge = (direction == Direction.right and at_right_edge())
     or (direction == Direction.left and at_left_edge())
     or (direction == Direction.up and at_top_edge())
     or (direction == Direction.down and at_bottom_edge())
   if at_edge_and_moving_to_edge then
-    dir_key = dir_keys_reverse[direction]
+    dir_key = DirectionKeysReverse[direction]
   end
 
   move_to_edge(at_edge_and_moving_to_edge, dir_key)
