@@ -1,8 +1,10 @@
+local Direction = require('smart-splits.types').Direction
+
 local dir_keys_wezterm = {
-  left = 'Left',
-  right = 'Right',
-  down = 'Down',
-  up = 'Up',
+  [Direction.left] = 'Left',
+  [Direction.right] = 'Right',
+  [Direction.down] = 'Down',
+  [Direction.up] = 'Up',
 }
 
 local function wezterm_exec(cmd)

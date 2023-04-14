@@ -1,3 +1,5 @@
+local Direction = require('smart-splits.types').Direction
+
 local M = {}
 
 function M.setup(config)
@@ -12,10 +14,10 @@ vim.tbl_map(function(direction)
   M[move_key] = require('smart-splits.api')[move_key]
   M[swap_buf_key] = require('smart-splits.api')[swap_buf_key]
 end, {
-  'left',
-  'right',
-  'up',
-  'down',
+  Direction.left,
+  Direction.right,
+  Direction.up,
+  Direction.down,
 })
 
 M.start_resize_mode = require('smart-splits.resize-mode').start_resize_mode

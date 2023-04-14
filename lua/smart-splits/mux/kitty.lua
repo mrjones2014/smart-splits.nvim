@@ -1,10 +1,11 @@
+local Direction = require('smart-splits.types').Direction
 local utils = require('smart-splits.utils')
 
 local dir_keys_kitty = {
-  left = 'left',
-  right = 'right',
-  up = 'top',
-  down = 'bottom',
+  [Direction.left] = 'left',
+  [Direction.right] = 'right',
+  [Direction.up] = 'top',
+  [Direction.down] = 'bottom',
 }
 
 local function kitty_exec(args)

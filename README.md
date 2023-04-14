@@ -76,12 +76,14 @@ require('smart-splits').setup({
   ignored_buftypes = { 'NvimTree' },
   -- the default number of lines/columns to resize by at a time
   default_amount = 3,
-  -- whether to wrap to opposite side when cursor is at an edge
-  -- e.g. by default, moving left at the left edge will jump
-  -- to the rightmost window, and vice versa, same for up/down.
-  -- NOTE: `wrap_at_edge = false` is not supported on Kitty terminal
+  -- Desired behavior when your cursor is at an edge and you
+  -- are moving towards that same edge:
+  -- 'wrap' => Wrap to opposite side
+  -- 'split' => Create a new split in the desired direction
+  -- 'stop' => Do nothing
+  -- NOTE: `at_edge = 'wrap'` is not supported on Kitty terminal
   -- multiplexer, as there is no way to determine layout via the CLI
-  wrap_at_edge = true,
+  at_edge = 'wrap',
   -- when moving cursor between splits left or right,
   -- place the cursor on the same row of the *screen*
   -- regardless of line numbers. False by default.
@@ -127,6 +129,10 @@ require('smart-splits').setup({
   -- this functionality is only supported on tmux and Wezterm due to kitty
   -- not having a way to check if a pane is zoomed
   disable_multiplexer_nav_when_zoomed = true,
+  -- Supply a Kitty remote control password if needed,
+  -- or you can also set vim.g.smart_splits_kitty_password
+  -- see https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.remote_control_password
+  kitty_password = nil,
 })
 ```
 
@@ -134,7 +140,7 @@ require('smart-splits').setup({
 
 The hook table allows you to define callbacks for the `on_enter` and `on_leave` events of the resize mode.
 
-##### Examples:
+##### Examples
 
 Integration with [bufresize.nvim](https://github.com/kwkarlwang/bufresize.nvim):
 
@@ -233,7 +239,7 @@ vim.keymap.set('n', '<leader><leader>k', require('smart-splits').swap_buf_up)
 vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
 ```
 
-### Lua API:
+### Lua API
 
 ```lua
 -- resizing splits
@@ -247,13 +253,13 @@ require('smart-splits').resize_down(amount)
 require('smart-splits').resize_left(amount)
 require('smart-splits').resize_right(amount)
 -- moving between splits
--- pass same_row as a boolean to override the default
--- for the move_cursor_same_row config option.
+-- You can override config.at_edge and
+-- config.move_cursor_same_row via opts
 -- See Configuration.
-require('smart-splits').move_cursor_up()
+require('smart-splits').move_cursor_up({ same_row = boolean, at_edge = 'wrap' | 'split' | 'stop' })
 require('smart-splits').move_cursor_down()
-require('smart-splits').move_cursor_left(same_row)
-require('smart-splits').move_cursor_right(same_row)
+require('smart-splits').move_cursor_left()
+require('smart-splits').move_cursor_right()
 -- Swapping buffers directionally with the window to the specified direction
 require('smart-splits').swap_buf_up()
 require('smart-splits').swap_buf_down()
@@ -381,7 +387,7 @@ return {
 
 #### Kitty
 
-> **Note** `config.wrap_at_edge = false` is not supoprted in Kitty terminal multiplexer due to inability to determine
+> **Note** `config.at_edge = 'wrap'` is not supoprted in Kitty terminal multiplexer due to inability to determine
 > pane layout from CLI.
 
 Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the keymaps and resize amount as desired.

@@ -1,3 +1,7 @@
+local types = require('smart-splits.types')
+local Direction = types.Direction
+local AtEdgeBehavior = types.AtEdgeBehavior
+
 local M = {}
 
 local config = require('smart-splits.config')
@@ -88,7 +92,7 @@ local function at_right_edge()
 end
 
 function M.win_position(direction)
-  if direction == 'left' or direction == 'right' then
+  if direction == Direction.left or direction == Direction.right then
     if at_left_edge() then
       return win_pos.start
     end
@@ -114,25 +118,25 @@ end
 local function compute_direction_vertical(direction)
   local current_pos = M.win_position(direction)
   if current_pos == win_pos.start or current_pos == win_pos.middle then
-    return direction == 'down' and '+' or '-'
+    return direction == Direction.down and '+' or '-'
   end
 
-  return direction == 'down' and '-' or '+'
+  return direction == Direction.down and '-' or '+'
 end
 
 local function compute_direction_horizontal(direction)
   local current_pos = M.win_position(direction)
   local result
   if current_pos == win_pos.start or current_pos == win_pos.middle then
-    result = direction == 'right' and '+' or '-'
+    result = direction == Direction.right and '+' or '-'
   else
-    result = direction == 'right' and '-' or '+'
+    result = direction == Direction.right and '-' or '+'
   end
 
   local at_left = at_left_edge()
   local at_right = at_right_edge()
   -- special case - check if there is an ignored window to the left
-  if direction == 'right' and result == '+' and at_left and at_right then
+  if direction == Direction.right and result == '+' and at_left and at_right then
     local cur_win = vim.api.nvim_get_current_win()
     next_window(dir_keys.left, true)
     if
@@ -142,7 +146,7 @@ local function compute_direction_horizontal(direction)
       vim.api.nvim_set_current_win(cur_win)
       result = '-'
     end
-  elseif direction == 'left' and result == '-' and at_left and at_right then
+  elseif direction == Direction.left and result == '-' and at_left and at_right then
     local cur_win = vim.api.nvim_get_current_win()
     next_window(dir_keys.left, true)
     if
@@ -161,16 +165,24 @@ local function resize(direction, amount)
   amount = amount or config.default_amount
 
   -- if a full width window and horizontall resize check if we can resize with multiplexer
-  if (direction == 'left' or direction == 'right') and is_full_width() and mux.resize_pane(direction, amount) then
+  if
+    (direction == Direction.left or direction == Direction.right)
+    and is_full_width()
+    and mux.resize_pane(direction, amount)
+  then
     return
   end
 
   -- if a full height window and vertical resize check if we can resize with multiplexer
-  if (direction == 'down' or direction == 'up') and is_full_height() and mux.resize_pane(direction, amount) then
+  if
+    (direction == Direction.down or direction == Direction.up)
+    and is_full_height()
+    and mux.resize_pane(direction, amount)
+  then
     return
   end
 
-  if direction == 'down' or direction == 'up' then
+  if direction == Direction.down or direction == Direction.up then
     -- vertically
     local plus_minus = compute_direction_vertical(direction)
     local cur_win_pos = vim.api.nvim_win_get_position(0)
@@ -238,7 +250,27 @@ local function move_to_edge(at_edge_and_moving_to_edge, dir_key)
   )
 end
 
-local function move_cursor(direction, same_row)
+local function move_cursor(direction, opts)
+  -- backwards compatibility, if opts is a boolean, treat it as historical `same_row` argument
+  local same_row = config.move_cursor_same_row
+  local at_edge = config.at_edge
+  if type(opts) == 'boolean' then
+    same_row = opts
+    vim.deprecate(
+      string.format('smartsplits.move_cursor_%s(boolean)', direction),
+      string.format('smartsplits.move_cursor_%s({ same_row = boolean, at_edge = AtEdgeBehavior })'),
+      'smart-splits.nvim'
+    )
+  elseif type(opts) == 'table' then
+    if opts.same_row ~= nil then
+      same_row = opts.same_row
+    end
+
+    if opts.at_edge ~= nil then
+      at_edge = opts.at_edge
+    end
+  end
+
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   local dir_key = dir_keys[direction]
 
@@ -248,27 +280,36 @@ local function move_cursor(direction, same_row)
   local at_bottom = at_bottom_edge()
 
   -- are we at an edge and attempting to move in the direction of the edge we're already at?
-  local at_edge_and_moving_to_edge = (direction == 'left' and at_left)
-    or (direction == 'right' and at_right)
-    or (direction == 'up' and at_top)
-    or (direction == 'down' and at_bottom)
+  local at_edge_and_moving_to_edge = (direction == Direction.left and at_left)
+    or (direction == Direction.right and at_right)
+    or (direction == Direction.up and at_top)
+    or (direction == Direction.down and at_bottom)
 
   local at_any_edge = at_right or at_left or at_top or at_bottom
 
   -- if at the edge, and moving towards the edge, check if we can move with multiplexer
-  if at_any_edge and at_edge_and_moving_to_edge and mux.move_pane(direction, at_edge_and_moving_to_edge) then
+  if at_any_edge and at_edge_and_moving_to_edge and mux.move_pane(direction, at_edge_and_moving_to_edge, at_edge) then
     return
   end
 
-  if config.wrap_at_edge == false then
-    if
-      (at_right and direction == 'right')
-      or (at_left and direction == 'left')
-      or (at_top and direction == 'up')
-      or (at_bottom and direction == 'down')
-    then
+  if at_edge_and_moving_to_edge then
+    if at_edge == AtEdgeBehavior.stop then
+      return
+    elseif at_edge == AtEdgeBehavior.split then
+      if direction == Direction.left or direction == Direction.right then
+        vim.cmd('vsp')
+        if vim.opt.splitright and direction == Direction.left then
+          vim.cmd('wincmd h')
+        end
+      else
+        vim.cmd('sp')
+        if vim.opt.splitbelow and direction == Direction.up then
+          vim.cmd('wincmd k')
+        end
+      end
       return
     end
+    -- else, at_edge == AtEdgeBehavior.wrap, continue
   end
 
   if at_edge_and_moving_to_edge then
@@ -278,7 +319,7 @@ local function move_cursor(direction, same_row)
   move_to_edge(at_edge_and_moving_to_edge, dir_key)
 
   if
-    (direction == 'left' or direction == 'right')
+    (direction == Direction.left or direction == Direction.right)
     and (same_row or (same_row == nil and config.move_cursor_same_row))
   then
     offset = offset - vim.api.nvim_win_get_position(0)[1]
@@ -302,10 +343,10 @@ local function swap_bufs(direction, opts)
   local win_1 = vim.api.nvim_get_current_win()
 
   local dir_key = dir_keys[direction]
-  local at_edge_and_moving_to_edge = (direction == 'right' and at_right_edge())
-    or (direction == 'left' and at_left_edge())
-    or (direction == 'up' and at_top_edge())
-    or (direction == 'down' and at_bottom_edge())
+  local at_edge_and_moving_to_edge = (direction == Direction.right and at_right_edge())
+    or (direction == Direction.left and at_left_edge())
+    or (direction == Direction.up and at_top_edge())
+    or (direction == Direction.down and at_bottom_edge())
   if at_edge_and_moving_to_edge then
     dir_key = dir_keys_reverse[direction]
   end
@@ -339,19 +380,19 @@ vim.tbl_map(function(direction)
     -- luacheck:ignore
     vim.o.eventignore = eventignore_orig
   end
-  M[string.format('move_cursor_%s', direction)] = function(same_row)
+  M[string.format('move_cursor_%s', direction)] = function(opts)
     is_resizing = false
-    pcall(move_cursor, direction, same_row)
+    pcall(move_cursor, direction, opts)
   end
   M[string.format('swap_buf_%s', direction)] = function(opts)
     is_resizing = false
     swap_bufs(direction, opts)
   end
 end, {
-  'left',
-  'right',
-  'up',
-  'down',
+  Direction.left,
+  Direction.right,
+  Direction.up,
+  Direction.down,
 })
 
 return M
