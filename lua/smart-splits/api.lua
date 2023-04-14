@@ -258,7 +258,7 @@ local function move_cursor(direction, opts)
     same_row = opts
     vim.deprecate(
       string.format('smartsplits.move_cursor_%s(boolean)', direction),
-      string.format('smartsplits.move_cursor_%s({ same_row = boolean, at_edge = AtEdgeBehavior })'),
+      string.format("smartsplits.move_cursor_%s({ same_row = boolean, at_edge = 'wrap'|'split'|'stop' })", direction),
       'smart-splits.nvim'
     )
   elseif type(opts) == 'table' then
