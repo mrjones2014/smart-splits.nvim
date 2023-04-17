@@ -1,3 +1,5 @@
+local Direction = require('smart-splits.types').Direction
+
 local function resize_handler(direction)
   return function(args)
     local amount
@@ -21,13 +23,14 @@ end
 
 return {
   -- resize
-  { 'SmartResizeLeft', resize_handler('left'), { desc = 'smart-splits: resize left', nargs = '*' } },
-  { 'SmartResizeRight', resize_handler('right'), { desc = 'smart-splits: resize right', nargs = '*' } },
-  { 'SmartResizeUp', resize_handler('up'), { desc = 'smart-splits: resize up', nargs = '*' } },
-  { 'SmartResizeDown', resize_handler('down'), { desc = 'smart-splits: resize down', nargs = '*' } },
+  { 'SmartResizeLeft', resize_handler(Direction.left), { desc = 'smart-splits: resize left', nargs = '*' } },
+  { 'SmartResizeRight', resize_handler(Direction.right), { desc = 'smart-splits: resize right', nargs = '*' } },
+  { 'SmartResizeUp', resize_handler(Direction.up), { desc = 'smart-splits: resize up', nargs = '*' } },
+  { 'SmartResizeDown', resize_handler(Direction.down), { desc = 'smart-splits: resize down', nargs = '*' } },
   -- move
-  { 'SmartCursorMoveLeft', move_handler('left'), { desc = 'smart-splits: move cursor left', nargs = '*' } },
-  { 'SmartCursorMoveRight', move_handler('right'), { desc = 'smart-splits: move cursor right', nargs = '*' } },
+  { 'SmartCursorMoveLeft', move_handler(Direction.left), { desc = 'smart-splits: move cursor left', nargs = '*' } },
+  { 'SmartCursorMoveRight', move_handler(Direction.right), { desc = 'smart-splits: move cursor right', nargs = '*' } },
+  -- same_row does not apply to up/down
   { 'SmartCursorMoveUp', require('smart-splits').move_cursor_up, { desc = 'smart-splits: move cursor up' } },
   { 'SmartCursorMoveDown', require('smart-splits').move_cursor_down, { desc = 'smart-splits: move cursor down' } },
   -- resize mode

@@ -1,8 +1,12 @@
+local types = require('smart-splits.types')
+local Direction = types.Direction
+local AtEdgeBehavior = types.AtEdgeBehavior
+
 local dir_keys_tmux = {
-  left = 'L',
-  right = 'R',
-  up = 'U',
-  down = 'D',
+  [Direction.left] = 'L',
+  [Direction.right] = 'R',
+  [Direction.up] = 'U',
+  [Direction.down] = 'D',
 }
 
 local function get_socket_path()
@@ -35,22 +39,20 @@ function M.current_pane_at_edge(direction)
     return false
   end
 
-  direction = dir_keys_tmux[direction]
-
-  local wrap_at_edge = require('smart-splits.config').wrap_at_edge
+  local wrap_at_edge = require('smart-splits.config').at_edge == AtEdgeBehavior.wrap
 
   local edge
   local op
-  if direction == 'U' then
+  if direction == Direction.up then
     edge = 'top'
     op = wrap_at_edge and '<=' or '<'
-  elseif direction == 'D' then
+  elseif direction == Direction.down then
     edge = 'bottom'
     op = wrap_at_edge and '>' or '>='
-  elseif direction == 'L' then
+  elseif direction == Direction.left then
     edge = 'left'
     op = wrap_at_edge and '<=' or '<'
-  elseif direction == 'R' then
+  elseif direction == Direction.right then
     edge = 'right'
     op = wrap_at_edge and '>' or '>='
   else

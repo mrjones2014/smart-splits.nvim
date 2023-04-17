@@ -1,10 +1,13 @@
 local config = require('smart-splits.config')
+local types = require('smart-splits.types')
+local Direction = types.Direction
+local AtEdgeBehavior = types.AtEdgeBehavior
 
 local directions_reverse = {
-  left = 'right',
-  right = 'left',
-  up = 'down',
-  down = 'up',
+  [Direction.left] = Direction.right,
+  [Direction.right] = Direction.left,
+  [Direction.up] = Direction.down,
+  [Direction.down] = Direction.up,
 }
 
 local function move_multiplexer_inner(direction, multiplexer)
@@ -38,16 +41,8 @@ local M = {}
 ---Get the currently configured multiplexer
 ---@return Multiplexer|nil
 function M.get()
-  local mux = config.multiplexer_integration
-  if mux == 'tmux' then
-    return require('smart-splits.mux.tmux')
-  elseif mux == 'wezterm' then
-    return require('smart-splits.mux.wezterm')
-  elseif mux == 'kitty' then
-    return require('smart-splits.mux.kitty')
-  else
-    return nil
-  end
+  local ok, mux = pcall(require, string.format('smart-splits.mux.%s', config.multiplexer_integration))
+  return ok and mux or nil
 end
 
 ---Check if any multiplexer is enabled
@@ -59,14 +54,16 @@ end
 ---Try moving with multiplexer
 ---@param direction Direction direction to move
 ---@param will_wrap boolean whether to wrap around edge
+---@param at_edge AtEdgeBehavior behavior at edge
 ---@return boolean whether we moved with multiplexer or not
-function M.move_pane(direction, will_wrap)
+function M.move_pane(direction, will_wrap, at_edge)
+  at_edge = at_edge or config.at_edge
   local multiplexer = M.get()
   if not multiplexer or not multiplexer.is_in_session() then
     return false
   end
 
-  if config.wrap_at_edge == false and multiplexer.current_pane_at_edge(direction) then
+  if at_edge ~= AtEdgeBehavior.wrap and multiplexer.current_pane_at_edge(direction) then
     return false
   end
 
