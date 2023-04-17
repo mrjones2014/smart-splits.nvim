@@ -319,17 +319,24 @@ local function move_cursor(direction, opts)
     or (direction == Direction.up and at_top)
     or (direction == Direction.down and at_bottom)
 
-  local at_any_edge = at_right or at_left or at_top or at_bottom
-
-  -- if at the edge, and moving towards the edge, check if we can move with multiplexer
-  if at_any_edge and at_edge_and_moving_to_edge and mux.move_pane(direction, at_edge_and_moving_to_edge, at_edge) then
-    return
-  end
-
   if at_edge_and_moving_to_edge then
+    -- if we can move with mux, then we're good
+    if mux.move_pane(direction, at_edge_and_moving_to_edge, at_edge) then
+      return
+    end
+
+    -- otherwise check at_edge behavior
     if at_edge == AtEdgeBehavior.stop then
       return
     elseif at_edge == AtEdgeBehavior.split then
+      -- if at_edge = 'split' and we're in an ignored buffer, just stop
+      if
+        vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
+        or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
+      then
+        return
+      end
+
       if direction == Direction.left or direction == Direction.right then
         vim.cmd('vsp')
         if vim.opt.splitright and direction == Direction.left then
