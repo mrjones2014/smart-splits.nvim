@@ -79,7 +79,10 @@ local function next_window(direction, skip_ignore_lists)
   if
     not skip_ignore_lists
     and is_resizing
-    and (vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype) or vim.tbl_contains(config.ignored_filetypes))
+    and (
+      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
+      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
+    )
   then
     vim.api.nvim_set_current_win(cur_win)
     return nil
