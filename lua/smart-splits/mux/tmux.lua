@@ -31,7 +31,7 @@ local function tmux_exec(cmd, as_list)
   return vim.fn.system(cmd_str)
 end
 
----@type Multiplexer
+---@type SmartSplitsMultiplexer
 local M = {}
 
 function M.current_pane_at_edge(direction)

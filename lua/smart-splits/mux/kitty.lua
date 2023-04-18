@@ -20,7 +20,7 @@ local function kitty_exec(args)
   return vim.fn.system(arguments)
 end
 
----@type Multiplexer
+---@type SmartSplitsMultiplexer
 local M = {}
 
 function M.current_pane_id()

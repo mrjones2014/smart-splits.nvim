@@ -60,7 +60,7 @@ local function current_pane_info()
   return nil
 end
 
----@type Multiplexer
+---@type SmartSplitsMultiplexer
 local M = {}
 
 function M.current_pane_id()

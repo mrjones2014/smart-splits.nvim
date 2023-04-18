@@ -113,7 +113,7 @@ local function at_right_edge()
   return vim.fn.winnr() == vim.fn.winnr('l')
 end
 
----@param direction Direction
+---@param direction SmartSplitsDirection
 ---@return WinPosition
 function M.win_position(direction)
   if direction == Direction.left or direction == Direction.right then
@@ -139,7 +139,7 @@ function M.win_position(direction)
   return WinPosition.middle
 end
 
----@param direction Direction
+---@param direction SmartSplitsDirection
 ---@return WincmdResizeDirection
 local function compute_direction_vertical(direction)
   local current_pos = M.win_position(direction)
@@ -150,7 +150,7 @@ local function compute_direction_vertical(direction)
   return direction == Direction.down and WincmdResizeDirection.smaller or WincmdResizeDirection.bigger
 end
 
----@param direction Direction
+---@param direction SmartSplitsDirection
 ---@return WincmdResizeDirection
 local function compute_direction_horizontal(direction)
   local current_pos = M.win_position(direction)
@@ -189,7 +189,7 @@ local function compute_direction_horizontal(direction)
   return result
 end
 
----@param direction Direction
+---@param direction SmartSplitsDirection
 ---@param amount number
 local function resize(direction, amount)
   amount = amount or config.default_amount
@@ -273,16 +273,31 @@ local function resize(direction, amount)
   end
 end
 
----@param at_edge_and_moving_to_edge boolean
+---@param will_wrap boolean
 ---@param dir_key DirectionKeys
-local function move_to_edge(at_edge_and_moving_to_edge, dir_key)
+local function next_win_or_wrap(will_wrap, dir_key)
   -- if someone has more than 99999 windows then just LOL
   vim.api.nvim_set_current_win(
-    vim.fn.win_getid(vim.fn.winnr(string.format('%s%s', at_edge_and_moving_to_edge and '99999' or '1', dir_key)))
+    vim.fn.win_getid(vim.fn.winnr(string.format('%s%s', will_wrap and '99999' or '1', dir_key)))
   )
 end
 
----@param direction Direction
+---@param direction SmartSplitsDirection
+local function split_edge(direction)
+  if direction == Direction.left or direction == Direction.right then
+    vim.cmd('vsp')
+    if vim.opt.splitright and direction == Direction.left then
+      vim.cmd('wincmd h')
+    end
+  else
+    vim.cmd('sp')
+    if vim.opt.splitbelow and direction == Direction.up then
+      vim.cmd('wincmd k')
+    end
+  end
+end
+
+---@param direction SmartSplitsDirection
 ---@param opts table
 local function move_cursor(direction, opts)
   -- backwards compatibility, if opts is a boolean, treat it as historical `same_row` argument
@@ -314,19 +329,29 @@ local function move_cursor(direction, opts)
   local at_bottom = at_bottom_edge()
 
   -- are we at an edge and attempting to move in the direction of the edge we're already at?
-  local at_edge_and_moving_to_edge = (direction == Direction.left and at_left)
+  local will_wrap = (direction == Direction.left and at_left)
     or (direction == Direction.right and at_right)
     or (direction == Direction.up and at_top)
     or (direction == Direction.down and at_bottom)
 
-  if at_edge_and_moving_to_edge then
+  if will_wrap then
     -- if we can move with mux, then we're good
-    if mux.move_pane(direction, at_edge_and_moving_to_edge, at_edge) then
+    if mux.move_pane(direction, will_wrap, at_edge) then
       return
     end
 
     -- otherwise check at_edge behavior
-    if at_edge == AtEdgeBehavior.stop then
+    if type(at_edge) == 'function' then
+      local ctx = { ---@type SmartSplitsContext
+        mux = mux.get(),
+        direction = direction,
+        split = function()
+          split_edge(direction)
+        end,
+      }
+      at_edge(ctx)
+      return
+    elseif at_edge == AtEdgeBehavior.stop then
       return
     elseif at_edge == AtEdgeBehavior.split then
       -- if at_edge = 'split' and we're in an ignored buffer, just stop
@@ -337,32 +362,17 @@ local function move_cursor(direction, opts)
         return
       end
 
-      if direction == Direction.left or direction == Direction.right then
-        vim.cmd('vsp')
-        if vim.opt.splitright and direction == Direction.left then
-          vim.cmd('wincmd h')
-        end
-      else
-        vim.cmd('sp')
-        if vim.opt.splitbelow and direction == Direction.up then
-          vim.cmd('wincmd k')
-        end
-      end
+      split_edge(direction)
       return
+    else -- at_edge == AtEdgeBehavior.wrap
+      -- reverse direction and continue
+      dir_key = DirectionKeysReverse[direction]
     end
-    -- else, at_edge == AtEdgeBehavior.wrap, continue
   end
 
-  if at_edge_and_moving_to_edge then
-    dir_key = DirectionKeysReverse[direction]
-  end
+  next_win_or_wrap(will_wrap, dir_key)
 
-  move_to_edge(at_edge_and_moving_to_edge, dir_key)
-
-  if
-    (direction == Direction.left or direction == Direction.right)
-    and (same_row or (same_row == nil and config.move_cursor_same_row))
-  then
+  if (direction == Direction.left or direction == Direction.right) and same_row then
     offset = offset - vim.api.nvim_win_get_position(0)[1]
     vim.cmd('normal! ' .. offset .. 'H')
   end
@@ -378,7 +388,7 @@ local function set_eventignore()
   vim.o.eventignore = eventignore
 end
 
----@param direction Direction
+---@param direction SmartSplitsDirection
 ---@param opts table
 local function swap_bufs(direction, opts)
   opts = opts or {}
@@ -386,15 +396,15 @@ local function swap_bufs(direction, opts)
   local win_1 = vim.api.nvim_get_current_win()
 
   local dir_key = DirectionKeys[direction]
-  local at_edge_and_moving_to_edge = (direction == Direction.right and at_right_edge())
+  local will_wrap = (direction == Direction.right and at_right_edge())
     or (direction == Direction.left and at_left_edge())
     or (direction == Direction.up and at_top_edge())
     or (direction == Direction.down and at_bottom_edge())
-  if at_edge_and_moving_to_edge then
+  if will_wrap then
     dir_key = DirectionKeysReverse[direction]
   end
 
-  move_to_edge(at_edge_and_moving_to_edge, dir_key)
+  next_win_or_wrap(will_wrap, dir_key)
   local buf_2 = vim.api.nvim_get_current_buf()
   local win_2 = vim.api.nvim_get_current_win()
 

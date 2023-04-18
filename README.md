@@ -81,6 +81,22 @@ require('smart-splits').setup({
   -- 'wrap' => Wrap to opposite side
   -- 'split' => Create a new split in the desired direction
   -- 'stop' => Do nothing
+  -- function => You handle the behavior yourself
+  -- NOTE: If using a function, the function will be called with
+  -- a context object with the following fields:
+  -- {
+  --    mux = {
+  --      current_pane_id():number,
+  --      is_in_session(): boolean
+  --      current_pane_is_zoomed():boolean,
+  --      -- following methods return a boolean to indicate success or failure
+  --      current_pane_at_edge(direction:'left'|'right'|'up'|'down'):boolean
+  --      next_pane(direction:'left'|'right'|'up'|'down'):boolean
+  --      resize_pane(direction:'left'|'right'|'up'|'down'):boolean
+  --    },
+  --    direction = 'left'|'right'|'up'|'down',
+  --    split(), -- utility function to split current Neovim pane in the current direction
+  -- }
   -- NOTE: `at_edge = 'wrap'` is not supported on Kitty terminal
   -- multiplexer, as there is no way to determine layout via the CLI
   at_edge = 'wrap',
