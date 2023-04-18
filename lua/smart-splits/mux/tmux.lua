@@ -34,6 +34,8 @@ end
 ---@type SmartSplitsMultiplexer
 local M = {}
 
+M.type = 'tmux'
+
 function M.current_pane_at_edge(direction)
   if not M.is_in_session() then
     return false

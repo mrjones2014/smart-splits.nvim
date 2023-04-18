@@ -86,6 +86,7 @@ require('smart-splits').setup({
   -- a context object with the following fields:
   -- {
   --    mux = {
+  --      type:'tmux'|'wezterm'|'kitty'
   --      current_pane_id():number,
   --      is_in_session(): boolean
   --      current_pane_is_zoomed():boolean,

@@ -23,6 +23,8 @@ end
 ---@type SmartSplitsMultiplexer
 local M = {}
 
+M.type = 'kitty'
+
 function M.current_pane_id()
   local output = kitty_exec({ 'ls' })
   local kitty_info = vim.json.decode(output)

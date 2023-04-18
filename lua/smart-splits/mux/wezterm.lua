@@ -63,6 +63,8 @@ end
 ---@type SmartSplitsMultiplexer
 local M = {}
 
+M.type = 'wezterm'
+
 function M.current_pane_id()
   local current_pane = current_pane_info()
   -- uses API that requires newest version of Wezterm
