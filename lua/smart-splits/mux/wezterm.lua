@@ -24,7 +24,7 @@ local function init_tab_id()
     return
   end
 
-  local data = vim.json.decode(output)
+  local data = vim.json.decode(output) --[[@as table]]
   for _, pane in ipairs(data) do
     if tostring(pane.pane_id) == tostring(vim.env.WEZTERM_PANE) then
       tab_id = pane.tab_id
@@ -50,7 +50,7 @@ local function current_pane_info()
     return nil
   end
 
-  local data = vim.json.decode(output)
+  local data = vim.json.decode(output) --[[@as table]]
   for _, pane in ipairs(data) do
     if pane.tab_id == tab_id and pane.is_active then
       return pane
@@ -71,7 +71,7 @@ function M.current_pane_id()
   end
 
   local output = wezterm_exec({ 'list-clients', '--format', 'json' })
-  local data = vim.json.decode(output)
+  local data = vim.json.decode(output) --[[@as table]]
   if #data == 0 then
     return nil
   end
@@ -124,14 +124,17 @@ function M.next_pane(direction)
   return ok
 end
 
-function M.resize_pane(_, _)
+function M.resize_pane(direction, amount)
   if not M.is_in_session() then
     return false
   end
 
-  -- TODO implement when possible
-  -- https://github.com/wez/wezterm/issues/3471
-  return false
+  direction = dir_keys_wezterm[direction] ---@diagnostic disable-line
+  local ok, _ = pcall(function()
+    wezterm_exec({ 'adjust-pane-size', '--amount', amount, direction })
+  end)
+
+  return ok
 end
 
 return M
