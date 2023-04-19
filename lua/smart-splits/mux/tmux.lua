@@ -18,17 +18,20 @@ local function get_socket_path()
   return vim.split(tmux, ',', { trimempty = true })[1]
 end
 
-local function tmux_exec(cmd, as_list)
+---@param args (string|number)[]
+---@param as_list boolean|nil
+---@return nil
+local function tmux_exec(args, as_list)
   local socket = get_socket_path()
   if not socket then
     return nil
   end
 
-  local cmd_str = string.format('tmux -S %s %s', socket, cmd)
+  local cmd = vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
   if as_list then
-    return vim.fn.systemlist(cmd_str) --[[ @as string[] ]]
+    return vim.fn.systemlist(cmd) --[[ @as string[] ]]
   end
-  return vim.fn.system(cmd_str)
+  return vim.fn.system(cmd)
 end
 
 ---@type SmartSplitsMultiplexer
@@ -62,7 +65,7 @@ function M.current_pane_at_edge(direction)
   end
 
   local tmux_expr = string.format('#{pane_id}:#{pane_%s}:#{?pane_active,_active_,_no_}', edge)
-  local panes = tmux_exec(string.format('list-panes -F "%s"', tmux_expr), true)
+  local panes = tmux_exec({ 'list-panes', '-F', tmux_expr }, true)
   local active_pane_output_line = vim.tbl_filter(function(line)
     return not not string.find(line, '_active_')
   end, panes --[[ @as string[] ]])[1]
@@ -115,7 +118,7 @@ function M.current_pane_id()
   end
 
   local ok, id = pcall(function()
-    local output = tmux_exec('display-message -p "#{pane_id}"') --[[@as string]]
+    local output = tmux_exec({ 'display-message', '-p', '#{pane_id}' }) --[[@as string]]
     if not output or #output == 0 then
       return nil
     end
@@ -137,7 +140,7 @@ function M.current_pane_is_zoomed()
     -- if it it includes 'Z' then it's zoomed. A '*' indicates
     -- current pane, and since we're only listing current pane flags,
     -- we're expecting to see '*Z' if the current pane is zoomed
-    local output = tmux_exec("display-message -p '#F'")
+    local output = tmux_exec({ 'display-message', '-p', '#F' })
     if output then
       output = vim.trim(output --[[@as string]])
     end
@@ -158,10 +161,7 @@ function M.next_pane(direction)
   end
 
   direction = dir_keys_tmux[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(function()
-    tmux_exec(string.format('select-pane -%s', direction))
-  end)
-
+  local ok, _ = pcall(tmux_exec, { 'select-pane', string.format('-%s', direction) })
   return ok
 end
 
@@ -171,10 +171,21 @@ function M.resize_pane(direction, amount)
   end
 
   direction = dir_keys_tmux[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(function()
-    tmux_exec(string.format('resize-pane -%s %s', direction, amount))
-  end)
+  local ok, _ = pcall(tmux_exec, { 'resize-pane', string.format('-%s', direction), amount })
+  return ok
+end
 
+function M.split_pane(direction, size)
+  local vert_or_horiz = (direction == Direction.left or direction == Direction.right) and '-h' or '-v'
+  local args = { 'split-pane', vert_or_horiz }
+  if direction == Direction.up or direction == Direction.left then
+    table.insert(args, '-b')
+  end
+  if size then
+    table.insert(args, '-l')
+    table.insert(args, size)
+  end
+  local ok, _ = pcall(tmux_exec, args)
   return ok
 end
 

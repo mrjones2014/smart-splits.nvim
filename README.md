@@ -94,6 +94,7 @@ require('smart-splits').setup({
   --      current_pane_at_edge(direction:'left'|'right'|'up'|'down'):boolean
   --      next_pane(direction:'left'|'right'|'up'|'down'):boolean
   --      resize_pane(direction:'left'|'right'|'up'|'down'):boolean
+  --      split_pane(direction:'left'|'right'|'up'|'down',size:number|nil):boolean
   --    },
   --    direction = 'left'|'right'|'up'|'down',
   --    split(), -- utility function to split current Neovim pane in the current direction
@@ -468,3 +469,29 @@ listen_on unix:/tmp/mykitty
 Thanks @knubie for inspiration for the Kitty implementation from [vim-kitty-navigator](https://github.com/knubie/vim-kitty-navigator).
 
 Thanks to @chancez for the relative resize [Python kitten](https://github.com/chancez/dotfiles/blob/badc69d3895a6a942285126b8c372a55d77533e1/kitty/.config/kitty/relative_resize.py).
+
+### Multiplexer Lua API
+
+You can directly access the multiplexer API for scripting purposes as well.
+To get a handle to the current multiplexer backend, you can do:
+
+```lua
+local mux = require('smart-splits.mux').get()
+```
+
+This returns the currently enabled multiplexer backend, or `nil` if none is currently in use.
+The API offers the following methods:
+
+```lua
+local mux = require('smart-splits.mux').get()
+-- mux matches the following type annotations
+---@class SmartSplitsMultiplexer
+---@field current_pane_id fun():number|nil
+---@field current_pane_at_edge fun(direction:'left'|'right'|'up'|'down'):boolean
+---@field is_in_session fun():boolean
+---@field current_pane_is_zoomed fun():boolean
+---@field next_pane fun(direction:'left'|'right'|'up'|'down'):boolean
+---@field resize_pane fun(direction:'left'|'right'|'up'|'down', amount:number):boolean
+---@field split_pane fun(direction:'left'|'right'|'up'|'down',size:number|nil):boolean
+---@field type 'tmux'|'wezterm'|'kitty'
+```

@@ -5,6 +5,7 @@
 ---@field current_pane_is_zoomed fun():boolean
 ---@field next_pane fun(direction:SmartSplitsDirection):boolean
 ---@field resize_pane fun(direction:SmartSplitsDirection, amount:number):boolean
+---@field split_pane fun(direction:SmartSplitsDirection,size:number|nil):boolean
 ---@field type SmartSplitsMultiplexerType
 
 ---@alias SmartSplitsDirection 'left'|'right'|'up'|'down'
