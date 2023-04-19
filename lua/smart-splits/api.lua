@@ -348,6 +348,9 @@ local function move_cursor(direction, opts)
         split = function()
           split_edge(direction)
         end,
+        wrap = function()
+          next_win_or_wrap(will_wrap, DirectionKeysReverse[direction])
+        end,
       }
       at_edge(ctx)
       return
