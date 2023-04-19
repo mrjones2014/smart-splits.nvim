@@ -8,6 +8,7 @@ smart-splits-key-mappings	smart-splits.txt	/*smart-splits-key-mappings*
 smart-splits-kitty	smart-splits.txt	/*smart-splits-kitty*
 smart-splits-lua-api	smart-splits.txt	/*smart-splits-lua-api*
 smart-splits-multiplexer-integrations	smart-splits.txt	/*smart-splits-multiplexer-integrations*
+smart-splits-multiplexer-lua-api	smart-splits.txt	/*smart-splits-multiplexer-lua-api*
 smart-splits-table-of-contents	smart-splits.txt	/*smart-splits-table-of-contents*
 smart-splits-tmux	smart-splits.txt	/*smart-splits-tmux*
 smart-splits-usage	smart-splits.txt	/*smart-splits-usage*
