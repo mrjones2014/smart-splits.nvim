@@ -7,6 +7,13 @@ local dir_keys_wezterm = {
   [Direction.up] = 'Up',
 }
 
+local dir_keys_wezterm_splits = {
+  [Direction.left] = '--left',
+  [Direction.right] = '--right',
+  [Direction.up] = '--top',
+  [Direction.down] = '--bottom',
+}
+
 local function wezterm_exec(cmd)
   local command = vim.deepcopy(cmd)
   table.insert(command, 1, 'wezterm')
@@ -119,10 +126,7 @@ function M.next_pane(direction)
   end
 
   direction = dir_keys_wezterm[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(function()
-    wezterm_exec({ 'activate-pane-direction', direction })
-  end)
-
+  local ok, _ = pcall(wezterm_exec, { 'activate-pane-direction', direction })
   return ok
 end
 
@@ -132,10 +136,17 @@ function M.resize_pane(direction, amount)
   end
 
   direction = dir_keys_wezterm[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(function()
-    wezterm_exec({ 'adjust-pane-size', '--amount', amount, direction })
-  end)
+  local ok, _ = pcall(wezterm_exec, { 'adjust-pane-size', '--amount', amount, direction })
+  return ok
+end
 
+function M.split_pane(direction, size)
+  local args = { 'split-pane', dir_keys_wezterm_splits[direction] }
+  if size then
+    table.insert(args, '--cells')
+    table.insert(args, size)
+  end
+  local ok, _ = pcall(wezterm_exec, args)
   return ok
 end
 

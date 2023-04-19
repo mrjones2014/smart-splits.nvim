@@ -81,10 +81,7 @@ function M.next_pane(direction)
   end
 
   direction = dir_keys_kitty[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(function()
-    kitty_exec({ 'kitten', 'neighboring_window.py', direction })
-  end)
-
+  local ok, _ = pcall(kitty_exec, { 'kitten', 'neighboring_window.py', direction })
   return ok
 end
 
@@ -93,11 +90,17 @@ function M.resize_pane(direction, amount)
     return false
   end
 
-  local ok, _ = pcall(function()
-    kitty_exec({ 'kitten', 'relative_resize.py', direction, amount })
-  end)
+  local ok, _ = pcall(kitty_exec, { 'kitten', 'relative_resize.py', direction, amount })
 
   return ok
+end
+
+function M.split_pane(_, _)
+  vim.notify(
+    '[smart-splits.nvim] Sorry, Kitty does not support creation of arbitrary split panes.',
+    vim.log.levels.WARN
+  )
+  return false
 end
 
 return M

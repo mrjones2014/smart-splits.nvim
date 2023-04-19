@@ -63,7 +63,7 @@ end
 ---@param direction SmartSplitsDirection direction to move
 ---@param will_wrap boolean whether to wrap around edge
 ---@param at_edge SmartSplitsAtEdgeBehavior behavior at edge
----@return boolean whether we moved with multiplexer or not
+---@return boolean success
 function M.move_pane(direction, will_wrap, at_edge)
   at_edge = at_edge or config.at_edge
   local multiplexer = M.get()
@@ -90,7 +90,7 @@ end
 ---Try resizing with multiplexer
 ---@param direction SmartSplitsDirection direction to resize
 ---@param amount number amount to resize
----@return boolean whether we resized with multiplexer or not
+---@return boolean success
 function M.resize_pane(direction, amount)
   local multiplexer = M.get()
   if not multiplexer or not multiplexer.is_in_session() then
@@ -103,10 +103,25 @@ function M.resize_pane(direction, amount)
   local ok = multiplexer.resize_pane(direction, amount)
   if not ok then
     vim.notify('[smart-splits.nvim] Failed to resize multiplexer pane', vim.log.levels.ERROR)
-    return false
   end
 
-  return true
+  return ok
+end
+
+---Try creating a new mux split pane. Not supported in Kitty multiplexer.
+---@param direction SmartSplitsDirection
+---@param size number|nil
+---@return boolean success
+function M.split_pane(direction, size)
+  local mux = M.get()
+  if not mux or not mux.is_in_session() then
+    return false
+  end
+  local ok = mux.split_pane(direction, size)
+  if not ok then
+    vim.notify('[smart-splits.nvim] Failed to create a new mux pane', vim.log.levels.ERROR)
+  end
+  return ok
 end
 
 return M
