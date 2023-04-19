@@ -39,8 +39,16 @@ end
 local M = {}
 
 ---Get the currently configured multiplexer
----@return Multiplexer|nil
+---@return SmartSplitsMultiplexer|nil
 function M.get()
+  if
+    config.multiplexer_integration == nil
+    or config.multiplexer_integration == false
+    or #tostring(config.multiplexer_integration or '') == 0
+  then
+    return nil
+  end
+
   local ok, mux = pcall(require, string.format('smart-splits.mux.%s', config.multiplexer_integration))
   return ok and mux or nil
 end
@@ -52,9 +60,9 @@ function M.is_enabled()
 end
 
 ---Try moving with multiplexer
----@param direction Direction direction to move
+---@param direction SmartSplitsDirection direction to move
 ---@param will_wrap boolean whether to wrap around edge
----@param at_edge AtEdgeBehavior behavior at edge
+---@param at_edge SmartSplitsAtEdgeBehavior behavior at edge
 ---@return boolean whether we moved with multiplexer or not
 function M.move_pane(direction, will_wrap, at_edge)
   at_edge = at_edge or config.at_edge
@@ -80,7 +88,7 @@ function M.move_pane(direction, will_wrap, at_edge)
 end
 
 ---Try resizing with multiplexer
----@param direction Direction direction to resize
+---@param direction SmartSplitsDirection direction to resize
 ---@param amount number amount to resize
 ---@return boolean whether we resized with multiplexer or not
 function M.resize_pane(direction, amount)

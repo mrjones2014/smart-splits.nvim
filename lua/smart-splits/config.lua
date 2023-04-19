@@ -16,12 +16,12 @@ local Multiplexer = types.Multiplexer
 ---@field ignored_buftypes string[]
 ---@field ignored_filetypes string[]
 ---@field default_amount number
----@field at_edge AtEdgeBehavior
+---@field at_edge SmartSplitsAtEdgeBehavior
 ---@field move_cursor_same_row boolean
 ---@field cursor_follows_swapped_bufs boolean
 ---@field resize_mode SmartResizeModeConfig
 ---@field ignored_events string[]
----@field multiplexer_integration MultiplexerType|false
+---@field multiplexer_integration SmartSplitsMultiplexerType|false
 ---@field disable_multiplexer_nav_when_zoomed boolean
 ---@field kitty_password string|nil
 ---@field setup fun(cfg:table)

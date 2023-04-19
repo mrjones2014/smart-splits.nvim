@@ -31,8 +31,10 @@ local function tmux_exec(cmd, as_list)
   return vim.fn.system(cmd_str)
 end
 
----@type Multiplexer
+---@type SmartSplitsMultiplexer
 local M = {}
+
+M.type = 'tmux'
 
 function M.current_pane_at_edge(direction)
   if not M.is_in_session() then
