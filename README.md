@@ -23,6 +23,7 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
     - [Wezterm](#wezterm)
     - [Kitty](#kitty)
       - [Credits](#credits)
+    - [Multiplexer Lua API](#multiplexer-lua-api)
 
 </details>
 
