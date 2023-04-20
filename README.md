@@ -61,7 +61,7 @@ such as [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua)
 which tries to maintain its own width unless manually resized. Note that
 nothing is ignored when moving between splits, only when resizing.
 
-> **NOTE:** `smart-splits.nvim` does not map any keys on it's own. See [Usage](#usage).
+> **Note** `smart-splits.nvim` does not map any keys on it's own. See [Usage](#usage).
 
 Defaults are shown below:
 
