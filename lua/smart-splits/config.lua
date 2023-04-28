@@ -1,3 +1,4 @@
+local log = require('smart-splits.log')
 local types = require('smart-splits.types')
 local AtEdgeBehavior = types.AtEdgeBehavior
 local Multiplexer = types.Multiplexer
@@ -26,6 +27,7 @@ local Multiplexer = types.Multiplexer
 ---@field kitty_password string|nil
 ---@field setup fun(cfg:table)
 ---@field set_default_multiplexer fun()
+---@field log_level 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
 
 ---@type SmartSplitsConfig
 local config = {
@@ -57,6 +59,7 @@ local config = {
   multiplexer_integration = nil, ---@diagnostic disable-line this gets computed during startup unless disabled by user
   disable_multiplexer_nav_when_zoomed = true,
   kitty_password = nil,
+  log_level = 'info',
 }
 
 ---@type SmartSplitsConfig
@@ -82,6 +85,10 @@ function M.set_default_multiplexer()
     -- Kitty doesn't use $TERM_PROGRAM, and also requires remote control enabled anyway
   elseif vim.env.KITTY_LISTEN_ON ~= nil then
     config.multiplexer_integration = Multiplexer.kitty
+  end
+
+  if type(config.multiplexer_integration) == 'string' then
+    log.debug('Auto-detected multiplexer back-end: %s', config.multiplexer_integration)
   end
 end
 

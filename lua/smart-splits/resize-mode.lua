@@ -1,3 +1,6 @@
+local log = require('smart-splits.log')
+local config = require('smart-splits.config')
+
 local M = {}
 
 local function wrap(fn)
@@ -8,9 +11,8 @@ local function wrap(fn)
 end
 
 function M.start_resize_mode()
-  local config = require('smart-splits.config')
   if vim.fn.mode() ~= 'n' then
-    vim.notify('Resize mode must be triggered from normal mode', vim.log.levels.ERROR)
+    log.error('Resize mode must be triggered from normal mode')
     return
   end
 
@@ -35,11 +37,10 @@ function M.start_resize_mode()
     vim.inspect(resize_keys),
     quit_key
   )
-  vim.notify(msg, vim.log.levels.INFO)
+  vim.info(msg, vim.log.levels.INFO)
 end
 
 function M.end_resize_mode()
-  local config = require('smart-splits.config')
   local quit_key = config.resize_mode.quit_key
   local resize_keys = config.resize_mode.resize_keys
   vim.api.nvim_del_keymap('n', resize_keys[1])
@@ -57,7 +58,7 @@ function M.end_resize_mode()
   end
 
   local msg = 'Persistent resize mode disabled. Normal keymaps have been restored.'
-  vim.notify(msg, vim.log.levels.INFO)
+  log.info(msg)
 end
 
 return M

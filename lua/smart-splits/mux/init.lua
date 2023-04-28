@@ -1,3 +1,4 @@
+local log = require('smart-splits.log')
 local config = require('smart-splits.config')
 local types = require('smart-splits.types')
 local Direction = types.Direction
@@ -13,18 +14,18 @@ local directions_reverse = {
 local function move_multiplexer_inner(direction, multiplexer)
   local current_pane = multiplexer.current_pane_id()
   if not current_pane then
-    vim.notify('[smart-splits.nvim] Failed to get multiplexer pane ID', vim.log.levels.ERROR)
+    log.error('Failed to get multiplexer pane ID')
     return false
   end
 
   local ok = multiplexer.next_pane(direction)
   if not ok then
-    vim.notify('[smart-splits.nvim] Failed to select multiplexer pane', vim.log.levels.ERROR)
+    log.error('Failed to select multiplexer pane')
     return false
   end
   local new_pane = multiplexer.current_pane_id()
   if not new_pane then
-    vim.notify('[smart-splits.nvim] Failed to get multiplexer pane ID', vim.log.levels.ERROR)
+    log.error('Failed to get multiplexer pane ID')
     return false
   end
 
@@ -102,7 +103,7 @@ function M.resize_pane(direction, amount)
 
   local ok = multiplexer.resize_pane(direction, amount)
   if not ok then
-    vim.notify('[smart-splits.nvim] Failed to resize multiplexer pane', vim.log.levels.ERROR)
+    log.error('Failed to resize multiplexer pane')
   end
 
   return ok
@@ -119,7 +120,7 @@ function M.split_pane(direction, size)
   end
   local ok = mux.split_pane(direction, size)
   if not ok then
-    vim.notify('[smart-splits.nvim] Failed to create a new mux pane', vim.log.levels.ERROR)
+    log.error('Failed to create a new mux pane')
   end
   return ok
 end

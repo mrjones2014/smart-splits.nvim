@@ -1,3 +1,4 @@
+local log = require('smart-splits.log')
 local Direction = require('smart-splits.types').Direction
 local utils = require('smart-splits.utils')
 
@@ -96,10 +97,7 @@ function M.resize_pane(direction, amount)
 end
 
 function M.split_pane(_, _)
-  vim.notify(
-    '[smart-splits.nvim] Sorry, Kitty does not support creation of arbitrary split panes.',
-    vim.log.levels.WARN
-  )
+  log.warn('Sorry, Kitty does not support creation of arbitrary split panes.')
   return false
 end
 
