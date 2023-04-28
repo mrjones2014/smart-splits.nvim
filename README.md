@@ -153,6 +153,8 @@ require('smart-splits').setup({
   -- or you can also set vim.g.smart_splits_kitty_password
   -- see https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.remote_control_password
   kitty_password = nil,
+  -- default logging level, one of: 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
+  log_level = 'info',
 })
 ```
 

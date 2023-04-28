@@ -39,4 +39,17 @@ return {
     require('smart-splits').start_resize_mode,
     { desc = 'smart-splits: Start persistent resize mode, press <ESC> to exit resize mode' },
   },
+  { 'SmartSplitsLog', require('smart-splits.log').open_log_file, { desc = 'smart-splits: show log file' } },
+  {
+    'SmartSplitsLogLevel',
+    function(args)
+      local log_level = vim.tbl_get(args, 'fargs', 1)
+      if not vim.tbl_contains(require('smart-splits.log').levels, log_level) then
+        error(string.format('Invalid log level %s', log_level))
+        return
+      end
+      require('smart-splits.config').log_level = log_level
+    end,
+    { desc = 'smart-splits: set the log level to use for logging', nargs = 1 },
+  },
 }
