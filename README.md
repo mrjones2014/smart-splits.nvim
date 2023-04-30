@@ -341,6 +341,9 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 > If you are experiencing performance issues with circular navigation, they are solved by [wez/wezterm@96f1585](https://github.com/wez/wezterm/commit/96f1585b103162b042e2593567884dfcbe32ca21),
 > so try using Wezterm nightly for now.
 
+> **Note**
+> This won't work if the pane is connected over SSH, as the pane will not properly report the foreground process name.
+
 Add the following snippet to your `~/.config/wezterm/wezterm.lua`:
 
 ```lua
@@ -411,6 +414,9 @@ return {
 
 > **Note** `config.at_edge = 'wrap'` is not supoprted in Kitty terminal multiplexer due to inability to determine
 > pane layout from CLI.
+
+> **Note**
+> This won't work if the pane is connected over SSH, as the pane will not properly report the foreground process name.
 
 Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the keymaps and resize amount as desired.
 
