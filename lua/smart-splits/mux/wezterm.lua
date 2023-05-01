@@ -1,4 +1,5 @@
 local Direction = require('smart-splits.types').Direction
+local log = require('smart-splits.log')
 
 local dir_keys_wezterm = {
   [Direction.left] = 'Left',
@@ -66,6 +67,37 @@ local function current_pane_info()
 
   return nil
 end
+
+local function set_user_var(value)
+  local osc1337_str
+  if vim.env.TMUX then
+    osc1337_str = [[\033Ptmux;\033\033]1337;SetUserVar=IS_NVIM=%s\007\033\\]]
+  else
+    osc1337_str = [[\033]1337;SetUserVar=IS_NVIM=%s\007]]
+  end
+
+  osc1337_str = osc1337_str:format(require('smart-splits.utils').base64_encode(value))
+  vim.fn.system(string.format('printf %s', osc1337_str))
+  if vim.v.shell_error ~= 0 then
+    log.warn('Failed to set Wezterm user var IS_NVIM=%s; %s', value, vim.v.shell_error)
+  end
+end
+
+---Set a Wezterm user var, `IS_NVIM=true`
+---and clear it on exit.
+---https://github.com/tmux/tmux/wiki/FAQ#what-is-the-passthrough-escape-sequence-and-how-do-i-use-it
+---Note that you ALSO need to add "set -g allow-passthrough on" to your tmux.conf
+local function setup_wezterm_uservars()
+  set_user_var(true)
+  vim.api.nvim_create_autocmd('VimLeavePre', {
+    callback = function()
+      set_user_var(false)
+    end,
+    group = vim.api.nvim_create_augroup('SmartSplitsWeztermIntegration', { clear = true }),
+  })
+end
+
+setup_wezterm_uservars()
 
 ---@type SmartSplitsMultiplexer
 local M = {}
