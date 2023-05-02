@@ -37,7 +37,7 @@ function M.start_resize_mode()
     vim.inspect(resize_keys),
     quit_key
   )
-  vim.info(msg, vim.log.levels.INFO)
+  log.info(msg, vim.log.levels.INFO)
 end
 
 function M.end_resize_mode()
