@@ -10,8 +10,7 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
 
 ![demo](https://user-images.githubusercontent.com/8648891/201928611-4338e3cb-cca9-4e15-92c6-0405b7072279.gif)
 
-<details>
-<summary>Table of Contents (click to expand)</summary>
+**Table of Contents**
 
 - [Install](#install)
 - [Configuration](#configuration)
@@ -24,8 +23,6 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
     - [Kitty](#kitty)
       - [Credits](#credits)
     - [Multiplexer Lua API](#multiplexer-lua-api)
-
-</details>
 
 ## Install
 
@@ -338,8 +335,10 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 #### Wezterm
 
 > **Note**
-> If you are experiencing performance issues with circular navigation, they are solved by [wez/wezterm@96f1585](https://github.com/wez/wezterm/commit/96f1585b103162b042e2593567884dfcbe32ca21),
-> so try using Wezterm nightly for now.
+> It is recommended _not to lazy load_ `smart-splits.nvim` if using the Wezterm integration.
+> If you need to lazy load, you need to use a different `is_vim()` implementation below.
+> The plugin is small, and smart about not loading modules unnecessarily, so it should
+> have minimal impact on your startup time. It adds about 0.07ms on my setup.
 
 > **Note**
 > This won't work if the pane is connected over SSH, as the pane will not properly report the foreground process name.
@@ -349,15 +348,23 @@ Add the following snippet to your `~/.config/wezterm/wezterm.lua`:
 ```lua
 local w = require('wezterm')
 
--- Equivalent to POSIX basename(3)
--- Given "/foo/bar" returns "bar"
--- Given "c:\\foo\\bar" returns "bar"
-local function basename(s)
-  return string.gsub(s, '(.*[/\\])(.*)', '%2')
+-- if you are *NOT* lazy-loading smart-splits.nvim (recommended)
+local function is_vim(pane)
+  -- this is set by the plugin, and unset on ExitPre in Neovim
+  return pane:get_user_vars().IS_NVIM == 'true'
 end
 
+-- if you *ARE* lazy-loading smart-splits.nvim (not recommended)
+-- you have to use this instead, but note that this will not work
+-- in all cases (e.g. over an SSH connection). Also note that
+-- `pane:get_foreground_process_name()` can have high and highly variable
+-- latency, so the other implementation of `is_vim()` will be more
+-- performant as well.
 local function is_vim(pane)
-  local process_name = basename(pane:get_foreground_process_name())
+  -- This gsub is equivalent to POSIX basename(3)
+  -- Given "/foo/bar" returns "bar"
+  -- Given "c:\\foo\\bar" returns "bar"
+  local process_name = string.gsub(pane:get_foreground_process_name(), '(.*[/\\])(.*)', '%2')
   return process_name == 'nvim' or process_name == 'vim'
 end
 
