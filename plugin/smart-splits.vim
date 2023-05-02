@@ -1,5 +1,9 @@
-" I have no idea why but this works if I write it in vimscript but not if I
-" write it in Lua...
+" This bit works better in Vimscript because Vimscript treats
+" terminal escapes (e.g. \033]1337) as octal, whereas Lua treats
+" them as base-10. This means to do this in Lua I'd have to translate
+" the codes from what's in Wezterm's docs and convert them to base-10.
+" I'd prefer to just use Vimscript and keep the codes consistent with
+" Wezterm's docs.
 
 let s:b64_table = [
   \ 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',
