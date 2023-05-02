@@ -340,9 +340,6 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 > The plugin is small, and smart about not loading modules unnecessarily, so it should
 > have minimal impact on your startup time. It adds about 0.07ms on my setup.
 
-> **Note**
-> This won't work if the pane is connected over SSH, as the pane will not properly report the foreground process name.
-
 Add the following snippet to your `~/.config/wezterm/wezterm.lua`:
 
 ```lua
