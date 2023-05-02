@@ -69,25 +69,30 @@ local function current_pane_info()
 end
 
 local function set_user_var(value)
-  local osc1337_str
-  if vim.env.TMUX then
-    osc1337_str = [[\033Ptmux;\033\033]1337;SetUserVar=IS_NVIM=%s\007\033\\]]
+  local osc1337_str = [[\033]1337;SetUserVar=IS_NVIM=%s\007]]
+  osc1337_str = osc1337_str:format(require('smart-splits.utils').base64_encode(tostring(value)))
+  local success
+  print(osc1337_str)
+  if vim.fn.filewritable('/dev/fd/1') == 1 then
+    success = vim.fn.writefile({ osc1337_str }, '/dev/fd/1', 'b') == 0
   else
-    osc1337_str = [[\033]1337;SetUserVar=IS_NVIM=%s\007]]
+    success = vim.fn.chansend(vim.v.stderr, osc1337_str) > 0
   end
-
-  osc1337_str = osc1337_str:format(require('smart-splits.utils').base64_encode(value))
-  vim.fn.system(string.format('printf %s', osc1337_str))
-  if vim.v.shell_error ~= 0 then
-    log.warn('Failed to set Wezterm user var IS_NVIM=%s; %s', value, vim.v.shell_error)
+  if not success then
+    log.error('Failed to set Wezterm user var NVIM=%s', value)
   end
 end
+
+---@type SmartSplitsMultiplexer
+local M = {}
+
+M.type = 'wezterm'
 
 ---Set a Wezterm user var, `IS_NVIM=true`
 ---and clear it on exit.
 ---https://github.com/tmux/tmux/wiki/FAQ#what-is-the-passthrough-escape-sequence-and-how-do-i-use-it
 ---Note that you ALSO need to add "set -g allow-passthrough on" to your tmux.conf
-local function setup_wezterm_uservars()
+function M.setup_wezterm_uservars()
   set_user_var(true)
   vim.api.nvim_create_autocmd('VimLeavePre', {
     callback = function()
@@ -96,13 +101,6 @@ local function setup_wezterm_uservars()
     group = vim.api.nvim_create_augroup('SmartSplitsWeztermIntegration', { clear = true }),
   })
 end
-
-setup_wezterm_uservars()
-
----@type SmartSplitsMultiplexer
-local M = {}
-
-M.type = 'wezterm'
 
 function M.current_pane_id()
   local current_pane = current_pane_info()

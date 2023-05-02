@@ -82,8 +82,9 @@ function M.set_default_multiplexer()
     config.multiplexer_integration = Multiplexer.tmux
   elseif vim.env.TERM_PROGRAM == 'WezTerm' then
     config.multiplexer_integration = Multiplexer.wezterm
-    -- Kitty doesn't use $TERM_PROGRAM, and also requires remote control enabled anyway
-  elseif vim.env.KITTY_LISTEN_ON ~= nil then
+    -- setup user vars
+    require('smart-splits.mux.wezterm').setup_wezterm_uservars()
+  elseif vim.env.KITTY_LISTEN_ON ~= nil then -- Kitty doesn't use $TERM_PROGRAM, and also requires remote control enabled anyway
     config.multiplexer_integration = Multiplexer.kitty
   end
 
