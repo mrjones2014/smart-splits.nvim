@@ -1,3 +1,5 @@
+ARE	smart-splits.txt	/*ARE*
+NOT	smart-splits.txt	/*NOT*
 screen	smart-splits.txt	/*screen*
 smart-splits-configuration	smart-splits.txt	/*smart-splits-configuration*
 smart-splits-credits	smart-splits.txt	/*smart-splits-credits*
