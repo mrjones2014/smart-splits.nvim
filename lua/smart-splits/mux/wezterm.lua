@@ -1,5 +1,4 @@
 local Direction = require('smart-splits.types').Direction
-local log = require('smart-splits.log')
 
 local dir_keys_wezterm = {
   [Direction.left] = 'Left',
