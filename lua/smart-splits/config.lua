@@ -26,7 +26,7 @@ local Multiplexer = types.Multiplexer
 ---@field disable_multiplexer_nav_when_zoomed boolean
 ---@field kitty_password string|nil
 ---@field setup fun(cfg:table)
----@field set_default_multiplexer fun()
+---@field set_default_multiplexer fun():string|nil
 ---@field log_level 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
 
 ---@type SmartSplitsConfig
@@ -82,8 +82,6 @@ function M.set_default_multiplexer()
     config.multiplexer_integration = Multiplexer.tmux
   elseif vim.env.TERM_PROGRAM == 'WezTerm' then
     config.multiplexer_integration = Multiplexer.wezterm
-    -- setup user vars
-    require('smart-splits.mux.wezterm').setup_wezterm_uservars()
   elseif vim.env.KITTY_LISTEN_ON ~= nil then -- Kitty doesn't use $TERM_PROGRAM, and also requires remote control enabled anyway
     config.multiplexer_integration = Multiplexer.kitty
   end
@@ -91,6 +89,8 @@ function M.set_default_multiplexer()
   if type(config.multiplexer_integration) == 'string' then
     log.debug('Auto-detected multiplexer back-end: %s', config.multiplexer_integration)
   end
+
+  return config.multiplexer_integration
 end
 
 function M.setup(new_config)
