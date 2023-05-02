@@ -10,8 +10,7 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
 
 ![demo](https://user-images.githubusercontent.com/8648891/201928611-4338e3cb-cca9-4e15-92c6-0405b7072279.gif)
 
-<details>
-<summary>Table of Contents (click to expand)</summary>
+**Table of Contents**
 
 - [Install](#install)
 - [Configuration](#configuration)
@@ -24,8 +23,6 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
     - [Kitty](#kitty)
       - [Credits](#credits)
     - [Multiplexer Lua API](#multiplexer-lua-api)
-
-</details>
 
 ## Install
 
