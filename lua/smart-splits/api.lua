@@ -42,7 +42,10 @@ local is_resizing = false
 ---@return boolean
 local function is_full_height(winnr)
   -- for vertical height account for tabline, status line, and cmd line
-  local window_height = vim.o.lines - 1 - vim.o.cmdheight
+  local window_height = vim.o.lines - vim.o.cmdheight
+  if (vim.o.laststatus == 1 and #vim.api.nvim_tabpage_list_wins(0) > 1) or vim.o.laststatus > 1 then
+    window_height = window_height - 1
+  end
   if (vim.o.showtabline == 1 and #vim.api.nvim_list_tabpages() > 1) or vim.o.showtabline == 2 then
     window_height = window_height - 1
   end
