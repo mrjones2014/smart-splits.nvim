@@ -39,7 +39,13 @@ return {
     require('smart-splits').start_resize_mode,
     { desc = 'smart-splits: Start persistent resize mode, press <ESC> to exit resize mode' },
   },
-  { 'SmartSplitsLog', require('smart-splits.log').open_log_file, { desc = 'smart-splits: show log file' } },
+  {
+    'SmartSplitsLog',
+    function()
+      require('smart-splits.log').open_log_file()
+    end,
+    { desc = 'smart-splits: show log file' },
+  },
   {
     'SmartSplitsLogLevel',
     function(args)
