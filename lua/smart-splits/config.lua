@@ -1,4 +1,5 @@
-local log = require('smart-splits.log')
+local lazy = require('smart-splits.lazy')
+local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplitsLogger]]
 local types = require('smart-splits.types')
 local AtEdgeBehavior = types.AtEdgeBehavior
 local Multiplexer = types.Multiplexer

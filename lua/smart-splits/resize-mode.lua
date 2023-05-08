@@ -1,5 +1,6 @@
-local log = require('smart-splits.log')
-local config = require('smart-splits.config')
+local lazy = require('smart-splits.lazy')
+local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplitsLogger]]
+local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
 
 local M = {}
 

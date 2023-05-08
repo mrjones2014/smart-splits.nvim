@@ -1,11 +1,11 @@
+local lazy = require('smart-splits.lazy')
+local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
+local mux = lazy.require_on_exported_call('smart-splits.mux') --[[@as SmartSplitsMultiplexer]]
 local types = require('smart-splits.types')
 local Direction = types.Direction
 local AtEdgeBehavior = types.AtEdgeBehavior
 
 local M = {}
-
-local config = require('smart-splits.config')
-local mux = require('smart-splits.mux')
 
 ---@enum WinPosition
 local WinPosition = {
