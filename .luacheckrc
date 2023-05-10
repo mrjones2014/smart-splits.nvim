@@ -1,2 +1,2 @@
-read_globals = { 'vim' }
+globals = { 'vim' }
 exclude_files = { '.install/**/*.lua', '.luarocks/**/*.lua' }
