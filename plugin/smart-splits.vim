@@ -65,5 +65,10 @@ let s:mux = luaeval("require('smart-splits.config').set_default_multiplexer()")
 
 if s:mux == "wezterm"
   call s:write(s:format_var("true"))
-  autocmd ExitPre * :call s:write(s:format_var("false"))
+  " Set to false if nvim is suspended with ctrl+z
+  autocmd VimSuspend * :call s:write(s:format_var("false"))
+  " Set to true if nvim is resumed after being suspended with ctrl+z
+  autocmd VimResume * :call s:write(s:format_var("true"))
+  " Set to false when nvim exits
+  autocmd VimLeave * :call s:write(s:format_var("false"))
 endif
