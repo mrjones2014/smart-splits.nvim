@@ -342,8 +342,8 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 
 > **Note**
 > Pane resizing currently requires a nightly build of Wezterm.
-> Check the output of `wezterm cli adjust-pane-size` to see if your build supports it; if not,
-> you can check how to obtain a nightly build by following the instructions [here](https://wezfurlong.org/wezterm/installation.html).
+> Check the output of `wezterm cli adjust-pane-size --help` to see if your build supports it; if not,
+> you can check how to obtain a nightly build by [following the instructions here](https://wezfurlong.org/wezterm/installation.html).
 
 Add the following snippet to your `~/.config/wezterm/wezterm.lua`:
 
