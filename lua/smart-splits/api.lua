@@ -1,6 +1,7 @@
 local lazy = require('smart-splits.lazy')
 local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
 local mux = lazy.require_on_exported_call('smart-splits.mux') --[[@as SmartSplitsMultiplexer]]
+local utils = require('smart-splits.utils')
 local types = require('smart-splits.types')
 local Direction = types.Direction
 local AtEdgeBehavior = types.AtEdgeBehavior
@@ -427,6 +428,11 @@ end
 
 vim.tbl_map(function(direction)
   M[string.format('resize_%s', direction)] = function(amount)
+    -- don't attempt to resize floating windows, it doesn't work right
+    if utils.is_floating_window() then
+      return
+    end
+
     local eventignore_orig = vim.deepcopy(vim.o.eventignore)
     set_eventignore()
     local cur_win_id = vim.api.nvim_get_current_win()
@@ -440,10 +446,18 @@ vim.tbl_map(function(direction)
     vim.o.eventignore = eventignore_orig
   end
   M[string.format('move_cursor_%s', direction)] = function(opts)
+    -- don't attempt to move across floating windows, it doesn't work right
+    if utils.is_floating_window() then
+      return
+    end
     is_resizing = false
     pcall(move_cursor, direction, opts)
   end
   M[string.format('swap_buf_%s', direction)] = function(opts)
+    -- don't attempt to swap bufs across floating windows, it doesn't work right
+    if utils.is_floating_window() then
+      return
+    end
     is_resizing = false
     swap_bufs(direction, opts)
   end
