@@ -1,6 +1,7 @@
 local lazy = require('smart-splits.lazy')
 local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
 local mux = lazy.require_on_exported_call('smart-splits.mux') --[[@as SmartSplitsMultiplexer]]
+local utils = require('smart-splits.utils')
 local types = require('smart-splits.types')
 local Direction = types.Direction
 local AtEdgeBehavior = types.AtEdgeBehavior
@@ -197,6 +198,17 @@ end
 local function resize(direction, amount)
   amount = amount or config.default_amount
 
+  -- ignore currently focused floating windows by focusing the last accessed window
+  -- if the last accessed window is also floating, do not attempt to resize it
+  if utils.is_floating_window() then
+    local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
+    if utils.is_floating_window(prev_win) then
+      return
+    end
+
+    vim.api.nvim_set_current_win(prev_win)
+  end
+
   -- if a full width window and horizontall resize check if we can resize with multiplexer
   if
     (direction == Direction.left or direction == Direction.right)
@@ -323,6 +335,17 @@ local function move_cursor(direction, opts)
     end
   end
 
+  -- ignore currently focused floating windows by focusing the last accessed window
+  -- if the last accessed window is also floating, do not attempt to move the cursor
+  if utils.is_floating_window() then
+    local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
+    if utils.is_floating_window(prev_win) then
+      return
+    end
+
+    vim.api.nvim_set_current_win(prev_win)
+  end
+
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   local dir_key = DirectionKeys[direction]
 
@@ -398,6 +421,18 @@ end
 ---@param opts table
 local function swap_bufs(direction, opts)
   opts = opts or {}
+
+  -- ignore currently focused floating windows by focusing the last accessed window
+  -- if the last accessed window is also floating, do not attempt to swap buffers
+  if utils.is_floating_window() then
+    local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
+    if utils.is_floating_window(prev_win) then
+      return
+    end
+
+    vim.api.nvim_set_current_win(prev_win)
+  end
+
   local buf_1 = vim.api.nvim_get_current_buf()
   local win_1 = vim.api.nvim_get_current_win()
 
