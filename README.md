@@ -345,7 +345,8 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 > Check the output of `wezterm cli adjust-pane-size --help` to see if your build supports it; if not,
 > you can check how to obtain a nightly build by [following the instructions here](https://wezfurlong.org/wezterm/installation.html).
 
-Add the following snippet to your `~/.config/wezterm/wezterm.lua`:
+First, ensure that the `wezterm` CLI is on your `$PATH`, as the CLI is used by the integration.
+Then, add the following snippet to your `~/.config/wezterm/wezterm.lua`:
 
 ```lua
 local w = require('wezterm')
