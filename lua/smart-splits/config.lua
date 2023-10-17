@@ -83,8 +83,8 @@ function M.set_default_multiplexer()
   -- because you aren't in any terminal, you're in a Neovim GUI
   local current_ui = vim.tbl_filter(function(ui)
     return ui.chan == 1
-  end, vim.api.nvim_list_uis())[0]
-  if not current_ui.stdin_tty and not current_ui.stdout_tty then
+  end, vim.api.nvim_list_uis())[1]
+  if current_ui and not current_ui.stdin_tty and not current_ui.stdout_tty then
     config.multiplexer_integration = false
     return nil
   end
