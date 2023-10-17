@@ -31,7 +31,7 @@ local Multiplexer = types.Multiplexer
 ---@field log_level 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
 
 ---@type SmartSplitsConfig
-local config = {
+local config = { ---@diagnostic disable-line:missing-fields
   ignored_buftypes = {
     'nofile',
     'quickfix',
@@ -79,6 +79,16 @@ function M.set_default_multiplexer()
     return
   end
 
+  -- if running in a GUI instead of terminal TUI, disable mux
+  -- because you aren't in any terminal, you're in a Neovim GUI
+  local current_ui = vim.tbl_filter(function(ui)
+    return ui.chan == 1
+  end, vim.api.nvim_list_uis())[1]
+  if current_ui and not current_ui.stdin_tty and not current_ui.stdout_tty then
+    config.multiplexer_integration = false
+    return nil
+  end
+
   if vim.env.TERM_PROGRAM == 'tmux' then
     config.multiplexer_integration = Multiplexer.tmux
   elseif vim.env.TERM_PROGRAM == 'WezTerm' then
@@ -92,13 +102,14 @@ function M.set_default_multiplexer()
     log.debug('Auto-detected multiplexer back-end: %s', config.multiplexer_integration)
   end
 
-  return config.multiplexer_integration
+  return type(config.multiplexer_integration) == 'string' and config.multiplexer_integration or nil
 end
 
 function M.setup(new_config)
   config = vim.tbl_deep_extend('force', config, new_config or {})
 
   -- check deprecated settings
+  ---@diagnostic disable:undefined-field
 
   if config.tmux_integration then
     vim.deprecate(
@@ -124,6 +135,7 @@ function M.setup(new_config)
     config.at_edge = config.wrap_at_edge == true and AtEdgeBehavior.wrap or AtEdgeBehavior.stop
     vim.deprecate('config.wrap_at_edge', "config.at_edge = 'wrap'|'split'|'stop'", 'smart-splits.nvim')
   end
+  ---@diagnostic enable:undefined-field
 end
 
 return M
