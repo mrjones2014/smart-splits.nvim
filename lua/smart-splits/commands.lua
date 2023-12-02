@@ -21,6 +21,16 @@ local function move_handler(direction)
   end
 end
 
+local function swap_handler(direction)
+  return function(args)
+    local same_row
+    if args and args.args and #args.args > 0 then
+      same_row = args.args
+    end
+    require('smart-splits')['swap_buf_' .. direction](same_row)
+  end
+end
+
 return {
   -- resize
   { 'SmartResizeLeft', resize_handler(Direction.left), { desc = 'smart-splits: resize left', nargs = '*' } },
@@ -33,6 +43,12 @@ return {
   -- same_row does not apply to up/down
   { 'SmartCursorMoveUp', require('smart-splits').move_cursor_up, { desc = 'smart-splits: move cursor up' } },
   { 'SmartCursorMoveDown', require('smart-splits').move_cursor_down, { desc = 'smart-splits: move cursor down' } },
+  -- swap
+  { 'SmartSwapLeft', swap_handler(Direction.left), { desc = 'smart-splits: swap buffer left', nargs = '*' } },
+  { 'SmartSwapRight', swap_handler(Direction.right), { desc = 'smart-splits: swap buffer right', nargs = '*' } },
+  -- same_row does not apply to up/down
+  { 'SmartSwapUp', require('smart-splits').swap_buf_up, { desc = 'smart-splits: swap buffer up' } },
+  { 'SmartSwapDown', require('smart-splits').swap_buf_down, { desc = 'smart-splits: swap buffer down' } },
   -- resize mode
   {
     'SmartResizeMode',
