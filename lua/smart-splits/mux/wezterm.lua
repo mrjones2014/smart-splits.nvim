@@ -68,7 +68,7 @@ local function current_pane_info()
 end
 
 ---@type SmartSplitsMultiplexer
-local M = {}
+local M = {} ---@diagnostic disable-line: missing-fields
 
 M.type = 'wezterm'
 
@@ -79,7 +79,7 @@ function M.current_pane_id()
     return current_pane.pane_id
   end
 
-  local output = wezterm_exec({ 'list-clients', '--format', 'json' })
+  local output = wezterm_exec({ 'list-clients', '--format', 'json' }) --[[@as string]]
   local data = vim.json.decode(output) --[[@as table]]
   if #data == 0 then
     return nil

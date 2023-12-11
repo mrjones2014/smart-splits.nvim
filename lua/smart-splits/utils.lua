@@ -19,4 +19,10 @@ function M.is_floating_window(win_id)
   return win_cfg and (win_cfg.relative ~= '' or not win_cfg.relative)
 end
 
+function M.are_we_wezterm()
+  local term = vim.trim((vim.env.TERM_PROGRAM or ''):lower())
+  local wezterm_pane = vim.trim(vim.env.WEZTERM_PANE or '')
+  return term == 'wezterm' or wezterm_pane ~= ''
+end
+
 return M
