@@ -89,9 +89,10 @@ function M.set_default_multiplexer()
     return nil
   end
 
-  if vim.env.TERM_PROGRAM == 'tmux' then
+  local term = vim.trim((vim.env.TERM_PROGRAM or ''):lower())
+  if term == 'tmux' then
     config.multiplexer_integration = Multiplexer.tmux
-  elseif vim.env.TERM_PROGRAM == 'WezTerm' then
+  elseif term == 'wezterm' then
     config.multiplexer_integration = Multiplexer.wezterm
   elseif vim.env.KITTY_LISTEN_ON ~= nil then
     -- Kitty doesn't use $TERM_PROGRAM, and also requires remote control enabled anyway
@@ -100,6 +101,8 @@ function M.set_default_multiplexer()
 
   if type(config.multiplexer_integration) == 'string' then
     log.debug('Auto-detected multiplexer back-end: %s', config.multiplexer_integration)
+  else
+    log.debug('Auto-detected multiplexer back-end: none')
   end
 
   return type(config.multiplexer_integration) == 'string' and config.multiplexer_integration or nil
