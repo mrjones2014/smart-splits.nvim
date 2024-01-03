@@ -3,6 +3,7 @@ local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplit
 local types = require('smart-splits.types')
 local AtEdgeBehavior = types.AtEdgeBehavior
 local Multiplexer = types.Multiplexer
+local utils = require('smart-splits.utils')
 
 ---@class SmartResizeModeHooks
 ---@field on_enter fun()|nil
@@ -81,10 +82,7 @@ function M.set_default_multiplexer()
 
   -- if running in a GUI instead of terminal TUI, disable mux
   -- because you aren't in any terminal, you're in a Neovim GUI
-  local current_ui = vim.tbl_filter(function(ui)
-    return ui.chan == 1
-  end, vim.api.nvim_list_uis())[1]
-  if current_ui and not current_ui.stdin_tty and not current_ui.stdout_tty then
+  if utils.are_we_gui() then
     config.multiplexer_integration = false
     return nil
   end
