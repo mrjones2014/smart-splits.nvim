@@ -360,7 +360,7 @@ smart_splits.apply_to_config(config, {
   -- smart_splits.apply_to_config(config)
 
   -- directional keys to use in order of: left, down, up, right
-  direction_keys = { 'h', 'j', 'k', 'l' }
+  direction_keys = { 'h', 'j', 'k', 'l' },
   -- modifier keys to combine with direction_keys
   modifiers = {
     move = 'CTRL', -- modifier to use for pane movement, e.g. CTRL+h to move left
