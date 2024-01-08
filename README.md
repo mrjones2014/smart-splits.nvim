@@ -346,7 +346,30 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 > you can check how to obtain a nightly build by [following the instructions here](https://wezfurlong.org/wezterm/installation.html).
 
 First, ensure that the `wezterm` CLI is on your `$PATH`, as the CLI is used by the integration.
-Then, add the following snippet to your `~/.config/wezterm/wezterm.lua`:
+
+Then, if you're on Wezterm nightly, you can use Wezterm's [experimental plugin loader](https://github.com/wez/wezterm/commit/e4ae8a844d8feaa43e1de34c5cc8b4f07ce525dd):
+
+```lua
+local wezterm = require('wezterm')
+local smart_splits = wezterm.plugin.require('https://github.com/mrjones2014/smart-splits.nvim')
+local config = wezterm.config_builder()
+-- you can put the rest of your Wezterm config here
+smart_splits.apply_to_config(config, {
+  -- the default config is here, if you'd like to use the default keys,
+  -- you can omit this configuration table parameter and just use
+  -- smart_splits.apply_to_config(config)
+
+  -- directional keys to use in order of: left, down, up, right
+  direction_keys = { 'h', 'j', 'k', 'l' },
+  -- modifier keys to combine with direction_keys
+  modifiers = {
+    move = 'CTRL', -- modifier to use for pane movement, e.g. CTRL+h to move left
+    resize = 'META', -- modifier to use for pane resize, e.g. META+h to resize to the left
+  }
+})
+```
+
+Otherwise, add the following snippet to your `~/.config/wezterm/wezterm.lua`:
 
 ```lua
 local w = require('wezterm')
@@ -372,11 +395,6 @@ local function is_vim(pane)
 end
 
 local direction_keys = {
-  Left = 'h',
-  Down = 'j',
-  Up = 'k',
-  Right = 'l',
-  -- reverse lookup
   h = 'Left',
   j = 'Down',
   k = 'Up',
