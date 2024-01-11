@@ -469,7 +469,7 @@ vim.tbl_map(function(direction)
     amount = amount or (vim.v.count1 * config.default_amount)
     pcall(resize, direction, amount)
     -- guarantee we haven't moved the cursor by accident
-    vim.api.nvim_set_current_win(cur_win_id)
+    pcall(vim.api.nvim_set_current_win, cur_win_id)
     is_resizing = false
     -- luacheck:ignore
     vim.o.eventignore = eventignore_orig
