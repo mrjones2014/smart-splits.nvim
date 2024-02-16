@@ -64,14 +64,14 @@ Defaults are shown below:
 
 ```lua
 require('smart-splits').setup({
-  -- Ignored filetypes (only while resizing)
-  ignored_filetypes = {
+  -- Ignored buffer types (only while resizing)
+  ignored_buftypes = {
     'nofile',
     'quickfix',
     'prompt',
   },
-  -- Ignored buffer types (only while resizing)
-  ignored_buftypes = { 'NvimTree' },
+  -- Ignored filetypes (only while resizing)
+  ignored_filetypes = { 'NvimTree' },
   -- the default number of lines/columns to resize by at a time
   default_amount = 3,
   -- Desired behavior when your cursor is at an edge and you
