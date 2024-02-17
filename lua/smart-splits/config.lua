@@ -4,6 +4,7 @@ local types = require('smart-splits.types')
 local AtEdgeBehavior = types.AtEdgeBehavior
 local Multiplexer = types.Multiplexer
 local utils = require('smart-splits.utils')
+local mux_utils = require('smart-splits.mux.utils')
 
 ---@class SmartResizeModeHooks
 ---@field on_enter fun()|nil
@@ -82,7 +83,7 @@ function M.set_default_multiplexer()
 
   -- if running in a GUI instead of terminal TUI, disable mux
   -- because you aren't in any terminal, you're in a Neovim GUI
-  if utils.are_we_gui() then
+  if mux_utils.are_we_gui() then
     config.multiplexer_integration = false
     return nil
   end

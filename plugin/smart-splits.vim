@@ -61,7 +61,7 @@ function s:format_var(val)
   return printf("\033]1337;SetUserVar=IS_NVIM=%s\007", s:encode_b64(a:val, 0))
 endfunction
 
-let s:are_we_wezterm = luaeval("require('smart-splits.utils').are_we_wezterm()")
+let s:are_we_wezterm = luaeval("require('smart-splits.mux.utils').are_we_wezterm()")
 
 if s:are_we_wezterm
   call s:write(s:format_var("true"))
