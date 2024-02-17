@@ -3,7 +3,6 @@ local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplit
 local types = require('smart-splits.types')
 local AtEdgeBehavior = types.AtEdgeBehavior
 local Multiplexer = types.Multiplexer
-local utils = require('smart-splits.utils')
 local mux_utils = require('smart-splits.mux.utils')
 
 ---@class SmartResizeModeHooks
@@ -108,7 +107,18 @@ function M.set_default_multiplexer()
 end
 
 function M.setup(new_config)
+  local original_mux = config.multiplexer_integration
+
   config = vim.tbl_deep_extend('force', config, new_config or {})
+  -- if the mux setting changed, run startup again
+  if
+    original_mux ~= nil
+    and original_mux ~= false
+    and #tostring(original_mux or '') == 0
+    and original_mux ~= config.multiplexer_integration
+  then
+    mux_utils.startup()
+  end
 
   -- check deprecated settings
   ---@diagnostic disable:undefined-field

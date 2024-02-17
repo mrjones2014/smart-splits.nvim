@@ -1,16 +1,5 @@
 local M = {}
 
----Check if Neovim is running in Wezterm TUI
----@return boolean
-function M.are_we_wezterm()
-  if M.are_we_gui() then
-    return false
-  end
-  local term = vim.trim((vim.env.TERM_PROGRAM or ''):lower())
-  local wezterm_pane = vim.trim(vim.env.WEZTERM_PANE or '')
-  return term == 'wezterm' or wezterm_pane ~= ''
-end
-
 function M.are_we_tmux()
   if M.are_we_gui() then
     return false
@@ -29,6 +18,32 @@ function M.are_we_gui()
     return ui.chan == 1
   end, vim.api.nvim_list_uis())[1]
   return current_ui ~= nil and not current_ui.stdin_tty and not current_ui.stdout_tty
+end
+
+---Initialization for mux capabilities.
+---If selected mux has an `on_init` or `on_exit`,
+---call `on_init` and set up autocmds to call `on_init` on `VimResume`
+---and `on_exit` on `VimSuspend` and `VimLeave`.
+function M.startup()
+  local mux = require('smart-splits.mux').get()
+  if not mux then
+    return
+  end
+  if mux.on_init then
+    mux.on_init()
+    vim.api.nvim_create_autocmd('VimResume', {
+      callback = function()
+        mux.on_init()
+      end,
+    })
+  end
+  if mux.on_exit then
+    vim.api.nvim_create_autocmd({ 'VimSuspend', 'VimLeave' }, {
+      callback = function()
+        mux.on_exit()
+      end,
+    })
+  end
 end
 
 return M

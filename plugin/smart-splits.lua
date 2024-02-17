@@ -5,3 +5,4 @@ vim.tbl_map(function(cmd)
 end, cmds)
 
 require('smart-splits.config').set_default_multiplexer()
+require('smart-splits.mux.utils').startup()

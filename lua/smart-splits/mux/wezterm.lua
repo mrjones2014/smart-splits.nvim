@@ -150,4 +150,16 @@ function M.split_pane(direction, size)
   return ok
 end
 
+function M.on_init()
+  local format_var = vim.fn['smart_splits#format_wezterm_var']
+  local write_var = vim.fn['smart_splits#write_wezterm_var']
+  write_var(format_var('true'))
+end
+
+function M.on_exit()
+  local format_var = vim.fn['smart_splits#format_wezterm_var']
+  local write_var = vim.fn['smart_splits#write_wezterm_var']
+  write_var(format_var('false'))
+end
+
 return M
