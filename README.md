@@ -305,13 +305,18 @@ You will need to set up keymaps in your `tmux`, `wezterm`, or `kitty` configs to
 Add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys and resize amount if desired):
 
 ```tmux
-# Smart pane switching with awareness of Vim splits.
+# '@pane-is-vim' is a pane-local option that is set by the plugin on load,
+# and unset when Neovim exits or suspends; note that this means you'll probably
+# not want to lazy-load smart-splits.nvim, as the variable won't be set until
+# the plugin is loaded
 
+# Smart pane switching with awareness of Neovim splits.
 bind-key -n C-h if -F "#{@pane-is-vim}" 'send-keys C-h'  'select-pane -L'
 bind-key -n C-j if -F "#{@pane-is-vim}" 'send-keys C-j'  'select-pane -D'
 bind-key -n C-k if -F "#{@pane-is-vim}" 'send-keys C-k'  'select-pane -U'
 bind-key -n C-l if -F "#{@pane-is-vim}" 'send-keys C-l'  'select-pane -R'
 
+# Smart pane resizing with awareness of Neovim splits.
 bind-key -n M-h if -F "#{@pane-is-vim}" 'send-keys M-h' 'resize-pane -L 3'
 bind-key -n M-j if -F "#{@pane-is-vim}" 'send-keys M-j' 'resize-pane -D 3'
 bind-key -n M-k if -F "#{@pane-is-vim}" 'send-keys M-k' 'resize-pane -U 3'
