@@ -306,7 +306,7 @@ Add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file
 
 ```tmux
 # Smart pane switching with awareness of Vim splits.
-"
+
 bind-key -n C-h if -F "#{@pane-is-vim}" 'send-keys C-h'  'select-pane -L'
 bind-key -n C-j if -F "#{@pane-is-vim}" 'send-keys C-j'  'select-pane -D'
 bind-key -n C-k if -F "#{@pane-is-vim}" 'send-keys C-k'  'select-pane -U'
