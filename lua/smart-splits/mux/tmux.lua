@@ -1,6 +1,6 @@
 local types = require('smart-splits.types')
 local Direction = types.Direction
-local Log = require('smart-splts.log')
+local log = require('smart-splits.log')
 
 local dir_keys_tmux = {
   [Direction.left] = 'L',
@@ -150,24 +150,24 @@ end
 function M.on_init()
   local pane_id = M.current_pane_id()
   if not pane_id then
-    Log.warn('tmux init: could not detect pane ID!')
+    log.warn('tmux init: could not detect pane ID!')
     return
   end
   tmux_exec({ 'set-option', '-pt', pane_id, '@pane-is-vim', 1 })
   if vim.v.shell_error ~= 0 then
-    Log.warn('tmux init: failed to detect pane_id')
+    log.warn('tmux init: failed to detect pane_id')
   end
 end
 
 function M.on_exit()
   local pane_id = M.current_pane_id()
   if not pane_id then
-    Log.warn('tmux init: could not detect pane ID!')
+    log.warn('tmux init: could not detect pane ID!')
     return
   end
   tmux_exec({ 'set-option', '-pt', pane_id, '@pane-is-vim', 0 })
   if vim.v.shell_error ~= 0 then
-    Log.warn('tmux init: failed to detect pane_id')
+    log.warn('tmux init: failed to detect pane_id')
   end
 end
 
