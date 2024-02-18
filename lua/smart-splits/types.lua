@@ -7,6 +7,8 @@
 ---@field resize_pane fun(direction:SmartSplitsDirection, amount:number):boolean
 ---@field split_pane fun(direction:SmartSplitsDirection,size:number|nil):boolean
 ---@field type SmartSplitsMultiplexerType
+---@field on_init fun()|nil
+---@field on_exit fun()|nil
 
 ---@alias SmartSplitsDirection 'left'|'right'|'up'|'down'
 

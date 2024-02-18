@@ -48,7 +48,7 @@ function s:encode_b64(str, size)
   return chunked
 endfunction
 
-function s:write(var)
+function smart_splits#write_wezterm_var(var)
   if filewritable('/dev/fd/2') == 1
     let l:success = writefile([a:var], '/dev/fd/2', 'b') == 0
   else
@@ -57,18 +57,6 @@ function s:write(var)
   return l:success
 endfunction
 
-function s:format_var(val)
+function smart_splits#format_wezterm_var(val)
   return printf("\033]1337;SetUserVar=IS_NVIM=%s\007", s:encode_b64(a:val, 0))
 endfunction
-
-let s:are_we_wezterm = luaeval("require('smart-splits.utils').are_we_wezterm()")
-
-if s:are_we_wezterm
-  call s:write(s:format_var("true"))
-  " Set to false if nvim is suspended with ctrl+z
-  autocmd VimSuspend * :call s:write(s:format_var("false"))
-  " Set to true if nvim is resumed after being suspended with ctrl+z
-  autocmd VimResume * :call s:write(s:format_var("true"))
-  " Set to false when nvim exits
-  autocmd VimLeave * :call s:write(s:format_var("false"))
-endif

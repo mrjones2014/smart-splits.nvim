@@ -52,6 +52,9 @@ function M.get()
   end
 
   local ok, mux = pcall(require, string.format('smart-splits.mux.%s', config.multiplexer_integration))
+  if not ok then
+    log.error(mux)
+  end
   return ok and mux or nil
 end
 
