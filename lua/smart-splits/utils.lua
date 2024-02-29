@@ -1,5 +1,11 @@
 local M = {}
 
+local function checkIfWSL()
+  return io.popen('grep -i WSL /proc/version')
+end
+
+M.isWSL = checkIfWSL()
+
 function M.tbl_find(tbl, predicate)
   for idx, value in ipairs(tbl) do
     if predicate(value) then
