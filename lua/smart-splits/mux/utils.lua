@@ -23,7 +23,7 @@ end
 ---Initialization for mux capabilities.
 ---If selected mux has an `on_init` or `on_exit`,
 ---call `on_init` and set up autocmds to call `on_init` on `VimResume`
----and `on_exit` on `VimSuspend` and `VimLeave`.
+---and `on_exit` on `VimSuspend` and `VimLeavePre`.
 function M.startup()
   local mux = require('smart-splits.mux').get()
   if not mux then
@@ -38,7 +38,7 @@ function M.startup()
     })
   end
   if mux.on_exit then
-    vim.api.nvim_create_autocmd({ 'VimSuspend', 'VimLeave' }, {
+    vim.api.nvim_create_autocmd({ 'VimSuspend', 'VimLeavePre' }, {
       callback = function()
         mux.on_exit()
       end,
