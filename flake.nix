@@ -47,10 +47,11 @@
         devShell = pkgs.mkShell {
           name = "shell with tmux";
 
-          packages = with pkgs; [ tmux ];
+          packages = with pkgs; [ tmux stylua luajitPackages.luacheck ];
 
           shellHook = ''
-            tmux -f ${tmux_conf}
+            alias tmux="tmux -f ${tmux_conf}"
+            alias :q="exit"
           '';
         };
       });
