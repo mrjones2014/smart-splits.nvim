@@ -1,10 +1,8 @@
 local M = {}
 
-local function checkIfWSL()
-  return io.popen('grep -i WSL /proc/version')
+function M.isWSL()
+  return vim.env.WSL_DISTRO_NAME ~= nil and vim.env.WSL_DISTRO_NAME ~= ''
 end
-
-M.isWSL = checkIfWSL()
 
 function M.tbl_find(tbl, predicate)
   for idx, value in ipairs(tbl) do
