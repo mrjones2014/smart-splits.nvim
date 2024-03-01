@@ -20,7 +20,6 @@ end
 
 ---@param args (string|number)[]
 ---@param as_list boolean|nil
----@return nil
 local function tmux_exec(args, as_list)
   local socket = get_socket_path()
   if not socket then
@@ -165,10 +164,15 @@ function M.on_exit()
     log.warn('tmux init: could not detect pane ID!')
     return
   end
-  tmux_exec({ 'set-option', '-pt', pane_id, '@pane-is-vim', 0 })
-  if vim.v.shell_error ~= 0 then
-    log.warn('tmux init: failed to detect pane_id')
+  local socket = get_socket_path()
+  if not socket then
+    log.warn('on_exit: Could not find tmux socket')
+    return
   end
+  local args = { 'set-option', '-pt', pane_id, '@pane-is-vim', 0 }
+  local cmd = vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
+
+  vim.fn.jobstart(cmd, { detach = true })
 end
 
 return M
