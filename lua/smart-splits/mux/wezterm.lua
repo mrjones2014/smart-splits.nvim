@@ -1,5 +1,6 @@
 local Direction = require('smart-splits.types').Direction
-local isWSL = require('smart-splits.utils').isWSL
+local utils = require('smart-splits.utils')
+local config = require('smart-splits.config')
 
 local dir_keys_wezterm = {
   [Direction.left] = 'Left',
@@ -17,8 +18,9 @@ local dir_keys_wezterm_splits = {
 
 local function wezterm_exec(cmd)
   local command = vim.deepcopy(cmd)
-  if isWSL then
-    table.insert(command, 1, 'wezterm.exe')
+  local wezterm_bin_path = config.wezterm_bin_path or 'wezterm.exe'
+  if utils.isWSL() then
+    table.insert(command, 1, wezterm_bin_path)
   else
     table.insert(command, 1, 'wezterm')
   end
