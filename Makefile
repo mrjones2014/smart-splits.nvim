@@ -8,7 +8,7 @@ check-luacheck:
 
 .PHONY: check-stylua # stylua gets run through a separate GitHub Action in CI
 check-stylua:
-	@if test -z "$$CI"; then echo "Running \`stylua\`..." && echo "No stylua errors found.\n"; fi
+	@if test -z "$$CI"; then echo "Running \`stylua\`..." && stylua ./lua/ && echo "No stylua errors found.\n"; fi
 
 .PHONY: check
 check: check-luacheck check-stylua
