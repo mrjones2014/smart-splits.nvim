@@ -26,6 +26,7 @@ local mux_utils = require('smart-splits.mux.utils')
 ---@field ignored_events string[]
 ---@field multiplexer_integration SmartSplitsMultiplexerType|false
 ---@field disable_multiplexer_nav_when_zoomed boolean
+---@field wezterm_cli_path string|nil
 ---@field kitty_password string|nil
 ---@field setup fun(cfg:table)
 ---@field set_default_multiplexer fun():string|nil
@@ -33,6 +34,7 @@ local mux_utils = require('smart-splits.mux.utils')
 
 ---@type SmartSplitsConfig
 local config = { ---@diagnostic disable-line:missing-fields
+  wezterm_cli_path = 'wezterm',
   ignored_buftypes = {
     'nofile',
     'quickfix',
@@ -108,6 +110,11 @@ end
 
 function M.setup(new_config)
   local original_mux = config.multiplexer_integration
+
+  if mux_utils.is_WSL() then
+    -- on WSL default to .exe unless explicitly set in user config
+    new_config.wezterm_cli_path = new_config.wezterm_cli_path or 'wezterm.exe'
+  end
 
   config = vim.tbl_deep_extend('force', config, new_config or {})
   -- if the mux setting changed, run startup again
