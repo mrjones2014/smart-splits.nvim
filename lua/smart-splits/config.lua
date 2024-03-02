@@ -26,7 +26,7 @@ local mux_utils = require('smart-splits.mux.utils')
 ---@field ignored_events string[]
 ---@field multiplexer_integration SmartSplitsMultiplexerType|false
 ---@field disable_multiplexer_nav_when_zoomed boolean
----@field wezterm_bin_path string|nil
+---@field wezterm_cli_path string|nil
 ---@field kitty_password string|nil
 ---@field setup fun(cfg:table)
 ---@field set_default_multiplexer fun():string|nil
@@ -34,6 +34,7 @@ local mux_utils = require('smart-splits.mux.utils')
 
 ---@type SmartSplitsConfig
 local config = { ---@diagnostic disable-line:missing-fields
+  wezterm_cli_path = 'wezterm',
   ignored_buftypes = {
     'nofile',
     'quickfix',
@@ -112,7 +113,6 @@ function M.setup(new_config)
 
   config = vim.tbl_deep_extend('force', config, new_config or {})
   -- if the mux setting changed, run startup again
-
   if
     original_mux ~= nil
     and original_mux ~= false
@@ -148,9 +148,6 @@ function M.setup(new_config)
   if config.wrap_at_edge == false or config.wrap_at_edge == true then
     config.at_edge = config.wrap_at_edge == true and AtEdgeBehavior.wrap or AtEdgeBehavior.stop
     vim.deprecate('config.wrap_at_edge', "config.at_edge = 'wrap'|'split'|'stop'", 'smart-splits.nvim')
-  end
-  if config.wezterm_bin_path then
-    M.wezterm_bin_path = config.wezterm_bin_path
   end
   ---@diagnostic enable:undefined-field
 end
