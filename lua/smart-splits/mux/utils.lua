@@ -18,6 +18,8 @@ function M.are_we_wezterm()
   return term == 'wezterm'
 end
 
+--- Check if we're in WSL
+---@return boolean
 function M.is_WSL()
   return vim.env.WSL_DISTRO_NAME ~= nil and vim.env.WSL_DISTRO_NAME ~= ''
 end
