@@ -9,6 +9,19 @@ function M.are_we_tmux()
   return term == 'tmux'
 end
 
+function M.are_we_wezterm()
+  if M.are_we_gui() then
+    return false
+  end
+
+  local term = vim.trim((vim.env.TERM_PROGRAM or ''):lower())
+  return term == 'wezterm'
+end
+
+function M.is_WSL()
+  return vim.env.WSL_DISTRO_NAME ~= nil and vim.env.WSL_DISTRO_NAME ~= ''
+end
+
 ---Check if Neovim is running in a GUI (rather than TUI)
 ---@return boolean
 function M.are_we_gui()

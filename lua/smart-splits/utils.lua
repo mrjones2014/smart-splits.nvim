@@ -1,9 +1,5 @@
 local M = {}
 
-function M.isWSL()
-  return vim.env.WSL_DISTRO_NAME ~= nil and vim.env.WSL_DISTRO_NAME ~= ''
-end
-
 function M.tbl_find(tbl, predicate)
   for idx, value in ipairs(tbl) do
     if predicate(value) then
