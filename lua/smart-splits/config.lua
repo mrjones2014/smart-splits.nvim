@@ -111,6 +111,11 @@ end
 function M.setup(new_config)
   local original_mux = config.multiplexer_integration
 
+  if mux_utils.is_WSL() then
+    -- on WSL default to .exe unless explicitly set in user config
+    new_config.wezterm_cli_path = new_config.wezterm_cli_path or 'wezterm.exe'
+  end
+
   config = vim.tbl_deep_extend('force', config, new_config or {})
   -- if the mux setting changed, run startup again
   if
