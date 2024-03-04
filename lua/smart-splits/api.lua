@@ -490,7 +490,7 @@ end, {
   Direction.down,
 })
 
-function M.move_cursor_previous_win()
+function M.move_cursor_previous()
   local win = mux_utils.get_previous_win()
   if win then
     vim.api.nvim_set_current_win(win)
