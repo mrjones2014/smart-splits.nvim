@@ -35,11 +35,27 @@ function M.are_we_gui()
   return current_ui ~= nil and not current_ui.stdin_tty and not current_ui.stdout_tty
 end
 
+local prev_win = nil
+
+---Return the buf ID of the previous buffer, if there is one
+---@return number|nil
+function M.get_previous_win()
+  return prev_win
+end
+
 ---Initialization for mux capabilities.
 ---If selected mux has an `on_init` or `on_exit`,
 ---call `on_init` and set up autocmds to call `on_init` on `VimResume`
 ---and `on_exit` on `VimSuspend` and `VimLeavePre`.
 function M.startup()
+  -- buffer tracking for "previous buffer"
+  vim.api.nvim_create_autocmd('WinLeave', {
+    callback = function()
+      prev_win = tonumber(vim.api.nvim_get_current_win())
+    end,
+  })
+
+  -- multiplexer startup/shutdown events
   local mux = require('smart-splits.mux').get()
   if not mux then
     return

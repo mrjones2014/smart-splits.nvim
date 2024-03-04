@@ -2,6 +2,7 @@ local lazy = require('smart-splits.lazy')
 local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
 local mux = lazy.require_on_exported_call('smart-splits.mux') --[[@as SmartSplitsMultiplexer]]
 local utils = require('smart-splits.utils')
+local mux_utils = require('smart-splits.mux.utils')
 local types = require('smart-splits.types')
 local Direction = types.Direction
 local AtEdgeBehavior = types.AtEdgeBehavior
@@ -488,5 +489,12 @@ end, {
   Direction.up,
   Direction.down,
 })
+
+function M.move_cursor_previous_win()
+  local win = mux_utils.get_previous_win()
+  if win then
+    vim.api.nvim_set_current_win(win)
+  end
+end
 
 return M

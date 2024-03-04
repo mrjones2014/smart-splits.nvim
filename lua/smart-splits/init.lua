@@ -21,6 +21,8 @@ end, {
   Direction.down,
 })
 
+M.move_cursor_previous_win = lazy.require_on_exported_call('smart-splits.api').move_cursor_previous_win
+
 M.start_resize_mode = function()
   require('smart-splits.resize-mode').start_resize_mode()
 end
