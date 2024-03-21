@@ -2,6 +2,8 @@ local types = require('smart-splits.types')
 local Direction = types.Direction
 local log = require('smart-splits.log')
 
+local is_nested_vim = false
+
 local dir_keys_tmux = {
   [Direction.left] = 'L',
   [Direction.right] = 'R',
@@ -152,6 +154,10 @@ function M.on_init()
     log.warn('tmux init: could not detect pane ID!')
     return
   end
+  if tonumber(tmux_exec({ 'show-options', '-pqvt', pane_id, '@pane-is-vim' })) == 1 then
+    is_nested_vim = true
+    return
+  end
   tmux_exec({ 'set-option', '-pt', pane_id, '@pane-is-vim', 1 })
   if vim.v.shell_error ~= 0 then
     log.warn('tmux init: failed to detect pane_id')
@@ -159,6 +165,9 @@ function M.on_init()
 end
 
 function M.on_exit()
+  if is_nested_vim then
+    return
+  end
   local pane_id = M.current_pane_id()
   if not pane_id then
     log.warn('tmux init: could not detect pane ID!')
