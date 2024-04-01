@@ -44,7 +44,7 @@
           set -as terminal-overrides ',*:Setulc=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m'
         '';
       in {
-        devShell = pkgs.mkShell {
+        devShells.default = pkgs.mkShell {
           name = "shell with tmux";
 
           packages = with pkgs; [ tmux stylua luajitPackages.luacheck ];

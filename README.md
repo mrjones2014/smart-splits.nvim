@@ -58,7 +58,8 @@ such as [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua)
 which tries to maintain its own width unless manually resized. Note that
 nothing is ignored when moving between splits, only when resizing.
 
-> **Note** `smart-splits.nvim` does not map any keys on it's own. See [Usage](#usage).
+> [!NOTE]
+> `smart-splits.nvim` does not map any keys on it's own. See [Usage](#usage).
 
 Defaults are shown below:
 
@@ -339,13 +340,13 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 
 #### Wezterm
 
-> **Note**
+> [!NOTE]
 > It is recommended _not to lazy load_ `smart-splits.nvim` if using the Wezterm integration.
 > If you need to lazy load, you need to use a different `is_vim()` implementation below.
 > The plugin is small, and smart about not loading modules unnecessarily, so it should
 > have minimal impact on your startup time. It adds about 0.07ms on my setup.
 
-> **Note**
+> [!NOTE]
 > Pane resizing currently requires a nightly build of Wezterm.
 > Check the output of `wezterm cli adjust-pane-size --help` to see if your build supports it; if not,
 > you can check how to obtain a nightly build by [following the instructions here](https://wezfurlong.org/wezterm/installation.html).
@@ -445,10 +446,11 @@ return {
 
 #### Kitty
 
-> **Note** `config.at_edge = 'wrap'` is not supoprted in Kitty terminal multiplexer due to inability to determine
+> [!NOTE]
+> The `config.at_edge = 'wrap'` option is not supoprted in Kitty terminal multiplexer due to inability to determine
 > pane layout from CLI.
 
-> **Note**
+> [!NOTE]
 > This won't work if the pane is connected over SSH, as the pane will not properly report the foreground process name.
 
 Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the keymaps and resize amount as desired.

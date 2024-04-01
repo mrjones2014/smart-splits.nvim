@@ -89,7 +89,11 @@ function M.move_pane(direction, will_wrap, at_edge)
     return multiplexer_moved
   end
 
-  return move_multiplexer_inner(directions_reverse[direction], multiplexer)
+  if at_edge == AtEdgeBehavior.wrap then
+    return move_multiplexer_inner(directions_reverse[direction], multiplexer)
+  end
+
+  return false
 end
 
 ---Try resizing with multiplexer
