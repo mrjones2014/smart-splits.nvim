@@ -97,6 +97,10 @@ function M.resize_pane(direction, amount)
   return ok
 end
 
+function M.on_init()
+  os.execute('kitten @ set-user-vars IS_NVIM=true')
+end
+
 function M.split_pane(_, _)
   log.warn('Sorry, Kitty does not support creation of arbitrary split panes.')
   return false
