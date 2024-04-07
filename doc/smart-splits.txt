@@ -499,8 +499,7 @@ keymaps and resize amount as desired.
     map alt+h kitten pass_keys.py relative_resize left  3 alt+h
     map alt+l kitten pass_keys.py relative_resize right 3 alt+l
 <
-By default the nvim plugin sets a kitty user-var `in_editor` via autocmd when
-the plugin loads. You can take advantage of this together with kittys
+By default the plugin sets a kitty user-var `in_editor` when it loads. You can take advantage of this together with kittys
 [conditional mappings feature](https://sw.kovidgoyal.net/kitty/mapping/#conditional-mappings-depending-on-the-state-of-the-focused-window)
 
     map ctrl+j neighboring_window down
