@@ -1,5 +1,3 @@
-import re
-
 from kittens.tui.handler import result_handler
 from kitty.key_encoding import KeyEvent, parse_shortcut
 
@@ -7,11 +5,10 @@ from kitty.key_encoding import KeyEvent, parse_shortcut
 def is_window_vim(boss, window):
     vars = boss.call_remote_control(window, ('set-user-vars', f'--match=id:{window.id}'))
     for var in vars.split('\n'):
-        if var.startswith('IS_NVIM'):
+        if var.startswith('in_editor'):
             return True
         else:
             return False
-
 
 def encode_key_mapping(window, key_mapping):
     mods, key = parse_shortcut(key_mapping)
@@ -102,7 +99,5 @@ def handle_result(args, result, target_window_id, boss):
         for keymap in key_mapping.split(">"):
             encoded = encode_key_mapping(window, keymap)
             window.write_to_child(encoded)
-    elif action == 'neighboring_window':
-        boss.active_tab.neighboring_window(direction)
     elif action == 'relative_resize':
         relative_resize_window(direction, amount, target_window_id, boss)

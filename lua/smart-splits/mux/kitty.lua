@@ -98,7 +98,19 @@ function M.resize_pane(direction, amount)
 end
 
 function M.on_init()
-  os.execute('kitten @ set-user-vars IS_NVIM=true')
+  vim.api.nvim_create_autocmd('VimEnter', {
+    group = vim.api.nvim_create_augroup('KittySetVarVimEnter', { clear = true }),
+    callback = function()
+      io.stdout:write('\x1b]1337;SetUserVar=in_editor=MQo\007')
+    end,
+  })
+
+  vim.api.nvim_create_autocmd('VimLeave', {
+    group = vim.api.nvim_create_augroup('KittyUnsetVarVimLeave', { clear = true }),
+    callback = function()
+      io.stdout:write('\x1b]1337;SetUserVar=in_editor\007')
+    end,
+  })
 end
 
 function M.split_pane(_, _)
