@@ -1,6 +1,6 @@
 local lazy = require('smart-splits.lazy')
 local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
-local mux = lazy.require_on_exported_call('smart-splits.mux') --[[@as SmartSplitsMultiplexer]]
+local mux = lazy.require_on_exported_call('smart-splits.mux') --[[@as SmartSplitsMuxApi]]
 local utils = require('smart-splits.utils')
 local mux_utils = require('smart-splits.mux.utils')
 local types = require('smart-splits.types')
