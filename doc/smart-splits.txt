@@ -6,6 +6,7 @@ Table of Contents                             *smart-splits-table-of-contents*
 Install ............................................... |smart-splits-install|
 Configuration ................................... |smart-splits-configuration|
 Hooks ................................................... |smart-splits-hooks|
+Examples ............................................. |smart-splits-examples|
 Usage ................................................... |smart-splits-usage|
 Key Mappings ..................................... |smart-splits-key-mappings|
 Lua API ............................................... |smart-splits-lua-api|
@@ -13,6 +14,7 @@ Multiplexer Integrations ............. |smart-splits-multiplexer-integrations|
 Tmux ..................................................... |smart-splits-tmux|
 Wezterm ............................................... |smart-splits-wezterm|
 Kitty ................................................... |smart-splits-kitty|
+Credits ............................................... |smart-splits-credits|
 Multiplexer Lua API ....................... |smart-splits-multiplexer-lua-api|
 
 ==============================================================================
@@ -178,9 +180,7 @@ The hook table allows you to define callbacks for the `on_enter` and
 `on_leave` events of the resize mode.
 
 
-==============================================================================
 EXAMPLES                                               *smart-splits-examples*
-
 
 Integration with bufresize.nvim
 <https://github.com/kwkarlwang/bufresize.nvim>:
@@ -541,9 +541,7 @@ Or, by adding the following to `~/.config/kitty/kitty.conf`:
     listen_on unix:/tmp/mykitty
 <
 
-==============================================================================
 CREDITS                                                 *smart-splits-credits*
-
 
 Thanks @knubie for inspiration for the Kitty implementation from
 vim-kitty-navigator <https://github.com/knubie/vim-kitty-navigator>.
