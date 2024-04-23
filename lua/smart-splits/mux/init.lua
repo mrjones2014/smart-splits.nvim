@@ -38,6 +38,7 @@ local function move_multiplexer_inner(direction, multiplexer)
   return false
 end
 
+---@class SmartSplitsMuxApi
 local M = {}
 
 ---Get the currently configured multiplexer
