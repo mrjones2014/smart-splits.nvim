@@ -319,6 +319,12 @@ bind-key -n C-j if -F "#{@pane-is-vim}" 'send-keys C-j'  'select-pane -D'
 bind-key -n C-k if -F "#{@pane-is-vim}" 'send-keys C-k'  'select-pane -U'
 bind-key -n C-l if -F "#{@pane-is-vim}" 'send-keys C-l'  'select-pane -R'
 
+# If you want to disable wrapping when moving in non-neovim panes, use these bindings
+bind-key -n C-h if -F '#{@pane-is-vim}' { send-keys C-h } { if -F '#{pane_at_left}'   '' 'select-pane -L' }
+bind-key -n C-j if -F '#{@pane-is-vim}' { send-keys C-j } { if -F '#{pane_at_bottom}' '' 'select-pane -D' }
+bind-key -n C-k if -F '#{@pane-is-vim}' { send-keys C-k } { if -F '#{pane_at_top}'    '' 'select-pane -U' }
+bind-key -n C-l if -F '#{@pane-is-vim}' { send-keys C-l } { if -F '#{pane_at_right}'  '' 'select-pane -R' }
+
 # Smart pane resizing with awareness of Neovim splits.
 bind-key -n M-h if -F "#{@pane-is-vim}" 'send-keys M-h' 'resize-pane -L 3'
 bind-key -n M-j if -F "#{@pane-is-vim}" 'send-keys M-j' 'resize-pane -D 3'
