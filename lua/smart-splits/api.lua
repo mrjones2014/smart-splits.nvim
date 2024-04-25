@@ -294,7 +294,7 @@ end
 local function next_win_or_wrap(will_wrap, dir_key)
   -- if someone has more than 99999 windows then just LOL
   vim.api.nvim_set_current_win(
-    vim.fn.win_getid(vim.fn.winnr(string.format('%s%s', will_wrap and '99999' or '1', dir_key)))
+    vim.fn.win_getid(vim.fn.winnr(string.format('%s%s', will_wrap and '99999' or vim.v.count1, dir_key)))
   )
 end
 
@@ -350,16 +350,12 @@ local function move_cursor(direction, opts)
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   local dir_key = DirectionKeys[direction]
 
-  local at_right = at_right_edge()
-  local at_left = at_left_edge()
-  local at_top = at_top_edge()
-  local at_bottom = at_bottom_edge()
-
   -- are we at an edge and attempting to move in the direction of the edge we're already at?
-  local will_wrap = (direction == Direction.left and at_left)
-    or (direction == Direction.right and at_right)
-    or (direction == Direction.up and at_top)
-    or (direction == Direction.down and at_bottom)
+  local win_to_move_to = vim.fn.winnr(vim.v.count1 .. dir_key)
+  local win_before = vim.v.count1 == 1 and vim.fn.winnr() or vim.fn.winnr(vim.v.count1 - 1 .. dir_key)
+  -- fn.winnr will return the same number for any move beyond border
+  -- if it is the same as the one one move closer - move is beyond
+  local will_wrap = win_to_move_to == win_before
 
   if will_wrap then
     -- if we can move with mux, then we're good
@@ -395,8 +391,10 @@ local function move_cursor(direction, opts)
       split_edge(direction)
       return
     else -- at_edge == AtEdgeBehavior.wrap
-      -- reverse direction and continue
-      dir_key = DirectionKeysReverse[direction]
+      -- shouldn't wrap if count is > 1
+      if vim.v.count1 == 1 then
+        dir_key = DirectionKeysReverse[direction]
+      end
     end
   end
 
