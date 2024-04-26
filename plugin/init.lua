@@ -27,7 +27,12 @@ local _smart_splits_wezterm_config = {
 }
 
 local directions = { 'Left', 'Down', 'Up', 'Right' }
-local direction_keys = {}
+local direction_keys = {
+  h = 'Left',
+  j = 'Down',
+  k = 'Up',
+  l = 'Right',
+}
 
 local function split_nav(resize_or_move, key)
   local modifier = resize_or_move == 'resize' and _smart_splits_wezterm_config.modifiers.resize
