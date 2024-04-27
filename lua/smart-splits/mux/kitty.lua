@@ -97,6 +97,14 @@ function M.resize_pane(direction, amount)
   return ok
 end
 
+function M.on_init()
+  io.stdout:write('\x1b]1337;SetUserVar=IS_NVIM=MQo\007')
+end
+
+function M.on_exit()
+  io.stdout:write('\x1b]1337;SetUserVar=IS_NVIM\007')
+end
+
 function M.split_pane(_, _)
   log.warn('Sorry, Kitty does not support creation of arbitrary split panes.')
   return false

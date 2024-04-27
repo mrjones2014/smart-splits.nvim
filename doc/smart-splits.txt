@@ -490,9 +490,6 @@ KITTY                                                     *smart-splits-kitty*
   [!NOTE] The `config.at_edge = 'wrap'` option is not supoprted in Kitty
   terminal multiplexer due to inability to determine pane layout from CLI.
 
-  [!NOTE] This won't work if the pane is connected over SSH, as the pane will
-  not properly report the foreground process name.
-
 Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the
 keymaps and resize amount as desired.
 
@@ -508,17 +505,19 @@ keymaps and resize amount as desired.
     map alt+h kitten pass_keys.py relative_resize left  3 alt+h
     map alt+l kitten pass_keys.py relative_resize right 3 alt+l
 <
-By default, it matches against the name of the current foreground process to
-detect if `vim`/`nvim` is running. If that doesn't work for you, or you want
-to include other CLI/TUI programs in the exclusion, you can provide an
-additional regex argument:
+By default the plugin sets a kitty user-var `IS_NVIM` when it loads. You can take advantage of this together with kittys
+[conditional mappings feature](https://sw.kovidgoyal.net/kitty/mapping/#conditional-mappings-depending-on-the-state-of-the-focused-window)
 
->
-    map ctrl+j kitten pass_keys.py neighboring_window bottom ctrl+j "^.* - nvim$"
-    map ctrl+k kitten pass_keys.py neighboring_window top    ctrl+k "^.* - nvim$"
-    map ctrl+h kitten pass_keys.py neighboring_window left   ctrl+h "^.* - nvim$"
-    map ctrl+l kitten pass_keys.py neighboring_window right  ctrl+l "^.* - nvim$"
-    
+    map ctrl+j neighboring_window down
+    map ctrl+k neighboring_window up
+    map ctrl+h neighboring_window left
+    map ctrl+l neighboring_window right
+
+    map --when-focus-on var:IS_NVIM ctrl+j
+    map --when-focus-on var:IS_NVIM ctrl+k
+    map --when-focus-on var:IS_NVIM ctrl+h
+    map --when-focus-on var:IS_NVIM ctrl+l
+
     # the 3 here is the resize amount, adjust as needed
     map alt+j kitten pass_keys.py relative_resize down  3 alt+j "^.* - nvim$"
     map alt+k kitten pass_keys.py relative_resize up    3 alt+k "^.* - nvim$"
