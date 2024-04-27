@@ -1,4 +1,4 @@
-*smart-splits.txt*                                  Last change: 2024 April 25
+*smart-splits.txt*                                  Last change: 2024 April 27
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -490,39 +490,37 @@ KITTY                                                     *smart-splits-kitty*
   [!NOTE] The `config.at_edge = 'wrap'` option is not supoprted in Kitty
   terminal multiplexer due to inability to determine pane layout from CLI.
 
+By default the plugin sets a kitty user-var `IS_NVIM` when it loads. You can
+take advantage of this together with kittys conditional mappings feature
+<https://sw.kovidgoyal.net/kitty/mapping/#conditional-mappings-depending-on-the-state-of-the-focused-window>
+to use the same keybind for both kitty and neovim.
+
 Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the
 keymaps and resize amount as desired.
 
 >
-    map ctrl+j kitten pass_keys.py neighboring_window bottom ctrl+j
-    map ctrl+k kitten pass_keys.py neighboring_window top    ctrl+k
-    map ctrl+h kitten pass_keys.py neighboring_window left   ctrl+h
-    map ctrl+l kitten pass_keys.py neighboring_window right  ctrl+l
     
-    # the 3 here is the resize amount, adjust as needed
-    map alt+j kitten pass_keys.py relative_resize down  3 alt+j
-    map alt+k kitten pass_keys.py relative_resize up    3 alt+k
-    map alt+h kitten pass_keys.py relative_resize left  3 alt+h
-    map alt+l kitten pass_keys.py relative_resize right 3 alt+l
-<
-By default the plugin sets a kitty user-var `IS_NVIM` when it loads. You can take advantage of this together with kittys
-[conditional mappings feature](https://sw.kovidgoyal.net/kitty/mapping/#conditional-mappings-depending-on-the-state-of-the-focused-window)
-
     map ctrl+j neighboring_window down
     map ctrl+k neighboring_window up
     map ctrl+h neighboring_window left
     map ctrl+l neighboring_window right
-
+    
+    # Unset the mapping to pass the keys to neovim
     map --when-focus-on var:IS_NVIM ctrl+j
     map --when-focus-on var:IS_NVIM ctrl+k
     map --when-focus-on var:IS_NVIM ctrl+h
     map --when-focus-on var:IS_NVIM ctrl+l
-
+    
     # the 3 here is the resize amount, adjust as needed
-    map alt+j kitten pass_keys.py relative_resize down  3 alt+j "^.* - nvim$"
-    map alt+k kitten pass_keys.py relative_resize up    3 alt+k "^.* - nvim$"
-    map alt+h kitten pass_keys.py relative_resize left  3 alt+h "^.* - nvim$"
-    map alt+l kitten pass_keys.py relative_resize right 3 alt+l "^.* - nvim$"
+    map alt+j kitten relative_resize down  3
+    map alt+k kitten relative_resize up    3
+    map alt+h kitten relative_resize left  3
+    map alt+l kitten relative_resize right 3
+    
+    map --when-focus-on var:IS_NVIM alt+j
+    map --when-focus-on var:IS_NVIM alt+k
+    map --when-focus-on var:IS_NVIM alt+h
+    map --when-focus-on var:IS_NVIM alt+l
 <
 Then, you must allow Kitty to listen for remote commands on a socket. You can
 do this either by running Kitty with the following command:
