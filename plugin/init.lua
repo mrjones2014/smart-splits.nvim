@@ -13,6 +13,11 @@ end
 local wezterm = require('wezterm')
 
 local function is_vim(pane)
+  -- if type is PaneInformation
+  if pane.user_vars ~= nil then
+    return pane.user_vars.IS_NVIM == 'true'
+  end
+
   -- this is set by the Neovim plugin on launch, and unset on ExitPre in Neovim
   return pane:get_user_vars().IS_NVIM == 'true'
 end
