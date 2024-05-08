@@ -475,10 +475,10 @@ map --when-focus-on var:IS_NVIM ctrl+h
 map --when-focus-on var:IS_NVIM ctrl+l
 
 # the 3 here is the resize amount, adjust as needed
-map alt+j kitten relative_resize down  3
-map alt+k kitten relative_resize up    3
-map alt+h kitten relative_resize left  3
-map alt+l kitten relative_resize right 3
+map alt+j kitten relative_resize.py down  3
+map alt+k kitten relative_resize.py up    3
+map alt+h kitten relative_resize.py left  3
+map alt+l kitten relative_resize.py right 3
 
 map --when-focus-on var:IS_NVIM alt+j
 map --when-focus-on var:IS_NVIM alt+k
