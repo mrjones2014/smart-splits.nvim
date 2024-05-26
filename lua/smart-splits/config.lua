@@ -2,6 +2,7 @@ local lazy = require('smart-splits.lazy')
 local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplitsLogger]]
 local types = require('smart-splits.types')
 local AtEdgeBehavior = types.AtEdgeBehavior
+local FloatWinBehavior = types.FloatWinBehavior
 local Multiplexer = types.Multiplexer
 local mux_utils = require('smart-splits.mux.utils')
 
@@ -20,6 +21,7 @@ local mux_utils = require('smart-splits.mux.utils')
 ---@field ignored_filetypes string[]
 ---@field default_amount number
 ---@field at_edge SmartSplitsAtEdgeBehavior
+---@field float_win_behavior SmartSplitsFloatWinBehavior
 ---@field move_cursor_same_row boolean
 ---@field cursor_follows_swapped_bufs boolean
 ---@field resize_mode SmartResizeModeConfig
@@ -45,6 +47,7 @@ local config = { ---@diagnostic disable-line:missing-fields
   },
   default_amount = 3,
   at_edge = AtEdgeBehavior.wrap,
+  float_win_behavior = FloatWinBehavior.previous,
   move_cursor_same_row = false,
   cursor_follows_swapped_bufs = false,
   resize_mode = {
