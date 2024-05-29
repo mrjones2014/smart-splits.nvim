@@ -102,6 +102,10 @@ require('smart-splits').setup({
   -- NOTE: `at_edge = 'wrap'` is not supported on Kitty terminal
   -- multiplexer, as there is no way to determine layout via the CLI
   at_edge = 'wrap',
+  -- Desired behavior when the current window is floating:
+  -- 'previous' => Focus previous Vim window and perform action
+  -- 'mux' => Always forward action to multiplexer
+  float_win_behavior = 'previous',
   -- when moving cursor between splits left or right,
   -- place the cursor on the same row of the *screen*
   -- regardless of line numbers. False by default.

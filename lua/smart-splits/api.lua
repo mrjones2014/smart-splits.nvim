@@ -6,6 +6,7 @@ local mux_utils = require('smart-splits.mux.utils')
 local types = require('smart-splits.types')
 local Direction = types.Direction
 local AtEdgeBehavior = types.AtEdgeBehavior
+local FloatWinBehavior = types.FloatWinBehavior
 
 local M = {}
 
@@ -194,20 +195,39 @@ local function compute_direction_horizontal(direction)
   return result
 end
 
+---@param mux_callback fun()|nil
+---@return boolean
+local function handle_floating_window(mux_callback)
+  if utils.is_floating_window() then
+    if config.float_win_behavior == FloatWinBehavior.previous then
+      -- focus the last accessed window.
+      -- if it's also floating, do not attempt to perform the action.
+      local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
+      if utils.is_floating_window(prev_win) then
+        return true
+      end
+
+      vim.api.nvim_set_current_win(prev_win)
+      return false
+    elseif config.float_win_behavior == FloatWinBehavior.mux then
+      -- always forward the action to the multiplexer
+      if mux_callback then
+        mux_callback()
+      end
+      return true
+    end
+  end
+end
+
 ---@param direction SmartSplitsDirection
 ---@param amount number
 local function resize(direction, amount)
   amount = amount or config.default_amount
 
-  -- ignore currently focused floating windows by focusing the last accessed window
-  -- if the last accessed window is also floating, do not attempt to resize it
-  if utils.is_floating_window() then
-    local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
-    if utils.is_floating_window(prev_win) then
-      return
-    end
-
-    vim.api.nvim_set_current_win(prev_win)
+  if handle_floating_window(function()
+    mux.resize_pane(direction, amount)
+  end) then
+    return
   end
 
   -- if a full width window and horizontall resize check if we can resize with multiplexer
@@ -336,15 +356,10 @@ local function move_cursor(direction, opts)
     end
   end
 
-  -- ignore currently focused floating windows by focusing the last accessed window
-  -- if the last accessed window is also floating, do not attempt to move the cursor
-  if utils.is_floating_window() then
-    local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
-    if utils.is_floating_window(prev_win) then
-      return
-    end
-
-    vim.api.nvim_set_current_win(prev_win)
+  if handle_floating_window(function()
+    mux.move_pane(direction, true, at_edge)
+  end) then
+    return
   end
 
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
@@ -421,15 +436,8 @@ end
 local function swap_bufs(direction, opts)
   opts = opts or {}
 
-  -- ignore currently focused floating windows by focusing the last accessed window
-  -- if the last accessed window is also floating, do not attempt to swap buffers
-  if utils.is_floating_window() then
-    local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
-    if utils.is_floating_window(prev_win) then
-      return
-    end
-
-    vim.api.nvim_set_current_win(prev_win)
+  if handle_floating_window() then
+    return
   end
 
   local buf_1 = vim.api.nvim_get_current_buf()

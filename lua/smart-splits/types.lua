@@ -13,6 +13,8 @@
 ---@alias SmartSplitsDirection 'left'|'right'|'up'|'down'
 
 ---@alias SmartSplitsAtEdgeBehavior 'split'|'wrap'|'stop'|function
+---
+---@alias SmartSplitsFloatWinBehavior 'previous'|'mux'
 
 ---@alias SmartSplitsMultiplexerType 'tmux'|'wezterm'|'kitty'
 
@@ -39,6 +41,12 @@ local M = {
     wrap = 'wrap',
     ---@type SmartSplitsAtEdgeBehavior
     stop = 'stop',
+  },
+  FloatWinBehavior = {
+    ---@type SmartSplitsFloatWinBehavior
+    previous = 'previous',
+    ---@type SmartSplitsFloatWinBehavior
+    mux = 'mux',
   },
   Multiplexer = {
     ---@type SmartSplitsMultiplexerType
