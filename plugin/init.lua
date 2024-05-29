@@ -20,7 +20,7 @@ local function is_vim(pane)
   end
 
   -- this is set by the Neovim plugin on launch, and unset on ExitPre in Neovim
-  print('[smart-splits.nvim]: Pane:get_user_vars().IS_NVIM = ', pane.user_vars.IS_NVIM)
+  print('[smart-splits.nvim]: Pane:get_user_vars().IS_NVIM = ', pane:get_user_vars().IS_NVIM)
   return pane:get_user_vars().IS_NVIM == 'true'
 end
 
