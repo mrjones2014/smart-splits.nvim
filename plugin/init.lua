@@ -76,11 +76,13 @@ local function apply_to_config(config_builder, plugin_config)
   if plugin_config then
     _smart_splits_wezterm_config.direction_keys = plugin_config.direction_keys
       or _smart_splits_wezterm_config.direction_keys
-    -- update the direction_keys mappings to reflect configured ones
-    direction_keys = {} -- reset the direction_keys table to overwrite defaults
-    for i, v in ipairs(directions) do
-      local key = plugin_config.direction_keys[i]
-      direction_keys[key] = v
+    if plugin_config.direction_keys then
+      -- update the direction_keys mappings to reflect configured ones
+      direction_keys = {} -- reset the direction_keys table to overwrite defaults
+      for i, v in ipairs(directions) do
+        local key = plugin_config.direction_keys[i] or _smart_splits_wezterm_config.direction_keys[i]
+        direction_keys[key] = v
+      end
     end
     if plugin_config.modifiers then
       _smart_splits_wezterm_config.modifiers.move = plugin_config.modifiers.move
