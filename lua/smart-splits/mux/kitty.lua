@@ -1,5 +1,4 @@
 local lazy = require('smart-splits.lazy')
-local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplitsLogger]]
 local utils = lazy.require_on_exported_call('smart-splits.utils')
 local Direction = require('smart-splits.types').Direction
 
@@ -105,9 +104,14 @@ function M.on_exit()
   io.stdout:write('\x1b]1337;SetUserVar=IS_NVIM\007')
 end
 
-function M.split_pane(_, _)
-  log.warn('Sorry, Kitty does not support creation of arbitrary split panes.')
-  return false
+function M.split_pane(direction, _)
+  if not M.is_in_session() then
+    return false
+  end
+
+  local ok, _ = pcall(kitty_exec, { 'kitten', 'split_window.py', direction })
+
+  return ok
 end
 
 return M
