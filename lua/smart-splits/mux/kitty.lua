@@ -1,5 +1,4 @@
 local lazy = require('smart-splits.lazy')
-local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplitsLogger]]
 local utils = lazy.require_on_exported_call('smart-splits.utils')
 local Direction = require('smart-splits.types').Direction
 
