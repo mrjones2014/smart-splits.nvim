@@ -23,4 +23,10 @@ def handle_result(args, result, target_window_id, boss):
         return
 
     direction = args[1]
-    split_window(boss, direction)
+    cmd = window.child.foreground_cmdline[0]
+    if cmd == 'tmux':
+        keymap = args[2]
+        encoded = encode_key_mapping(window, keymap)
+        window.write_to_child(encoded)
+    else:
+        split_window(boss, direction)
