@@ -29,10 +29,9 @@ def handle_result(args, result, target_window_id, boss):
     keymap = args[2]
 
     cmd = window.child.foreground_cmdline[0]
-    if cmd == 'nvim':
+    if cmd == 'tmux':
+        keymap = args[2]
         encoded = encode_key_mapping(window, keymap)
         window.write_to_child(encoded)
-    elif cmd == 'tmux':
-        pass
     else:
         boss.active_tab.neighboring_window(args[1])
