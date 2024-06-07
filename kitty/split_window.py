@@ -1,8 +1,25 @@
 from kittens.tui.handler import result_handler
+from kitty.key_encoding import KeyEvent, parse_shortcut
 
 
 def main(args):
     pass
+
+
+def encode_key_mapping(window, key_mapping):
+    mods, key = parse_shortcut(key_mapping)
+    event = KeyEvent(
+        mods=mods,
+        key=key,
+        shift=bool(mods & 1),
+        alt=bool(mods & 2),
+        ctrl=bool(mods & 4),
+        super=bool(mods & 8),
+        hyper=bool(mods & 16),
+        meta=bool(mods & 32),
+    ).as_window_system_event()
+
+    return window.encoded_key(event)
 
 
 def split_window(boss, direction):
