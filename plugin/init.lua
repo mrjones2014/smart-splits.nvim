@@ -3,6 +3,7 @@
 ---@field resize string
 
 ---@class SmartSplitsWeztermConfig
+---@field default_amount number The number of cells to resize by
 ---@field direction_keys string[] Keys to use for movements, not including the modifier key (such as alt or ctrl), in order of left, down, up, right
 ---@field modifiers SmartSplitsWeztermModifiers Modifier keys to use for movement and resize actions, these should be Wezterm's modifier key strings such as 'META', 'CTRL', etc.
 
@@ -26,6 +27,7 @@ end
 
 ---@type SmartSplitsWeztermConfig
 local _smart_splits_wezterm_config = {
+  default_amount = 3,
   direction_keys = { 'h', 'j', 'k', 'l' },
   modifiers = {
     move = 'CTRL',
@@ -58,7 +60,7 @@ local function split_nav(resize_or_move, key)
         }, pane)
       else
         if resize_or_move == 'resize' then
-          win:perform_action({ AdjustPaneSize = { direction_keys[key], 3 } }, pane)
+          win:perform_action({ AdjustPaneSize = { direction_keys[key], _smart_splits_wezterm_config.default_amount } }, pane)
         else
           win:perform_action({ ActivatePaneDirection = direction_keys[key] }, pane)
         end
@@ -89,6 +91,10 @@ local function apply_to_config(config_builder, plugin_config)
         or _smart_splits_wezterm_config.modifiers.move
       _smart_splits_wezterm_config.modifiers.resize = plugin_config.modifiers.resize
         or _smart_splits_wezterm_config.modifiers.resize
+    end
+    if plugin_config.default_amount then
+      _smart_splits_wezterm_config.default_amount = plugin_config.default_amount
+        or _smart_splits_wezterm_config.default_amount
     end
   end
 
