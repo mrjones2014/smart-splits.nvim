@@ -11,6 +11,10 @@ local function wrap(fn)
   end
 end
 
+local function compare_key(a, b)
+  return vim.api.nvim_replace_termcodes(a, true, false, true) == vim.api.nvim_replace_termcodes(b, true, false, true)
+end
+
 M.__map_cache = {}
 ---Store any existing mappings to be restored after exit
 ---@param resize_keys string[]
@@ -20,11 +24,11 @@ local function cache_mappings(resize_keys, quit_key)
   M.__map_cache = {}
   for _, map in ipairs(maps) do
     if
-      map.lhs == resize_keys[1]
-      or map.lhs == resize_keys[2]
-      or map.lhs == resize_keys[3]
-      or map.lhs == resize_keys[4]
-      or map.lhs == quit_key
+      compare_key(map.lhs, resize_keys[1])
+      or compare_key(map.lhs, resize_keys[2])
+      or compare_key(map.lhs, resize_keys[3])
+      or compare_key(map.lhs, resize_keys[4])
+      or compare_key(map.lhs, quit_key)
     then
       M.__map_cache[map.lhs] = map
     end
