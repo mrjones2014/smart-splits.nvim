@@ -377,6 +377,12 @@ smart_splits.apply_to_config(config, {
 
   -- directional keys to use in order of: left, down, up, right
   direction_keys = { 'h', 'j', 'k', 'l' },
+  -- if you want to use separate direction keys for move vs. resize, you
+  -- can also do this:
+  direction keys = {
+    move = { 'h', 'j', 'k', 'l' },
+    resize = { 'Left', 'Down', 'Up', 'Right' },
+  },
   -- modifier keys to combine with direction_keys
   modifiers = {
     move = 'CTRL', -- modifier to use for pane movement, e.g. CTRL+h to move left
