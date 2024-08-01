@@ -2,9 +2,13 @@
 ---@field move string
 ---@field resize string
 
+---@class DirectionKeys
+---@field move string[] keys to use for moving windows
+---@field resize string[] keys to use for resizing windows
+
 ---@class SmartSplitsWeztermConfig
 ---@field default_amount number The number of cells to resize by
----@field direction_keys string[] Keys to use for movements, not including the modifier key (such as alt or ctrl), in order of left, down, up, right
+---@field direction_keys string[]|DirectionKeys Keys to use for movements, not including the modifier key (such as alt or ctrl), in order of left, down, up, right
 ---@field modifiers SmartSplitsWeztermModifiers Modifier keys to use for movement and resize actions, these should be Wezterm's modifier key strings such as 'META', 'CTRL', etc.
 
 if vim ~= nil then
@@ -35,15 +39,13 @@ local _smart_splits_wezterm_config = {
   },
 }
 
-local directions = { 'Left', 'Down', 'Up', 'Right' }
-local direction_keys = {
-  h = 'Left',
-  j = 'Down',
-  k = 'Up',
-  l = 'Right',
-}
+local Directions = { 'Left', 'Down', 'Up', 'Right' }
 
-local function split_nav(resize_or_move, key)
+---@param resize_or_move 'resize'|'move'
+---@param key string
+---@param direction 'Left'|'Down'|'Up'|'Right'
+---@return table
+local function split_nav(resize_or_move, key, direction)
   local modifier = resize_or_move == 'resize' and _smart_splits_wezterm_config.modifiers.resize
     or _smart_splits_wezterm_config.modifiers.move
   return {
@@ -60,13 +62,33 @@ local function split_nav(resize_or_move, key)
         }, pane)
       else
         if resize_or_move == 'resize' then
-          win:perform_action({ AdjustPaneSize = { direction_keys[key], _smart_splits_wezterm_config.default_amount } }, pane)
+          win:perform_action({ AdjustPaneSize = { direction, _smart_splits_wezterm_config.default_amount } }, pane)
         else
-          win:perform_action({ ActivatePaneDirection = direction_keys[key] }, pane)
+          win:perform_action({ ActivatePaneDirection = direction }, pane)
         end
       end
     end),
   }
+end
+
+---@return string[]
+local function get_move_direction_keys()
+  -- check if table format or list format
+  if _smart_splits_wezterm_config.direction_keys.move ~= nil then
+    return _smart_splits_wezterm_config.direction_keys.move
+  end
+
+  return _smart_splits_wezterm_config.direction_keys --[[@as string[] ]]
+end
+
+---@return string[]
+local function get_resize_direction_keys()
+  -- check if table format or list format
+  if _smart_splits_wezterm_config.direction_keys.resize ~= nil then
+    return _smart_splits_wezterm_config.direction_keys.resize
+  end
+
+  return _smart_splits_wezterm_config.direction_keys --[[@as string[] ]]
 end
 
 ---Apply plugin to Wezterm config.
@@ -78,14 +100,6 @@ local function apply_to_config(config_builder, plugin_config)
   if plugin_config then
     _smart_splits_wezterm_config.direction_keys = plugin_config.direction_keys
       or _smart_splits_wezterm_config.direction_keys
-    if plugin_config.direction_keys then
-      -- update the direction_keys mappings to reflect configured ones
-      direction_keys = {} -- reset the direction_keys table to overwrite defaults
-      for i, v in ipairs(directions) do
-        local key = plugin_config.direction_keys[i] or _smart_splits_wezterm_config.direction_keys[i]
-        direction_keys[key] = v
-      end
-    end
     if plugin_config.modifiers then
       _smart_splits_wezterm_config.modifiers.move = plugin_config.modifiers.move
         or _smart_splits_wezterm_config.modifiers.move
@@ -99,9 +113,11 @@ local function apply_to_config(config_builder, plugin_config)
   end
 
   local keymaps = {}
-  for _, key in ipairs(_smart_splits_wezterm_config.direction_keys) do
-    table.insert(keymaps, split_nav('move', key))
-    table.insert(keymaps, split_nav('resize', key))
+  for idx, key in ipairs(get_move_direction_keys()) do
+    table.insert(keymaps, split_nav('move', key, Directions[idx]))
+  end
+  for idx, key in ipairs(get_resize_direction_keys()) do
+    table.insert(keymaps, split_nav('resize', key, Directions[idx]))
   end
 
   if config_builder.keys == nil then
