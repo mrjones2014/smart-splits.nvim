@@ -379,9 +379,9 @@ smart_splits.apply_to_config(config, {
   direction_keys = { 'h', 'j', 'k', 'l' },
   -- if you want to use separate direction keys for move vs. resize, you
   -- can also do this:
-  direction keys = {
+  direction_keys = {
     move = { 'h', 'j', 'k', 'l' },
-    resize = { 'Left', 'Down', 'Up', 'Right' },
+    resize = { 'LeftArrow', 'DownArrow', 'UpArrow', 'RightArrow' },
   },
   -- modifier keys to combine with direction_keys
   modifiers = {
