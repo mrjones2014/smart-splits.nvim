@@ -1,4 +1,4 @@
-*smart-splits.txt*                              Last change: 2024 September 09
+*smart-splits.txt*                              Last change: 2024 September 11
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -75,7 +75,7 @@ nvim-tree.lua <https://github.com/kyazdani42/nvim-tree.lua> which tries to
 maintain its own width unless manually resized. Note that nothing is ignored
 when moving between splits, only when resizing.
 
-  [!NOTE] > `smart-splits.nvim` does not map any keys on it's own. See Usage
+  [!NOTE] `smart-splits.nvim` does not map any keys on it's own. See Usage
   <#usage>.
 
 Defaults are shown below:
