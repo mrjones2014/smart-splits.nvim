@@ -149,7 +149,7 @@ function M.split_pane(direction, size)
 end
 
 function M.on_init()
-  local pane_id = M.current_pane_id()
+  local pane_id = os.getenv('TMUX_PANE')
   if not pane_id then
     log.warn('tmux init: could not detect pane ID!')
     return
