@@ -442,6 +442,7 @@ local function swap_bufs(direction, opts)
 
   local buf_1 = vim.api.nvim_get_current_buf()
   local win_1 = vim.api.nvim_get_current_win()
+  local win_view_1 = vim.fn.winsaveview()
 
   local dir_key = DirectionKeys[direction]
   local will_wrap = (direction == Direction.right and at_right_edge())
@@ -455,14 +456,36 @@ local function swap_bufs(direction, opts)
   next_win_or_wrap(will_wrap, dir_key)
   local buf_2 = vim.api.nvim_get_current_buf()
   local win_2 = vim.api.nvim_get_current_win()
+  local win_view_2 = vim.fn.winsaveview()
 
-  vim.api.nvim_win_set_buf(win_2, buf_1)
-  vim.api.nvim_win_set_buf(win_1, buf_2)
+  -- special case, same buffer in both windows, just swap cursor/scroll position
+  if buf_1 == buf_2 then
+    -- temporarily turn off folds to prevent jumping around the buffer
+    local win_1_folds_enabled = vim.api.nvim_get_option_value('foldenable', { win = win_1 })
+    local win_2_folds_enabled = vim.api.nvim_get_option_value('foldenable', { win = win_2 })
+    vim.api.nvim_set_option_value('foldenable', false, { win = win_1 })
+    vim.api.nvim_set_option_value('foldenable', false, { win = win_2 })
+
+    vim.api.nvim_set_current_win(win_1)
+    vim.fn.winrestview(win_view_2)
+    vim.api.nvim_set_current_win(win_2)
+    vim.fn.winrestview(win_view_1)
+
+    -- revert `foldenable` option
+    vim.api.nvim_set_option_value('foldenable', win_1_folds_enabled, { win = win_1 })
+    vim.api.nvim_set_option_value('foldenable', win_2_folds_enabled, { win = win_2 })
+  else
+    vim.api.nvim_win_set_buf(win_2, buf_1)
+    vim.api.nvim_win_set_buf(win_1, buf_2)
+  end
+
   local move_cursor_with_buf = opts.move_cursor
   if move_cursor_with_buf == nil then
     move_cursor_with_buf = config.cursor_follows_swapped_bufs
   end
-  if not move_cursor_with_buf then
+  if move_cursor_with_buf then
+    vim.api.nvim_set_current_win(win_2)
+  else
     vim.api.nvim_set_current_win(win_1)
   end
 end
