@@ -10,24 +10,13 @@
 ---@field default_amount number The number of cells to resize by
 ---@field direction_keys string[]|DirectionKeys Keys to use for movements, not including the modifier key (such as alt or ctrl), in order of left, down, up, right
 ---@field modifiers SmartSplitsWeztermModifiers Modifier keys to use for movement and resize actions, these should be Wezterm's modifier key strings such as 'META', 'CTRL', etc.
+---@field log_level 'info'|'warn'|'error'
 
 if vim ~= nil then
   return -- this is a Wezterm plugin, not part of the Neovim plugin
 end
 
 local wezterm = require('wezterm')
-
-local function is_vim(pane)
-  -- if type is PaneInformation
-  if pane.user_vars ~= nil then
-    wezterm.log_info('[smart-splits.nvim]: PaneInformation.user_vars.IS_NVIM = ', pane.user_vars.IS_NVIM)
-    return pane.user_vars.IS_NVIM == 'true'
-  end
-
-  -- this is set by the Neovim plugin on launch, and unset on ExitPre in Neovim
-  wezterm.log_info('[smart-splits.nvim]: Pane:get_user_vars().IS_NVIM = ', pane:get_user_vars().IS_NVIM)
-  return pane:get_user_vars().IS_NVIM == 'true'
-end
 
 ---@type SmartSplitsWeztermConfig
 local _smart_splits_wezterm_config = {
@@ -37,7 +26,45 @@ local _smart_splits_wezterm_config = {
     move = 'CTRL',
     resize = 'META',
   },
+  log_level = 'info',
 }
+
+local logger = {
+  info = function(...)
+    if _smart_splits_wezterm_config.log_level == 'info' then
+      wezterm.log_info(...)
+    end
+  end,
+  warn = function(...)
+    if
+      _smart_splits_wezterm_config.log_level == 'info' --
+      or _smart_splits_wezterm_config.log_level == 'warn'
+    then
+      wezterm.log_warn(...)
+    end
+  end,
+  error = function(...)
+    if
+      _smart_splits_wezterm_config.log_level == 'info'
+      or _smart_splits_wezterm_config.log_level == 'warn'
+      or _smart_splits_wezterm_config.log_level == 'error'
+    then
+      wezterm.log_error(...)
+    end
+  end,
+}
+
+local function is_vim(pane)
+  -- if type is PaneInformation
+  if pane.user_vars ~= nil then
+    logger.info('[smart-splits.nvim]: PaneInformation.user_vars.IS_NVIM = ', pane.user_vars.IS_NVIM)
+    return pane.user_vars.IS_NVIM == 'true'
+  end
+
+  -- this is set by the Neovim plugin on launch, and unset on ExitPre in Neovim
+  logger.info('[smart-splits.nvim]: Pane:get_user_vars().IS_NVIM = ', pane:get_user_vars().IS_NVIM)
+  return pane:get_user_vars().IS_NVIM == 'true'
+end
 
 local Directions = { 'Left', 'Down', 'Up', 'Right' }
 
@@ -109,6 +136,9 @@ local function apply_to_config(config_builder, plugin_config)
     if plugin_config.default_amount then
       _smart_splits_wezterm_config.default_amount = plugin_config.default_amount
         or _smart_splits_wezterm_config.default_amount
+    end
+    if plugin_config.log_level then
+      _smart_splits_wezterm_config.log_level = plugin_config.log_level
     end
   end
 
