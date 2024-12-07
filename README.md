@@ -388,6 +388,8 @@ smart_splits.apply_to_config(config, {
     move = 'CTRL', -- modifier to use for pane movement, e.g. CTRL+h to move left
     resize = 'META', -- modifier to use for pane resize, e.g. META+h to resize to the left
   },
+  -- log level to use: info, warn, error
+  log_level = 'info'
 })
 ```
 
