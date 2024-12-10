@@ -1,4 +1,4 @@
-*smart-splits.txt*                              Last change: 2024 September 11
+*smart-splits.txt*                               Last change: 2024 December 07
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -423,6 +423,8 @@ loader
         move = 'CTRL', -- modifier to use for pane movement, e.g. CTRL+h to move left
         resize = 'META', -- modifier to use for pane resize, e.g. META+h to resize to the left
       },
+      -- log level to use: info, warn, error
+      log_level = 'info'
     })
 <
 Otherwise, add the following snippet to your `~/.config/wezterm/wezterm.lua`:
