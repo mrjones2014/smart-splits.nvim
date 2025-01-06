@@ -58,7 +58,7 @@ such as [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua)
 which tries to maintain its own width unless manually resized. Note that
 nothing is ignored when moving between splits, only when resizing.
 
-> [!NOTE]
+> [!NOTE] \
 > `smart-splits.nvim` does not map any keys on it's own. See [Usage](#usage).
 
 Defaults are shown below:
@@ -348,6 +348,17 @@ bind-key -T copy-mode-vi 'C-l' select-pane -R
 bind-key -T copy-mode-vi 'C-\' select-pane -l
 ```
 
+##### Quirks with Alacritty
+
+By default, on macOS, Alacritty does not treat the `Option` key as an `Alt`/`Meta` key. This is not useful and probably not what you want.
+If you want to use `Option` key as an `Alt` key for keymaps in `tmux`, you will have to configure Alacritty to interpret the key code correctly. \
+[reference](https://alacritty.org/config-alacritty.html#s20)
+
+```yaml
+window:
+  option_as_alt: "Both" # or "OnlyLeft" or "OnlyRight" if you prefer
+```
+
 #### Wezterm
 
 > [!NOTE]
@@ -389,7 +400,7 @@ smart_splits.apply_to_config(config, {
     resize = 'META', -- modifier to use for pane resize, e.g. META+h to resize to the left
   },
   -- log level to use: info, warn, error
-  log_level = 'info'
+  log_level = 'info',
 })
 ```
 
