@@ -1,4 +1,4 @@
-*smart-splits.txt*                               Last change: 2024 December 07
+*smart-splits.txt*                                Last change: 2025 January 06
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -12,6 +12,7 @@ Key Mappings ..................................... |smart-splits-key-mappings|
 Lua API ............................................... |smart-splits-lua-api|
 Multiplexer Integrations ............. |smart-splits-multiplexer-integrations|
 Tmux ..................................................... |smart-splits-tmux|
+Quirks with Alacritty ................... |smart-splits-quirks-with-alacritty|
 Wezterm ............................................... |smart-splits-wezterm|
 Kitty ................................................... |smart-splits-kitty|
 Credits ............................................... |smart-splits-credits|
@@ -75,7 +76,7 @@ nvim-tree.lua <https://github.com/kyazdani42/nvim-tree.lua> which tries to
 maintain its own width unless manually resized. Note that nothing is ignored
 when moving between splits, only when resizing.
 
-  [!NOTE] `smart-splits.nvim` does not map any keys on it's own. See Usage
+  [!NOTE] \ `smart-splits.nvim` does not map any keys on it's own. See Usage
   <#usage>.
 
 Defaults are shown below:
@@ -379,6 +380,19 @@ file (customizing the keys and resize amount if desired):
     bind-key -T copy-mode-vi 'C-\' select-pane -l
 <
 
+QUIRKS WITH ALACRITTY                     *smart-splits-quirks-with-alacritty*
+
+By default, on macOS, Alacritty does not treat the `Option` key as an
+`Alt`/`Meta` key. This is not useful and probably not what you want. If you
+want to use `Option` key as an `Alt` key for keymaps in `tmux`, you will have
+to configure Alacritty to interpret the key code correctly. \ reference
+<https://alacritty.org/config-alacritty.html#s20>
+
+>yaml
+    window:
+      option_as_alt: "Both" # or "OnlyLeft" or "OnlyRight" if you prefer
+<
+
                                                                               
 WEZTERM                                                 *smart-splits-wezterm*
 
@@ -424,7 +438,7 @@ loader
         resize = 'META', -- modifier to use for pane resize, e.g. META+h to resize to the left
       },
       -- log level to use: info, warn, error
-      log_level = 'info'
+      log_level = 'info',
     })
 <
 Otherwise, add the following snippet to your `~/.config/wezterm/wezterm.lua`:
