@@ -145,7 +145,9 @@ require('smart-splits').setup({
   -- enable or disable a multiplexer integration;
   -- automatically determined, unless explicitly disabled or set,
   -- by checking the $TERM_PROGRAM environment variable,
-  -- and the $KITTY_LISTEN_ON environment variable for Kitty
+  -- and the $KITTY_LISTEN_ON environment variable for Kitty.
+  -- You can also set this value by setting `vim.g.smart_splits_multiplexer_integration`
+  -- before the plugin is loaded (e.g. for lazy environments).
   multiplexer_integration = nil,
   -- disable multiplexer navigation if current multiplexer pane is zoomed
   -- this functionality is only supported on tmux and Wezterm due to kitty
@@ -306,6 +308,9 @@ require('smart-splits').start_resize_mode()
 
 `smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `wezterm`, or `kitty` panes.
 You will need to set up keymaps in your `tmux`, `wezterm`, or `kitty` configs to match the Neovim keymaps.
+
+You can also set the desired multiplexer integration in lazy environments before the plugin is loaded by setting
+`vim.g.smart_splits_multiplexer_integration`. The values are the same as described in [Configuration](#configuration).
 
 #### Tmux
 
