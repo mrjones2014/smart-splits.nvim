@@ -96,6 +96,10 @@ function M.set_default_multiplexer()
       vim.g.smart_splits_multiplexer_integration
     )
     config.multiplexer_integration = vim.g.smart_splits_multiplexer_integration
+    -- if set to 0 or 1, convert to boolean
+    if type(config.multiplexer_integration) == 'number' then
+      config.multiplexer_integration = config.multiplexer_integration ~= 0
+    end
     return
   end
 
