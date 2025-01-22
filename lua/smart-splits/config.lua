@@ -80,16 +80,32 @@ local M = setmetatable({}, {
 })
 
 function M.set_default_multiplexer()
-  -- if explicitly disabled or set to a different value, don't do anything
-  if config.multiplexer_integration == false and config.multiplexer_integration ~= nil then
-    return
-  end
-
   -- if running in a GUI instead of terminal TUI, disable mux
   -- because you aren't in any terminal, you're in a Neovim GUI
   if mux_utils.are_we_gui() then
+    log.debug('Disabling multiplexer_integration because nvim is running in a GUI, not a TTY')
     config.multiplexer_integration = false
-    return nil
+    return
+  end
+
+  -- for lazy environments, allow users to specify the mux before the plugin
+  -- is loaded by using a `vim.g` variable
+  if vim.g.smart_splits_multiplexer_integration ~= nil then
+    log.debug(
+      'Taking multiplexer_integration from vim.g.multiplexer_integration: %s',
+      vim.g.smart_splits_multiplexer_integration
+    )
+    config.multiplexer_integration = vim.g.smart_splits_multiplexer_integration
+    -- if set to 0 or 1, convert to boolean
+    if type(config.multiplexer_integration) == 'number' then
+      config.multiplexer_integration = config.multiplexer_integration ~= 0
+    end
+    return
+  end
+
+  -- if explicitly disabled or set to a different value, don't do anything
+  if config.multiplexer_integration == false and config.multiplexer_integration ~= nil then
+    return
   end
 
   local term = vim.trim((vim.env.TERM_PROGRAM or ''):lower())
@@ -107,8 +123,6 @@ function M.set_default_multiplexer()
   else
     log.debug('Auto-detected multiplexer back-end: none')
   end
-
-  return type(config.multiplexer_integration) == 'string' and config.multiplexer_integration or nil
 end
 
 function M.setup(new_config)
