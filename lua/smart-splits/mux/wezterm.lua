@@ -16,10 +16,19 @@ local dir_keys_wezterm_splits = {
 }
 
 local function wezterm_exec(cmd)
+  if vim.fn.executable(config.wezterm_cli_path) == 0 then
+    error(string.format('`%s` is not executable', config.wezterm_cli_path))
+  end
+
   local command = vim.deepcopy(cmd)
   table.insert(command, 1, config.wezterm_cli_path)
   table.insert(command, 2, 'cli')
-  return vim.fn.system(command)
+  local result = vim.system(command, { text = true }):wait()
+  if result.code == 0 then
+    return result.stdout
+  else
+    return result.stderr
+  end
 end
 
 local tab_id

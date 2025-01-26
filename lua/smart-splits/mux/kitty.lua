@@ -10,6 +10,9 @@ local dir_keys_kitty = {
 }
 
 local function kitty_exec(args)
+  if vim.fn.executable('kitty') == 0 then
+    error('`kitty` is not executable (not found on `$PATH`)')
+  end
   local arguments = vim.deepcopy(args)
   table.insert(arguments, 1, 'kitty')
   table.insert(arguments, 2, '@')
@@ -18,7 +21,12 @@ local function kitty_exec(args)
     table.insert(arguments, 3, '--password')
     table.insert(arguments, 4, password)
   end
-  return vim.fn.system(arguments)
+  local result = vim.system(arguments, { text = true }):wait()
+  if result.code == 0 then
+    return result.stdout
+  else
+    return result.stderr
+  end
 end
 
 ---@type SmartSplitsMultiplexer

@@ -28,11 +28,21 @@ local function tmux_exec(args, as_list)
     return nil
   end
 
+  if vim.fn.executable('tmux') == 0 then
+    error('`tmux` not executable (not found on `$PATH`)')
+  end
+
   local cmd = vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
   if as_list then
     return vim.fn.systemlist(cmd) --[[ @as string[] ]]
   end
-  return vim.fn.system(cmd)
+
+  local result = vim.system(cmd, { text = true }):wait()
+  if result.code == 0 then
+    return result.stdout
+  else
+    return result.stderr
+  end
 end
 
 ---@type SmartSplitsMultiplexer

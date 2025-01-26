@@ -77,7 +77,7 @@ body:
         -- bootstrap lazy
         local lazypath = root .. '/plugins/lazy.nvim'
         if not vim.loop.fs_stat(lazypath) then
-          vim.fn.system({
+          vim.system({
             'git',
             'clone',
             '--filter=blob:none',
