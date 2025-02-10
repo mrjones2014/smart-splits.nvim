@@ -44,15 +44,14 @@
           set -as terminal-overrides ',*:Setulc=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m'
         '';
       in {
-        devShells.default = pkgs.mkShell {
+        devShells.default = let
+          tmux_wrapper = pkgs.writeShellScriptBin "tmux" ''
+            ${pkgs.tmux}/bin/tmux -f ${tmux_conf} $@
+          '';
+        in pkgs.mkShell {
           name = "shell with tmux";
 
-          packages = with pkgs; [ tmux stylua luajitPackages.luacheck ];
-
-          shellHook = ''
-            alias tmux="tmux -f ${tmux_conf}"
-            alias :q="exit"
-          '';
+          packages = with pkgs; [ tmux_wrapper stylua luajitPackages.luacheck ];
         };
       });
 }
