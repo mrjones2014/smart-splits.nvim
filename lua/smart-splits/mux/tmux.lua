@@ -28,7 +28,10 @@ local function tmux_exec(args, as_list)
     return nil
   end
 
-  local cmd = vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
+  local cmd = os.getenv('FLATPAK_ID')
+      and vim.list_extend({ 'flatpak-spawn', '--host', 'tmux', '-S', socket }, args, 1, #args)
+    or vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
+
   if as_list then
     return vim.fn.systemlist(cmd) --[[ @as string[] ]]
   end
