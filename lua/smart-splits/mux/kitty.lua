@@ -97,10 +97,14 @@ function M.resize_pane(direction, amount)
 end
 
 function M.on_init()
+  -- selene: allow(incorrect_standard_library_use)
+  -- selene: allow(bad_string_escape)
   io.stdout:write('\x1b]1337;SetUserVar=IS_NVIM=MQo\007')
 end
 
 function M.on_exit()
+  -- selene: allow(incorrect_standard_library_use)
+  -- selene: allow(bad_string_escape)
   io.stdout:write('\x1b]1337;SetUserVar=IS_NVIM\007')
 end
 
