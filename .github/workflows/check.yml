@@ -23,7 +23,12 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         args: --check lua/
         version: 0.15.2
-    - name: Run Luacheck
-      uses: lunarmodules/luacheck@v1
+    - name: Run Selene
+      uses: NTBBloodbath/selene-action@v1.0.0
       with:
-        args: lua/
+        # Github secret token
+        token: ${{ secrets.GITHUB_TOKEN }}
+        # selene arguments
+        args: --display-style=quiet .
+        # selene version
+        version: 0.28.0

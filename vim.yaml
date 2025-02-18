@@ -1,0 +1,6 @@
+---
+base: lua51
+name: vim
+globals:
+  vim:
+    any: true

@@ -51,7 +51,7 @@
         in pkgs.mkShell {
           name = "shell with tmux";
 
-          packages = with pkgs; [ tmux_wrapper stylua luajitPackages.luacheck ];
+          packages = with pkgs; [ tmux_wrapper stylua selene ];
         };
       });
 }
