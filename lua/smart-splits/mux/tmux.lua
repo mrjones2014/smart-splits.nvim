@@ -182,7 +182,9 @@ function M.on_exit()
     return
   end
   local args = { 'set-option', '-pt', pane_id, '@pane-is-vim', 0 }
-  local cmd = vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
+  local cmd = os.getenv('FLATPAK_ID')
+      and vim.list_extend({ 'flatpak-spawn', '--host', 'tmux', '-S', socket }, args, 1, #args)
+    or vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
 
   vim.fn.jobstart(cmd, { detach = true })
 end
