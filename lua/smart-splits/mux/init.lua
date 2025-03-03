@@ -118,7 +118,7 @@ function M.resize_pane(direction, amount)
   return ok
 end
 
----Try creating a new mux split pane. Not supported in Kitty multiplexer.
+---Try creating a new mux split pane.
 ---@param direction SmartSplitsDirection
 ---@param size number|nil
 ---@return boolean success
