@@ -317,7 +317,7 @@ You can also set the desired multiplexer integration in lazy environments before
 You can use the package manager [TPM](https://github.com/tmux-plugins/tpm) to configure your Tmux setup:
 
 > [!NOTE]
-> Currently, jumping to the last viewed pane is not supported.
+> Currently, jumping to the last viewed pane is not supported. Feel free to submit a PR for it!
 
 ```tmux
 set -g @plugin 'mrjones2014/smart-splits.nvim'
