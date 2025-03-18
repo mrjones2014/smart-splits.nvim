@@ -1,4 +1,4 @@
-*smart-splits.txt*                                Last change: 2025 January 16
+*smart-splits.txt*                                  Last change: 2025 March 18
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -347,8 +347,32 @@ described in Configuration <#configuration>.
                                                                               
 TMUX                                                       *smart-splits-tmux*
 
-Add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf`
-file (customizing the keys and resize amount if desired):
+You can use the package manager TPM <https://github.com/tmux-plugins/tpm> to
+configure your Tmux setup:
+
+  [!NOTE] Currently, jumping to the last viewed pane is not supported. Feel free
+  to submit a PR for it!
+
+>tmux
+    set -g @plugin 'mrjones2014/smart-splits.nvim'
+    
+    # Optional configurations with their default values if omitted:
+    
+    set -g @smart-splits_no_wrap '' # to disable wrapping. (any value disables wrapping)
+    
+    set -g @smart-splits_move_left_key  'C-h' # key-mapping for navigation.
+    set -g @smart-splits_move_down_key  'C-j' #  --"--
+    set -g @smart-splits_move_up_key    'C-k' #  --"--
+    set -g @smart-splits_move_right_key 'C-l' #  --"--
+    
+    set -g @smart-splits_resize_left_key  'M-h' # key-mapping for resizing.
+    set -g @smart-splits_resize_down_key  'M-j' #  --"--
+    set -g @smart-splits_resize_up_key    'M-k' #  --"--
+    set -g @smart-splits_resize_right_key 'M-l' #  --"--
+<
+Alternatively, add the following snippet to your
+`~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys and
+resize amount if desired):
 
 >tmux
     # '@pane-is-vim' is a pane-local option that is set by the plugin on load,
