@@ -335,6 +335,8 @@ set -g @smart-splits_resize_left_key  'M-h' # key-mapping for resizing.
 set -g @smart-splits_resize_down_key  'M-j' #  --"--
 set -g @smart-splits_resize_up_key    'M-k' #  --"--
 set -g @smart-splits_resize_right_key 'M-l' #  --"--
+
+set -g @smart-splits_resize_step_size '3' # change the step-size for resizing.
 ```
 
 Alternatively, add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys and resize amount if desired):
