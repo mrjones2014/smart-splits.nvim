@@ -1,4 +1,4 @@
-*smart-splits.txt*                                  Last change: 2025 March 18
+*smart-splits.txt*                                  Last change: 2025 March 28
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -369,6 +369,8 @@ configure your Tmux setup:
     set -g @smart-splits_resize_down_key  'M-j' #  --"--
     set -g @smart-splits_resize_up_key    'M-k' #  --"--
     set -g @smart-splits_resize_right_key 'M-l' #  --"--
+    
+    set -g @smart-splits_resize_step_size '3' # change the step-size for resizing.
 <
 Alternatively, add the following snippet to your
 `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys and
