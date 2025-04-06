@@ -1,4 +1,4 @@
-*smart-splits.txt*                                  Last change: 2025 March 28
+*smart-splits.txt*                                  Last change: 2025 April 05
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -13,6 +13,7 @@ Lua API ............................................... |smart-splits-lua-api|
 Multiplexer Integrations ............. |smart-splits-multiplexer-integrations|
 Tmux ..................................................... |smart-splits-tmux|
 Quirks with Alacritty ................... |smart-splits-quirks-with-alacritty|
+Zellij ................................................. |smart-splits-zellij|
 Wezterm ............................................... |smart-splits-wezterm|
 Kitty ................................................... |smart-splits-kitty|
 Credits ............................................... |smart-splits-credits|
@@ -35,8 +36,8 @@ demo
 - Install <#install>
 - Configuration <#configuration> - Hooks <#hooks> - Examples: <#examples>
 - Usage <#usage> - Multiplexer Integrations <#multiplexer-integrations> - Tmux
-  <#tmux> - Wezterm <#wezterm> - Kitty <#kitty> - Credits <#credits> -
-  Multiplexer Lua API <#multiplexer-lua-api>
+  <#tmux> - Zellij <#zellij> - Wezterm <#wezterm> - Kitty <#kitty> - Credits
+  <#credits> - Multiplexer Lua API <#multiplexer-lua-api>
 
 ------------------------------------------------------------------------------
 INSTALL                                                 *smart-splits-install*
@@ -424,6 +425,88 @@ to configure Alacritty to interpret the key code correctly. \ reference
 >yaml
     window:
       option_as_alt: "Both" # or "OnlyLeft" or "OnlyRight" if you prefer
+<
+
+                                                                              
+ZELLIJ                                                   *smart-splits-zellij*
+
+  [!NOTE] Zellij support is currently experimental. Please try it out and report
+  any issues! \ Resizing by a specific amount from Neovim and presetting new
+  split size is unsupported.
+
+Add the following keymap config to your Zellij KDL config, adjusting the keys
+you wish to use as necessary. No configuration should be needed on the Neovim
+side.
+
+>kdl
+    keybinds {
+      shared_except "locked" {
+        bind "Ctrl h" {
+            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+                name "move_focus_or_tab";
+                payload "left";
+                move_mod "ctrl";
+                resize_mod "alt";
+            };
+        }
+        bind "Ctrl j" {
+            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+                name "move_focus";
+                payload "down";
+                move_mod "ctrl";
+                resize_mod "alt";
+            };
+        }
+        bind "Ctrl k" {
+            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+                name "move_focus";
+                payload "up";
+                move_mod "ctrl";
+                resize_mod "alt";
+            };
+        }
+        bind "Ctrl l" {
+            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+                name "move_focus_or_tab";
+                payload "right";
+                move_mod "ctrl";
+                resize_mod "alt";
+            };
+        }
+        bind "Alt h" {
+            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+                name "resize";
+                payload "left";
+                move_mod "ctrl";
+                resize_mod "alt";
+            };
+        }
+        bind "Alt j" {
+            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+                name "resize";
+                payload "down";
+                move_mod "ctrl";
+                resize_mod "alt";
+            };
+        }
+        bind "Alt k" {
+            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+                name "resize";
+                payload "up";
+                move_mod "ctrl";
+                resize_mod "alt";
+            };
+        }
+        bind "Alt l" {
+            MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+                name "resize";
+                payload "right";
+                move_mod "ctrl";
+                resize_mod "alt";
+            };
+        }
+      }
+    }
 <
 
                                                                               
