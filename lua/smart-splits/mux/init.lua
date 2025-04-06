@@ -112,7 +112,7 @@ function M.resize_pane(direction, amount)
 
   local ok = multiplexer.resize_pane(direction, amount)
   if not ok then
-    log.error('Failed to resize multiplexer pane')
+    log.debug('Failed to resize multiplexer pane')
   end
 
   return ok
