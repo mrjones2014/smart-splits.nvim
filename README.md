@@ -19,6 +19,7 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
 - [Usage](#usage)
   - [Multiplexer Integrations](#multiplexer-integrations)
     - [Tmux](#tmux)
+    - [Zellij](#zellij)
     - [Wezterm](#wezterm)
     - [Kitty](#kitty)
       - [Credits](#credits)
@@ -387,6 +388,86 @@ If you want to use `Option` key as an `Alt` key for keymaps in `tmux`, you will 
 ```yaml
 window:
   option_as_alt: "Both" # or "OnlyLeft" or "OnlyRight" if you prefer
+```
+
+#### Zelli
+
+> [!NOTE]
+> Zellij support is currently experimental. Please try it out and report any issues! \
+> Resizing by a specific amount from Neovim and presetting new split size is unsupported.
+
+Add the following keymap config to your Zellij KDL config, adjusting the keys you wish to use as necessary.
+No configuration should be needed on the Neovim side.
+
+```kdl
+keybinds {
+  shared_except "locked" {
+    bind "Ctrl h" {
+        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+            name "move_focus_or_tab";
+            payload "left";
+            move_mod "ctrl";
+            resize_mod "alt";
+        };
+    }
+    bind "Ctrl j" {
+        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+            name "move_focus";
+            payload "down";
+            move_mod "ctrl";
+            resize_mod "alt";
+        };
+    }
+    bind "Ctrl k" {
+        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+            name "move_focus";
+            payload "up";
+            move_mod "ctrl";
+            resize_mod "alt";
+        };
+    }
+    bind "Ctrl l" {
+        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+            name "move_focus_or_tab";
+            payload "right";
+            move_mod "ctrl";
+            resize_mod "alt";
+        };
+    }
+    bind "Alt h" {
+        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+            name "resize";
+            payload "left";
+            move_mod "ctrl";
+            resize_mod "alt";
+        };
+    }
+    bind "Alt j" {
+        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+            name "resize";
+            payload "down";
+            move_mod "ctrl";
+            resize_mod "alt";
+        };
+    }
+    bind "Alt k" {
+        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+            name "resize";
+            payload "up";
+            move_mod "ctrl";
+            resize_mod "alt";
+        };
+    }
+    bind "Alt l" {
+        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
+            name "resize";
+            payload "right";
+            move_mod "ctrl";
+            resize_mod "alt";
+        };
+    }
+  }
+}
 ```
 
 #### Wezterm

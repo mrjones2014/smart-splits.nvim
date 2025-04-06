@@ -1,0 +1,91 @@
+local Direction = require('smart-splits.types').Direction
+local log = require('smart-splits.log')
+
+local function zellij_exec(cmd)
+  local command = vim.deepcopy(cmd)
+  table.insert(command, 1, 'zellij')
+  local result = vim.fn.systemlist(command)
+  return result
+end
+
+---@type SmartSplitsMultiplexer
+local M = {} ---@diagnostic disable-line: missing-fields
+
+M.type = 'zellij'
+
+function M.current_pane_id()
+  local output = zellij_exec({ 'action', 'list-clients' })
+  if not output[2] then
+    return nil
+  end
+  local pane_id = string.match(output[2], '%S+%s+%w+_(%d+)')
+  return pane_id
+end
+
+function M.current_pane_at_edge()
+  local pane_id = M.current_pane_id()
+  if pane_id == nil then
+    log.warn('could not get zeillij pane id')
+    return false
+  end
+  zellij_exec({ 'action', 'move-focus', Direction.left })
+  local new_pane_id = M.current_pane_id()
+
+  if new_pane_id == nil then
+    log.warn('could not get zeillij pane id')
+    return false
+  end
+
+  return pane_id == new_pane_id
+end
+
+-- amount is not supported on zellij
+function M.resize_pane(direction, _amount) ---@diagnostic disable-line: unused-local
+  if not M.is_in_session() then
+    return false
+  end
+
+  local ok, _ = pcall(zellij_exec, { 'action', 'resize', 'increase', direction })
+  return ok
+end
+
+function M.is_in_session()
+  return M.current_pane_id() ~= nil
+end
+
+function M.current_pane_is_zoomed()
+  return false
+end
+
+function M.next_pane(direction)
+  if not M.is_in_session() then
+    return false
+  end
+  local ok, _ = pcall(zellij_exec, { 'action', 'move-focus', direction })
+  return ok
+end
+
+-- size is not supported on zellij
+function M.split_pane(direction, _size) ---@diagnostic disable-line: unused-local
+  -- zellij only splits right and down; for the others,
+  -- we must split right and down then swap the panes
+  local args = { 'action', 'new-pane' }
+  local need_swap
+  if direction == Direction.left then
+    table.insert(args, 'right')
+    need_swap = 'right'
+  elseif direction == Direction.up then
+    table.insert(args, 'down')
+    need_swap = 'down'
+  else
+    table.insert(args, direction)
+  end
+  local split_ok, _ = pcall(zellij_exec, args)
+  if need_swap ~= nil then
+    local swap_ok = pcall(zellij_exec, { 'action', 'move-pane', need_swap })
+    return split_ok and swap_ok
+  end
+  return split_ok
+end
+
+return M
