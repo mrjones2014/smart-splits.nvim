@@ -1,4 +1,4 @@
-*smart-splits.txt*                                  Last change: 2025 April 05
+*smart-splits.txt*                                  Last change: 2025 April 06
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -437,6 +437,10 @@ ZELLIJ                                                   *smart-splits-zellij*
 Add the following keymap config to your Zellij KDL config, adjusting the keys
 you wish to use as necessary. No configuration should be needed on the Neovim
 side.
+
+  [!NOTE] This is an example. It is highly recommended to manually install the
+  plugins and use `MessagePlugin "file:/path/to/plugin.wasm"` instead of the
+  GitHub URL!
 
 >kdl
     keybinds {
