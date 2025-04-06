@@ -113,6 +113,8 @@ function M.set_default_multiplexer()
     config.multiplexer_integration = Multiplexer.tmux
   elseif term == 'wezterm' then
     config.multiplexer_integration = Multiplexer.wezterm
+  elseif vim.env.ZELLIJ ~= nil then
+    config.multiplexer_integration = 'zellij'
   elseif vim.env.KITTY_LISTEN_ON ~= nil then
     -- Kitty doesn't use $TERM_PROGRAM, and also requires remote control enabled anyway
     config.multiplexer_integration = Multiplexer.kitty
