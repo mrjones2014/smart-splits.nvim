@@ -207,6 +207,11 @@ If you are a [legendary.nvim](https://github.com/mrjones2014/legendary.nvim) (>=
 quickly easily and easily create with the `legendary.nvim` extension for `smart-splits.nvim`. See more
 option in the [extension documentation in `legendary.nvim`](https://github.com/mrjones2014/legendary.nvim/blob/master/doc/EXTENSIONS.md#smart-splitsnvim).
 
+> [!NOTE]
+> The recommended mappings use the Alt/Meta key. In some terminals, such as Alacritty
+> and Ghostty, on macOS you will need to set a configuration option for it to treat
+> the macOS Option key as Alt
+
 ```lua
 require('legendary').setup({
   extensions = {
@@ -377,17 +382,6 @@ bind-key -T copy-mode-vi 'C-j' select-pane -D
 bind-key -T copy-mode-vi 'C-k' select-pane -U
 bind-key -T copy-mode-vi 'C-l' select-pane -R
 bind-key -T copy-mode-vi 'C-\' select-pane -l
-```
-
-##### Quirks with Alacritty
-
-By default, on macOS, Alacritty does not treat the `Option` key as an `Alt`/`Meta` key. This is not useful and probably not what you want.
-If you want to use `Option` key as an `Alt` key for keymaps in `tmux`, you will have to configure Alacritty to interpret the key code correctly. \
-[reference](https://alacritty.org/config-alacritty.html#s20)
-
-```yaml
-window:
-  option_as_alt: "Both" # or "OnlyLeft" or "OnlyRight" if you prefer
 ```
 
 #### Zellij
