@@ -15,18 +15,18 @@ local directions_reverse = {
 local function move_multiplexer_inner(direction, multiplexer)
   local current_pane = multiplexer.current_pane_id()
   if not current_pane then
-    log.error('Failed to get multiplexer pane ID')
+    log.debug('Failed to get multiplexer pane ID')
     return false
   end
 
   local ok = multiplexer.next_pane(direction)
   if not ok then
-    log.error('Failed to select multiplexer pane')
+    log.debug('Failed to select multiplexer pane')
     return false
   end
   local new_pane = multiplexer.current_pane_id()
   if not new_pane then
-    log.error('Failed to get multiplexer pane ID')
+    log.debug('Failed to get multiplexer pane ID')
     return false
   end
 
