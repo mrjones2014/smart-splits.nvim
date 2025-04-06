@@ -12,7 +12,6 @@ Key Mappings ..................................... |smart-splits-key-mappings|
 Lua API ............................................... |smart-splits-lua-api|
 Multiplexer Integrations ............. |smart-splits-multiplexer-integrations|
 Tmux ..................................................... |smart-splits-tmux|
-Quirks with Alacritty ................... |smart-splits-quirks-with-alacritty|
 Zellij ................................................. |smart-splits-zellij|
 Wezterm ............................................... |smart-splits-wezterm|
 Kitty ................................................... |smart-splits-kitty|
@@ -234,6 +233,10 @@ If you are a legendary.nvim <https://github.com/mrjones2014/legendary.nvim>
 extension documentation in `legendary.nvim`
 <https://github.com/mrjones2014/legendary.nvim/blob/master/doc/EXTENSIONS.md#smart-splitsnvim>.
 
+  [!NOTE] The recommended mappings use the Alt/Meta key. In some terminals, such
+  as Alacritty and Ghostty, on macOS you will need to set a configuration option
+  for it to treat the macOS Option key as Alt
+
 >lua
     require('legendary').setup({
       extensions = {
@@ -336,8 +339,9 @@ LUA API                                                 *smart-splits-lua-api*
 MULTIPLEXER INTEGRATIONS               *smart-splits-multiplexer-integrations*
 
 `smart-splits.nvim` can also enable seamless navigation between Neovim splits
-and `tmux`, `wezterm`, or `kitty` panes. You will need to set up keymaps in
-your `tmux`, `wezterm`, or `kitty` configs to match the Neovim keymaps.
+and `tmux`, `zellij`, `wezterm`, or `kitty` panes. You will need to set up
+keymaps in your `tmux`, `wezterm`, or `kitty` configs to match the Neovim
+keymaps.
 
 You can also set the desired multiplexer integration in lazy environments
 before the plugin is loaded by setting
@@ -412,19 +416,6 @@ resize amount if desired):
     bind-key -T copy-mode-vi 'C-k' select-pane -U
     bind-key -T copy-mode-vi 'C-l' select-pane -R
     bind-key -T copy-mode-vi 'C-\' select-pane -l
-<
-
-QUIRKS WITH ALACRITTY                     *smart-splits-quirks-with-alacritty*
-
-By default, on macOS, Alacritty does not treat the `Option` key as an
-`Alt`/`Meta` key. This is not useful and probably not what you want. If you
-want to use `Option` key as an `Alt` key for keymaps in `tmux`, you will have
-to configure Alacritty to interpret the key code correctly. \ reference
-<https://alacritty.org/config-alacritty.html#s20>
-
->yaml
-    window:
-      option_as_alt: "Both" # or "OnlyLeft" or "OnlyRight" if you prefer
 <
 
                                                                               
