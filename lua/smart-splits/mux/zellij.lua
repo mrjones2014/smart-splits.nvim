@@ -36,6 +36,9 @@ function M.current_pane_at_edge()
     return false
   end
 
+  -- move back to original pane
+  zellij_exec({ 'action', 'move-focus', Direction.right })
+
   return pane_id == new_pane_id
 end
 

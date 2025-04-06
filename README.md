@@ -399,6 +399,10 @@ window:
 Add the following keymap config to your Zellij KDL config, adjusting the keys you wish to use as necessary.
 No configuration should be needed on the Neovim side.
 
+> [!NOTE]
+> This is an example. It is highly recommended to manually install the plugins and use `MessagePlugin "file:/path/to/plugin.wasm"`
+> instead of the GitHub URL!
+
 ```kdl
 keybinds {
   shared_except "locked" {
