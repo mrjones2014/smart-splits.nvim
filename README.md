@@ -307,7 +307,7 @@ require('smart-splits').start_resize_mode()
 
 ### Multiplexer Integrations
 
-`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `wezterm`, or `kitty` panes.
+`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `zellij`, `wezterm`, or `kitty` panes.
 You will need to set up keymaps in your `tmux`, `wezterm`, or `kitty` configs to match the Neovim keymaps.
 
 You can also set the desired multiplexer integration in lazy environments before the plugin is loaded by setting
