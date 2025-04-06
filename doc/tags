@@ -16,5 +16,6 @@ smart-splits-table-of-contents	smart-splits.txt	/*smart-splits-table-of-contents
 smart-splits-tmux	smart-splits.txt	/*smart-splits-tmux*
 smart-splits-usage	smart-splits.txt	/*smart-splits-usage*
 smart-splits-wezterm	smart-splits.txt	/*smart-splits-wezterm*
+smart-splits-zellij	smart-splits.txt	/*smart-splits-zellij*
 smart-splits-🧠-`smart-splits.nvim	smart-splits.txt	/*smart-splits-🧠-`smart-splits.nvim*
 smart-splits.txt	smart-splits.txt	/*smart-splits.txt*
