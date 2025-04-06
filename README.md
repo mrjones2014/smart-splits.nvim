@@ -390,7 +390,7 @@ window:
   option_as_alt: "Both" # or "OnlyLeft" or "OnlyRight" if you prefer
 ```
 
-#### Zelli
+#### Zellij
 
 > [!NOTE]
 > Zellij support is currently experimental. Please try it out and report any issues! \
