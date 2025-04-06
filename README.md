@@ -8,7 +8,7 @@
 instead of wider/narrower/taller/shorter for resizing. Supports seamless navigation between Neovim and terminal
 multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integrations).
 
-![demo](https://user-images.githubusercontent.com/8648891/201928611-4338e3cb-cca9-4e15-92c6-0405b7072279.gif)
+<video src="https://github.com/user-attachments/assets/e516399d-0c49-4c3d-b748-3ee0e4262898"></video>
 
 **Table of Contents**
 
