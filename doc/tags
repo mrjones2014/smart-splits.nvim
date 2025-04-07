@@ -13,6 +13,7 @@ smart-splits-multiplexer-integrations	smart-splits.txt	/*smart-splits-multiplexe
 smart-splits-multiplexer-lua-api	smart-splits.txt	/*smart-splits-multiplexer-lua-api*
 smart-splits-table-of-contents	smart-splits.txt	/*smart-splits-table-of-contents*
 smart-splits-tmux	smart-splits.txt	/*smart-splits-tmux*
+smart-splits-troubleshooting	smart-splits.txt	/*smart-splits-troubleshooting*
 smart-splits-usage	smart-splits.txt	/*smart-splits-usage*
 smart-splits-wezterm	smart-splits.txt	/*smart-splits-wezterm*
 smart-splits-zellij	smart-splits.txt	/*smart-splits-zellij*
