@@ -12,18 +12,25 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
 
 **Table of Contents**
 
+<!--toc:start-->
+
 - [Install](#install)
 - [Configuration](#configuration)
   - [Hooks](#hooks)
-    - [Examples:](#examples)
+    - [Examples](#examples)
 - [Usage](#usage)
+  - [Key Mappings](#key-mappings)
+  - [Lua API](#lua-api)
   - [Multiplexer Integrations](#multiplexer-integrations)
     - [Tmux](#tmux)
     - [Zellij](#zellij)
+      - [Troubleshooting](#troubleshooting)
     - [Wezterm](#wezterm)
     - [Kitty](#kitty)
       - [Credits](#credits)
-    - [Multiplexer Lua API](#multiplexer-lua-api)
+  - [Multiplexer Lua API](#multiplexer-lua-api)
+
+<!--toc:end-->
 
 ## Install
 
@@ -390,7 +397,9 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 > Zellij support is currently experimental. Please try it out and report any issues! \
 > Resizing by a specific amount from Neovim and presetting new split size is unsupported.
 
+Zellij support is implemented with help from [vim-zellij-navigator](https://github.com/hiasr/vim-zellij-navigator).
 Add the following keymap config to your Zellij KDL config, adjusting the keys you wish to use as necessary.
+Consult the documentation from [vim-zellij-navigator](https://github.com/hiasr/vim-zellij-navigator) for more customization options.
 No configuration should be needed on the Neovim side.
 
 > [!NOTE]
@@ -402,71 +411,63 @@ keybinds {
   shared_except "locked" {
     bind "Ctrl h" {
         MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "move_focus_or_tab";
+            name "move_focus";
             payload "left";
-            move_mod "ctrl";
-            resize_mod "alt";
         };
     }
     bind "Ctrl j" {
         MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
             name "move_focus";
             payload "down";
-            move_mod "ctrl";
-            resize_mod "alt";
         };
     }
     bind "Ctrl k" {
         MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
             name "move_focus";
             payload "up";
-            move_mod "ctrl";
-            resize_mod "alt";
         };
     }
     bind "Ctrl l" {
         MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "move_focus_or_tab";
+            name "move_focus";
             payload "right";
-            move_mod "ctrl";
-            resize_mod "alt";
         };
     }
     bind "Alt h" {
         MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
             name "resize";
             payload "left";
-            move_mod "ctrl";
-            resize_mod "alt";
         };
     }
     bind "Alt j" {
         MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
             name "resize";
             payload "down";
-            move_mod "ctrl";
-            resize_mod "alt";
         };
     }
     bind "Alt k" {
         MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
             name "resize";
             payload "up";
-            move_mod "ctrl";
-            resize_mod "alt";
         };
     }
     bind "Alt l" {
         MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
             name "resize";
             payload "right";
-            move_mod "ctrl";
-            resize_mod "alt";
         };
     }
   }
 }
 ```
+
+##### Troubleshooting
+
+If you are able to move between and resize Zellij splits, but not Neovim splits, it could be that the `zellij` command is not
+on the `$PATH` that is made available to the Zellij process itself. The `vim-zellij-navigator` plugin currently uses `zellij action list-clients`
+to determine if the current pane is running Neovim (this will go away in a future release when that information is made available directly via the Zellij plugin API).
+
+To troubleshoot this, from within your Zellij session, you can run `zellij run -- env` to see Zellij's current environment, which should include it's `$PATH` variable.
 
 #### Wezterm
 
