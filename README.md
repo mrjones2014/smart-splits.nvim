@@ -93,7 +93,7 @@ require('smart-splits').setup({
   -- a context object with the following fields:
   -- {
   --    mux = {
-  --      type:'tmux'|'wezterm'|'kitty'
+  --      type:'tmux'|'wezterm'|'kitty'|'zellij'
   --      current_pane_id():number,
   --      is_in_session(): boolean
   --      current_pane_is_zoomed():boolean,
@@ -393,14 +393,12 @@ bind-key -T copy-mode-vi 'C-\' select-pane -l
 
 #### Zellij
 
-> [!NOTE]
-> Zellij support is currently experimental. Please try it out and report any issues! \
-> Resizing by a specific amount from Neovim and presetting new split size is unsupported.
-
 Zellij support is implemented with help from [vim-zellij-navigator](https://github.com/hiasr/vim-zellij-navigator).
 Add the following keymap config to your Zellij KDL config, adjusting the keys you wish to use as necessary.
 Consult the documentation from [vim-zellij-navigator](https://github.com/hiasr/vim-zellij-navigator) for more customization options.
 No configuration should be needed on the Neovim side.
+
+**Resizing by a specific amount from Neovim and presetting new split size is unsupported.**
 
 > [!NOTE]
 > This is an example. It is highly recommended to manually install the plugins and use `MessagePlugin "file:/path/to/plugin.wasm"`
@@ -676,5 +674,5 @@ local mux = require('smart-splits.mux').get()
 ---@field next_pane fun(direction:'left'|'right'|'up'|'down'):boolean
 ---@field resize_pane fun(direction:'left'|'right'|'up'|'down', amount:number):boolean
 ---@field split_pane fun(direction:'left'|'right'|'up'|'down',size:number|nil):boolean
----@field type 'tmux'|'wezterm'|'kitty'
+---@field type 'tmux'|'wezterm'|'kitty'|'zellij'
 ```
