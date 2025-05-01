@@ -79,7 +79,8 @@ local function split_nav(resize_or_move, key, direction)
     key = key,
     mods = modifier,
     action = wezterm.action_callback(function(win, pane)
-      if is_vim(pane) then
+      local num_panes = #win:window:active_tab():panes()
+      if is_vim(pane) or num_panes == 1 then
         -- pass the keys through to vim/nvim
         win:perform_action({
           SendKey = {
