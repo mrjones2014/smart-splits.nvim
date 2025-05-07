@@ -124,23 +124,6 @@ require('smart-splits').setup({
   -- `{ move_cursor = true }` or `{ move_cursor = false }`
   -- when calling the Lua function.
   cursor_follows_swapped_bufs = false,
-  -- resize mode options
-  resize_mode = {
-    -- key to exit persistent resize mode
-    quit_key = '<ESC>',
-    -- keys to use for moving in resize mode
-    -- in order of left, down, up' right
-    resize_keys = { 'h', 'j', 'k', 'l' },
-    -- set to true to silence the notifications
-    -- when entering/exiting persistent resize mode
-    silent = false,
-    -- must be functions, they will be executed when
-    -- entering or exiting the resize mode
-    hooks = {
-      on_enter = nil,
-      on_leave = nil,
-    },
-  },
   -- ignore these autocmd events (via :h eventignore) while processing
   -- smart-splits.nvim computations, which involve visiting different
   -- buffers and windows. These events will be ignored during processing,
@@ -167,42 +150,6 @@ require('smart-splits').setup({
   kitty_password = nil,
   -- default logging level, one of: 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
   log_level = 'info',
-})
-```
-
-### Hooks
-
-The hook table allows you to define callbacks for the `on_enter` and `on_leave` events of the resize mode.
-
-##### Examples
-
-Integration with [bufresize.nvim](https://github.com/kwkarlwang/bufresize.nvim):
-
-```lua
-require('smart-splits').setup({
-  resize_mode = {
-    hooks = {
-      on_leave = require('bufresize').register,
-    },
-  },
-})
-```
-
-Custom messages when using resize mode:
-
-```lua
-require('smart-splits').setup({
-  resize_mode = {
-    silent = true,
-    hooks = {
-      on_enter = function()
-        vim.notify('Entering resize mode')
-      end,
-      on_leave = function()
-        vim.notify('Exiting resize mode, bye')
-      end,
-    },
-  },
 })
 ```
 
@@ -309,12 +256,6 @@ require('smart-splits').swap_buf_right()
 -- the buffer swap functions can also take an `opts` table to override the
 -- default behavior of whether or not the cursor follows the buffer
 require('smart-splits').swap_buf_right({ move_cursor = true })
--- persistent resize mode
--- temporarily remap your configured resize keys to
--- smart resize left, down, up, and right, respectively,
--- press <ESC> to stop resize mode (unless you've set a different key in config)
--- resize keys also accept a range, e.e. pressing `5j` will resize down 5 times the default_amount
-require('smart-splits').start_resize_mode()
 ```
 
 ### Multiplexer Integrations
@@ -676,3 +617,56 @@ local mux = require('smart-splits.mux').get()
 ---@field split_pane fun(direction:'left'|'right'|'up'|'down',size:number|nil):boolean
 ---@field type 'tmux'|'wezterm'|'kitty'|'zellij'
 ```
+
+### Persistent Resize Mode
+
+Previously, `smart-splits.nvim` included a "persistent resize mode" feature, which temporarily allowed you to
+resize windows by pressing just your directional keys without a modifier, until exiting resize mode. This feature
+had a lot of bugs and was too much of a maintenance burden, and is much better handled by other plugins that are
+designed to do that sort of thing, and the feature was therefore removed.
+
+Instead, you should use something like [submode.nvim](https://github.com/pogyomo/submode.nvim) with a configuration like:
+
+```lua
+{
+  'mrjones2014/smart-splits.nvim',
+  event = 'VeryLazy',
+  dependencies = {
+    'pogyomo/submode.nvim',
+  },
+  config = function()
+    -- Resize
+    local submode = require 'submode'
+    submode.create('WinResize', {
+      mode = 'n',
+      enter = '<C-w>r',
+      leave = { '<Esc>', 'q', '<C-c>' },
+      hook = {
+        on_enter = function()
+          vim.notify 'Use { h, j, k, l } or { <Left>, <Down>, <Up>, <Right> } to resize the window'
+        end,
+        on_leave = function()
+          vim.notify ''
+        end,
+      },
+      default = function(register)
+        register('h', require('smart-splits').resize_left, { desc = 'Resize left' })
+        register('j', require('smart-splits').resize_down, { desc = 'Resize down' })
+        register('k', require('smart-splits').resize_up, { desc = 'Resize up' })
+        register('l', require('smart-splits').resize_right, { desc = 'Resize right' })
+        register('<Left>', require('smart-splits').resize_left, { desc = 'Resize left' })
+        register('<Down>', require('smart-splits').resize_down, { desc = 'Resize down' })
+        register('<Up>', require('smart-splits').resize_up, { desc = 'Resize up' })
+        register('<Right>', require('smart-splits').resize_right, { desc = 'Resize right' })
+      end,
+    })
+  end,
+}
+```
+
+Special thank you to [@drowining-cat](https://github.com/drowning-cat) for putting this example together.
+
+Other alternative plugins to do this include:
+
+- [hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
+- [mini.clue](https://github.com/echasnovski/mini.nvim/blob/main/doc/mini-clue.txt#L357)

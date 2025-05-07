@@ -3,14 +3,13 @@ NOT	smart-splits.txt	/*NOT*
 screen	smart-splits.txt	/*screen*
 smart-splits-configuration	smart-splits.txt	/*smart-splits-configuration*
 smart-splits-credits	smart-splits.txt	/*smart-splits-credits*
-smart-splits-examples	smart-splits.txt	/*smart-splits-examples*
-smart-splits-hooks	smart-splits.txt	/*smart-splits-hooks*
 smart-splits-install	smart-splits.txt	/*smart-splits-install*
 smart-splits-key-mappings	smart-splits.txt	/*smart-splits-key-mappings*
 smart-splits-kitty	smart-splits.txt	/*smart-splits-kitty*
 smart-splits-lua-api	smart-splits.txt	/*smart-splits-lua-api*
 smart-splits-multiplexer-integrations	smart-splits.txt	/*smart-splits-multiplexer-integrations*
 smart-splits-multiplexer-lua-api	smart-splits.txt	/*smart-splits-multiplexer-lua-api*
+smart-splits-persistent-resize-mode	smart-splits.txt	/*smart-splits-persistent-resize-mode*
 smart-splits-table-of-contents	smart-splits.txt	/*smart-splits-table-of-contents*
 smart-splits-tmux	smart-splits.txt	/*smart-splits-tmux*
 smart-splits-troubleshooting	smart-splits.txt	/*smart-splits-troubleshooting*

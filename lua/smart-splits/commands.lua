@@ -49,12 +49,6 @@ return {
   -- same_row does not apply to up/down
   { 'SmartSwapUp', require('smart-splits').swap_buf_up, { desc = 'smart-splits: swap buffer up' } },
   { 'SmartSwapDown', require('smart-splits').swap_buf_down, { desc = 'smart-splits: swap buffer down' } },
-  -- resize mode
-  {
-    'SmartResizeMode',
-    require('smart-splits').start_resize_mode,
-    { desc = 'smart-splits: Start persistent resize mode, press <ESC> to exit resize mode' },
-  },
   {
     'SmartSplitsLog',
     function()
