@@ -24,7 +24,6 @@ local mux_utils = require('smart-splits.mux.utils')
 ---@field float_win_behavior SmartSplitsFloatWinBehavior
 ---@field move_cursor_same_row boolean
 ---@field cursor_follows_swapped_bufs boolean
----@field resize_mode SmartResizeModeConfig
 ---@field ignored_events string[]
 ---@field multiplexer_integration SmartSplitsMultiplexerType|false
 ---@field disable_multiplexer_nav_when_zoomed boolean
@@ -50,15 +49,6 @@ local config = { ---@diagnostic disable-line:missing-fields
   float_win_behavior = FloatWinBehavior.previous,
   move_cursor_same_row = false,
   cursor_follows_swapped_bufs = false,
-  resize_mode = {
-    quit_key = '<ESC>',
-    resize_keys = { 'h', 'j', 'k', 'l' },
-    silent = false,
-    hooks = {
-      on_enter = nil,
-      on_leave = nil,
-    },
-  },
   ignored_events = {
     'BufEnter',
     'WinEnter',
