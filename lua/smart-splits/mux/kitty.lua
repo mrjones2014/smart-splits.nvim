@@ -73,7 +73,31 @@ function M.is_in_session()
 end
 
 function M.current_pane_is_zoomed()
-  return false
+  local output = kitty_exec({ 'ls' })
+  local kitty_info = vim.json.decode(output)
+  if #kitty_info == 0 then
+    return false
+  end
+
+  local active_client = utils.tbl_find(kitty_info, function(client)
+    -- if we're doing a keymap, obviously the terminal must be focused also
+    return client.is_active and client.is_focused
+  end)
+
+  if not active_client then
+    return false
+  end
+
+  local active_tab = utils.tbl_find(active_client.tabs, function(tab)
+    -- different versions of Kitty have different output for this
+    return (tab.is_active or tab.is_active_tab) and tab.is_focused
+  end)
+
+  if not active_tab then
+    return false
+  end
+
+  return active_tab.layout == 'stack'
 end
 
 function M.next_pane(direction)
