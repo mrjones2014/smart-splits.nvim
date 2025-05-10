@@ -21,12 +21,7 @@ local function kitty_exec(args)
   return vim.fn.system(arguments)
 end
 
----@type SmartSplitsMultiplexer
-local M = {}
-
-M.type = 'kitty'
-
-function M.current_pane_id()
+local function get_active_tab()
   local output = kitty_exec({ 'ls' })
   local kitty_info = vim.json.decode(output)
   if #kitty_info == 0 then
@@ -46,6 +41,21 @@ function M.current_pane_id()
     -- different versions of Kitty have different output for this
     return (tab.is_active or tab.is_active_tab) and tab.is_focused
   end)
+
+  if not active_tab then
+    return nil
+  end
+
+  return active_tab
+end
+
+---@type SmartSplitsMultiplexer
+local M = {}
+
+M.type = 'kitty'
+
+function M.current_pane_id()
+  local active_tab = get_active_tab()
 
   if not active_tab then
     return nil
@@ -73,25 +83,7 @@ function M.is_in_session()
 end
 
 function M.current_pane_is_zoomed()
-  local output = kitty_exec({ 'ls' })
-  local kitty_info = vim.json.decode(output)
-  if #kitty_info == 0 then
-    return false
-  end
-
-  local active_client = utils.tbl_find(kitty_info, function(client)
-    -- if we're doing a keymap, obviously the terminal must be focused also
-    return client.is_active and client.is_focused
-  end)
-
-  if not active_client then
-    return false
-  end
-
-  local active_tab = utils.tbl_find(active_client.tabs, function(tab)
-    -- different versions of Kitty have different output for this
-    return (tab.is_active or tab.is_active_tab) and tab.is_focused
-  end)
+  local active_tab = get_active_tab()
 
   if not active_tab then
     return false
