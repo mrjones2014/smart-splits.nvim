@@ -21,12 +21,7 @@ local function kitty_exec(args)
   return vim.fn.system(arguments)
 end
 
----@type SmartSplitsMultiplexer
-local M = {}
-
-M.type = 'kitty'
-
-function M.current_pane_id()
+local function get_active_tab()
   local output = kitty_exec({ 'ls' })
   local kitty_info = vim.json.decode(output)
   if #kitty_info == 0 then
@@ -46,6 +41,21 @@ function M.current_pane_id()
     -- different versions of Kitty have different output for this
     return (tab.is_active or tab.is_active_tab) and tab.is_focused
   end)
+
+  if not active_tab then
+    return nil
+  end
+
+  return active_tab
+end
+
+---@type SmartSplitsMultiplexer
+local M = {}
+
+M.type = 'kitty'
+
+function M.current_pane_id()
+  local active_tab = get_active_tab()
 
   if not active_tab then
     return nil
@@ -73,7 +83,13 @@ function M.is_in_session()
 end
 
 function M.current_pane_is_zoomed()
-  return false
+  local active_tab = get_active_tab()
+
+  if not active_tab then
+    return false
+  end
+
+  return active_tab.layout == 'stack'
 end
 
 function M.next_pane(direction)
