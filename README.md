@@ -141,8 +141,6 @@ require('smart-splits').setup({
   -- before the plugin is loaded (e.g. for lazy environments).
   multiplexer_integration = nil,
   -- disable multiplexer navigation if current multiplexer pane is zoomed
-  -- this functionality is only supported on tmux and Wezterm due to kitty
-  -- not having a way to check if a pane is zoomed
   disable_multiplexer_nav_when_zoomed = true,
   -- Supply a Kitty remote control password if needed,
   -- or you can also set vim.g.smart_splits_kitty_password
