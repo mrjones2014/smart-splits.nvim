@@ -1,4 +1,5 @@
 local Direction = require('smart-splits.types').Direction
+local lazy = require('smart-splits.lazy')
 local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
 local log = require('smart-splits.log')
 
