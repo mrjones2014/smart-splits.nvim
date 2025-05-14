@@ -269,6 +269,9 @@ You can also set the desired multiplexer integration in lazy environments before
 You can use the package manager [TPM](https://github.com/tmux-plugins/tpm) to configure your Tmux setup:
 
 > [!NOTE]
+> It is recommended to _not_ lazy load `smart-splits.nvim` when using this integration. It depends on the plugin
+> setting the `@pane-is-vim` tmux variable, which won't happen until the plugin is loaded.
+>
 > Currently, jumping to the last viewed pane is not supported. Feel free to submit a PR for it!
 
 ```tmux
