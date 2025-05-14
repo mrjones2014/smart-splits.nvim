@@ -1,4 +1,4 @@
-*smart-splits.txt*                                    Last change: 2025 May 12
+*smart-splits.txt*                                    Last change: 2025 May 14
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -292,8 +292,10 @@ TMUX                                                       *smart-splits-tmux*
 You can use the package manager TPM <https://github.com/tmux-plugins/tpm> to
 configure your Tmux setup:
 
-  [!NOTE] Currently, jumping to the last viewed pane is not supported. Feel free
-  to submit a PR for it!
+  [!NOTE] It is recommended to _not_ lazy load `smart-splits.nvim` when using
+  this integration. It depends on the plugin setting the `@pane-is-vim` tmux
+  variable, which won't happen until the plugin is loaded. Currently, jumping to
+  the last viewed pane is not supported. Feel free to submit a PR for it!
 
 >tmux
     set -g @plugin 'mrjones2014/smart-splits.nvim'
