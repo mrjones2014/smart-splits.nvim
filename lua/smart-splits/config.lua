@@ -29,6 +29,7 @@ local mux_utils = require('smart-splits.mux.utils')
 ---@field disable_multiplexer_nav_when_zoomed boolean
 ---@field wezterm_cli_path string|nil
 ---@field kitty_password string|nil
+---@field zellij_move_focus_or_tab boolean
 ---@field setup fun(cfg:table)
 ---@field set_default_multiplexer fun():string|nil
 ---@field log_level 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
@@ -56,6 +57,7 @@ local config = { ---@diagnostic disable-line:missing-fields
   multiplexer_integration = nil, ---@diagnostic disable-line this gets computed during startup unless disabled by user
   disable_multiplexer_nav_when_zoomed = true,
   kitty_password = nil,
+  zellij_move_focus_or_tab = false,
   log_level = 'info',
 }
 
