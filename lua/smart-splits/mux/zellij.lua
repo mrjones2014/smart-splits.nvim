@@ -1,4 +1,6 @@
 local Direction = require('smart-splits.types').Direction
+local lazy = require('smart-splits.lazy')
+local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
 local log = require('smart-splits.log')
 
 local function zellij_exec(cmd)
@@ -75,7 +77,11 @@ function M.next_pane(direction)
   if not M.is_in_session() then
     return false
   end
-  local ok, _ = pcall(zellij_exec, { 'action', 'move-focus', direction })
+  local action = 'move-focus'
+  if config.zellij_move_focus_or_tab and (direction == Direction.left or direction == Direction.right) then
+    action = 'move-focus-or-tab'
+  end
+  local ok, _ = pcall(zellij_exec, { 'action', action, direction })
   return ok
 end
 

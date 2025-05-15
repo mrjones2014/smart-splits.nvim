@@ -146,6 +146,9 @@ require('smart-splits').setup({
   -- or you can also set vim.g.smart_splits_kitty_password
   -- see https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.remote_control_password
   kitty_password = nil,
+  -- In Zellij, set this to true if you would like to move to the next *tab*
+  -- when the current pane is at the edge of the zellij tab/window
+  zellij_move_focus_or_tab = false,
   -- default logging level, one of: 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
   log_level = 'info',
 })
