@@ -96,17 +96,17 @@ function M.set_default_multiplexer()
   end
 
   -- if explicitly disabled or set to a different value, don't do anything
-  if config.multiplexer_integration == false and config.multiplexer_integration ~= nil then
+  if config.multiplexer_integration == false or config.multiplexer_integration ~= nil then
     return
   end
 
   local term = vim.trim((vim.env.TERM_PROGRAM or ''):lower())
   if term == 'tmux' then
     config.multiplexer_integration = Multiplexer.tmux
-  elseif term == 'wezterm' then
-    config.multiplexer_integration = Multiplexer.wezterm
   elseif vim.env.ZELLIJ ~= nil then
     config.multiplexer_integration = 'zellij'
+  elseif term == 'wezterm' then
+    config.multiplexer_integration = Multiplexer.wezterm
   elseif vim.env.KITTY_LISTEN_ON ~= nil then
     -- Kitty doesn't use $TERM_PROGRAM, and also requires remote control enabled anyway
     config.multiplexer_integration = Multiplexer.kitty
