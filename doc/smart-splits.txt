@@ -33,7 +33,7 @@ src="https://github.com/user-attachments/assets/e516399d-0c49-4c3d-b748-3ee0e426
 **Table of Contents**
 
 - Install <#install>
-- Configuration <#configuration> - Hooks <#hooks> - Examples <#examples>
+- Configuration <#configuration>
 - Usage <#usage> - Key Mappings <#key-mappings> - Lua API <#lua-api> -
   Multiplexer Integrations <#multiplexer-integrations> - Tmux <#tmux> - Zellij
   <#zellij> - Troubleshooting <#troubleshooting> - Wezterm <#wezterm> - Kitty
