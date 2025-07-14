@@ -6,15 +6,10 @@ local FloatWinBehavior = types.FloatWinBehavior
 local Multiplexer = types.Multiplexer
 local mux_utils = require('smart-splits.mux.utils')
 
----@class SmartResizeModeHooks
----@field on_enter fun()|nil
----@field on_leave fun()|nil
-
 ---@class SmartResizeModeConfig
 ---@field quit_key string
 ---@field resize_keys string[]
 ---@field silent boolean
----@field hooks SmartResizeModeHooks
 
 ---@class SmartSplitsConfig
 ---@field ignored_buftypes string[]
