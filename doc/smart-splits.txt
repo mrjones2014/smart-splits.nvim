@@ -1,4 +1,4 @@
-*smart-splits.txt*                                    Last change: 2025 May 14
+*smart-splits.txt*                                   Last change: 2025 July 14
 
 ==============================================================================
 Table of Contents                             *smart-splits-table-of-contents*
@@ -152,6 +152,8 @@ Defaults are shown below:
       -- before the plugin is loaded (e.g. for lazy environments).
       multiplexer_integration = nil,
       -- disable multiplexer navigation if current multiplexer pane is zoomed
+      -- NOTE: This does not work on Zellij as there is no way to determine the
+      -- pane zoom state outside of the Zellij Plugin API, which does not apply here
       disable_multiplexer_nav_when_zoomed = true,
       -- Supply a Kitty remote control password if needed,
       -- or you can also set vim.g.smart_splits_kitty_password
@@ -173,52 +175,13 @@ USAGE                                                     *smart-splits-usage*
                                                                               
 KEY MAPPINGS                                       *smart-splits-key-mappings*
 
-If you are a legendary.nvim <https://github.com/mrjones2014/legendary.nvim>
-(>= v2.10.0) user, you can quickly easily and easily create with the
-`legendary.nvim` extension for `smart-splits.nvim`. See more option in the
-extension documentation in `legendary.nvim`
-<https://github.com/mrjones2014/legendary.nvim/blob/master/doc/EXTENSIONS.md#smart-splitsnvim>.
-
   [!NOTE] The recommended mappings use the Alt/Meta key. In some terminals, such
   as Alacritty and Ghostty, on macOS you will need to set a configuration option
-  for it to treat the macOS Option key as Alt
-
->lua
-    require('legendary').setup({
-      extensions = {
-        -- to use default settings:
-        smart_splits = {},
-        -- default settings shown below:
-        smart_splits = {
-          directions = { 'h', 'j', 'k', 'l' },
-          mods = {
-            -- for moving cursor between windows
-            move = '<C>',
-            -- for resizing windows
-            resize = '<M>',
-            -- for swapping window buffers
-            swap = false, -- false disables creating a binding
-          },
-        },
-        -- or, customize the mappings
-        smart_splits = {
-          mods = {
-            -- any of the mods can also be a table of the following form
-            swap = {
-              -- this will create the mapping like
-              -- <leader><C-h>
-              -- <leader><C-j>
-              -- <leader><C-k>
-              -- <leader><C-l>
-              mod = '<C>',
-              prefix = '<leader>',
-            },
-          },
-        },
-      },
-    })
-<
-Otherwise, here are some recommended mappings.
+  for it to treat the macOS Option key as Alt. See:
+  https://ghostty.org/docs/config/reference#macos-option-as-alt
+  <https://ghostty.org/docs/config/reference#macos-option-as-alt> See:
+  https://alacritty.org/config-alacritty.html#s20
+  <https://alacritty.org/config-alacritty.html#s20>
 
 >lua
     -- recommended mappings
