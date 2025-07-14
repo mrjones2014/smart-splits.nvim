@@ -163,7 +163,7 @@ require('smart-splits').setup({
 > and Ghostty, on macOS you will need to set a configuration option for it to treat
 > the macOS Option key as Alt.
 >
-> See: [https://ghostty.org/docs/config/reference#macos-option-as-alt](https://ghostty.org/docs/config/reference#macos-option-as-alt)
+> See: [https://ghostty.org/docs/config/reference#macos-option-as-alt](https://ghostty.org/docs/config/reference#macos-option-as-alt) \
 > See: [https://alacritty.org/config-alacritty.html#s20](https://alacritty.org/config-alacritty.html#s20)
 
 ```lua
