@@ -16,8 +16,6 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
 
 - [Install](#install)
 - [Configuration](#configuration)
-  - [Hooks](#hooks)
-    - [Examples](#examples)
 - [Usage](#usage)
   - [Key Mappings](#key-mappings)
   - [Lua API](#lua-api)
