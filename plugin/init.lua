@@ -1,6 +1,10 @@
+---@class SmartSplitsWeztermModifierMap
+---@field wezterm string
+---@field neovim string
+
 ---@class SmartSplitsWeztermModifiers
----@field move string
----@field resize string
+---@field move string | SmartSplitsWeztermModifierMap
+---@field resize string | SmartSplitsWeztermModifierMap
 
 ---@class DirectionKeys
 ---@field move string[] keys to use for moving windows
@@ -75,9 +79,16 @@ local Directions = { 'Left', 'Down', 'Up', 'Right' }
 local function split_nav(resize_or_move, key, direction)
   local modifier = resize_or_move == 'resize' and _smart_splits_wezterm_config.modifiers.resize
     or _smart_splits_wezterm_config.modifiers.move
+  local wezterm_modifier = modifier
+  local neovim_modifier = modifier
+  if type(modifier) == 'table' then
+    wezterm_modifier = modifier.wezterm
+    neovim_modifier = modifier.neovim
+  end
+  wezterm.log_error('oops', wezterm_modifier, neovim_modifier)
   return {
     key = key,
-    mods = modifier,
+    mods = wezterm_modifier,
     action = wezterm.action_callback(function(win, pane)
       local num_panes = #win:active_tab():panes()
       if is_vim(pane) or num_panes == 1 then
@@ -85,7 +96,7 @@ local function split_nav(resize_or_move, key, direction)
         win:perform_action({
           SendKey = {
             key = key,
-            mods = modifier,
+            mods = neovim_modifier,
           },
         }, pane)
       else
@@ -150,6 +161,8 @@ local function apply_to_config(config_builder, plugin_config)
   for idx, key in ipairs(get_resize_direction_keys()) do
     table.insert(keymaps, split_nav('resize', key, Directions[idx]))
   end
+
+  wezterm.log_info(keymaps)
 
   if config_builder.keys == nil then
     config_builder.keys = keymaps
