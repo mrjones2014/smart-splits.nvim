@@ -98,7 +98,7 @@ function M.next_pane(direction)
   end
 
   direction = dir_keys_kitty[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(kitty_exec, { 'kitten', 'neighboring_window.py', direction })
+  local ok, _ = pcall(kitty_exec, { 'kitten', '@', 'focus-window', '--match', 'neighbor:' .. direction })
   return ok
 end
 
