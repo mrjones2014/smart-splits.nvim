@@ -79,13 +79,8 @@ local Directions = { 'Left', 'Down', 'Up', 'Right' }
 local function split_nav(resize_or_move, key, direction)
   local modifier = resize_or_move == 'resize' and _smart_splits_wezterm_config.modifiers.resize
     or _smart_splits_wezterm_config.modifiers.move
-  local wezterm_modifier = modifier
-  local neovim_modifier = modifier
-  if type(modifier) == 'table' then
-    wezterm_modifier = modifier.wezterm
-    neovim_modifier = modifier.neovim
-  end
-  wezterm.log_error('oops', wezterm_modifier, neovim_modifier)
+  local wezterm_modifier = type(modifier) == 'table' and modifier.wezterm or modifier
+  local neovim_modifier = type(modifier) == 'table' and modifier.neovim or modifier
   return {
     key = key,
     mods = wezterm_modifier,
