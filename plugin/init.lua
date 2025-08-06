@@ -157,8 +157,6 @@ local function apply_to_config(config_builder, plugin_config)
     table.insert(keymaps, split_nav('resize', key, Directions[idx]))
   end
 
-  wezterm.log_info(keymaps)
-
   if config_builder.keys == nil then
     config_builder.keys = keymaps
   else
