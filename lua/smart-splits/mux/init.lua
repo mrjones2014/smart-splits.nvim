@@ -39,11 +39,18 @@ local function move_multiplexer_inner(direction, multiplexer)
 end
 
 ---@class SmartSplitsMuxApi
+---@field private __mux SmartSplitsMultiplexer|nil
 local M = {}
+
+M.__mux = nil
 
 ---Get the currently configured multiplexer
 ---@return SmartSplitsMultiplexer|nil
 function M.get()
+  if M.__mux ~= nil then
+    return M.__mux
+  end
+
   if
     config.multiplexer_integration == nil
     or config.multiplexer_integration == false
@@ -55,8 +62,11 @@ function M.get()
   local ok, mux = pcall(require, string.format('smart-splits.mux.%s', config.multiplexer_integration))
   if not ok then
     log.error(mux)
+  else
+    M.__mux = mux
   end
-  return ok and mux or nil
+
+  return M.__mux
 end
 
 ---Check if any multiplexer is enabled
