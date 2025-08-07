@@ -1,6 +1,10 @@
+---@class SmartSplitsWeztermModifierMap
+---@field wezterm string
+---@field neovim string
+
 ---@class SmartSplitsWeztermModifiers
----@field move string
----@field resize string
+---@field move string | SmartSplitsWeztermModifierMap
+---@field resize string | SmartSplitsWeztermModifierMap
 
 ---@class DirectionKeys
 ---@field move string[] keys to use for moving windows
@@ -75,9 +79,11 @@ local Directions = { 'Left', 'Down', 'Up', 'Right' }
 local function split_nav(resize_or_move, key, direction)
   local modifier = resize_or_move == 'resize' and _smart_splits_wezterm_config.modifiers.resize
     or _smart_splits_wezterm_config.modifiers.move
+  local wezterm_modifier = type(modifier) == 'table' and modifier.wezterm or modifier
+  local neovim_modifier = type(modifier) == 'table' and modifier.neovim or modifier
   return {
     key = key,
-    mods = modifier,
+    mods = wezterm_modifier,
     action = wezterm.action_callback(function(win, pane)
       local num_panes = #win:active_tab():panes()
       if is_vim(pane) or num_panes == 1 then
@@ -85,7 +91,7 @@ local function split_nav(resize_or_move, key, direction)
         win:perform_action({
           SendKey = {
             key = key,
-            mods = modifier,
+            mods = neovim_modifier,
           },
         }, pane)
       else
