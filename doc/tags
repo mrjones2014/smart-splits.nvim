@@ -1,6 +1,3 @@
-ARE	smart-splits.txt	/*ARE*
-NOT	smart-splits.txt	/*NOT*
-screen	smart-splits.txt	/*screen*
 smart-splits-configuration	smart-splits.txt	/*smart-splits-configuration*
 smart-splits-credits	smart-splits.txt	/*smart-splits-credits*
 smart-splits-install	smart-splits.txt	/*smart-splits-install*
@@ -18,4 +15,3 @@ smart-splits-wezterm	smart-splits.txt	/*smart-splits-wezterm*
 smart-splits-zellij	smart-splits.txt	/*smart-splits-zellij*
 smart-splits-🧠-`smart-splits.nvim	smart-splits.txt	/*smart-splits-🧠-`smart-splits.nvim*
 smart-splits.txt	smart-splits.txt	/*smart-splits.txt*
-tab	smart-splits.txt	/*tab*
