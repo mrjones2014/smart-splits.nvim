@@ -266,6 +266,9 @@ Alternatively, add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/
 # not want to lazy-load smart-splits.nvim, as the variable won't be set until
 # the plugin is loaded
 
+# Disable default keybinds
+set -g @smart-splits_no_default_keybinds 1 # to disable the default keybinds. (any value disables the default keybinds)
+
 # Smart pane switching with awareness of Neovim splits.
 bind-key -n C-h if -F "#{@pane-is-vim}" 'send-keys C-h'  'select-pane -L'
 bind-key -n C-j if -F "#{@pane-is-vim}" 'send-keys C-j'  'select-pane -D'

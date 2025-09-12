@@ -10,6 +10,7 @@ get_option() {
 }
 
 no_wrap=$(get_option '@smart-splits_no_wrap' '')
+no_default_keybinds=$(get_option '@smart-splits_no_default_keybinds' '')
 
 move_left_key=$(get_option  '@smart-splits_move_left_key'  'C-h')
 move_down_key=$(get_option  '@smart-splits_move_down_key'  'C-j')
@@ -25,6 +26,10 @@ resize_step_size=$(get_option '@smart-splits_resize_step_size' '3')
 
 # Setup all the navigation key-mappings.
 setup_navigation() {
+    if [ -n $no_default_keybinds ]; then
+        return
+    fi
+
     if [ -z $no_wrap ]; then
         tmux bind-key -n "$move_left_key"  if -F '#{@pane-is-vim}' "send-keys $move_left_key"  'select-pane -L'
         tmux bind-key -n "$move_down_key"  if -F '#{@pane-is-vim}' "send-keys $move_down_key"  'select-pane -D'
@@ -48,6 +53,10 @@ setup_navigation() {
 
 # Setup all the key-mappings for resizing.
 setup_resize() {
+    if [ -n $no_default_keybinds ]; then
+        return
+    fi
+
     tmux bind-key -n "$resize_left_key"  if -F '#{@pane-is-vim}' "send-keys $resize_left_key"  "resize-pane -L $resize_step_size"
     tmux bind-key -n "$resize_down_key"  if -F '#{@pane-is-vim}' "send-keys $resize_down_key"  "resize-pane -D $resize_step_size"
     tmux bind-key -n "$resize_up_key"    if -F '#{@pane-is-vim}' "send-keys $resize_up_key"    "resize-pane -U $resize_step_size"
