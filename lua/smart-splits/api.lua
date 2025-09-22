@@ -243,7 +243,10 @@ local function resize(direction, amount)
   if
     (direction == Direction.down or direction == Direction.up)
     and is_full_height()
-    and mux.resize_pane(direction, amount)
+    -- if not using a multiplexer, trying to vertically resize
+    -- a full height window can result in the nvim window being
+    -- permanently stuck with empty space below the status bar
+    and (mux.resize_pane(direction, amount) or mux.get() ~= nil)
   then
     return
   end
