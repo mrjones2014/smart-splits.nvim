@@ -10,6 +10,28 @@ local FloatWinBehavior = types.FloatWinBehavior
 
 local M = {}
 
+-- Cache for ignored buffer/file types as hash tables for O(1) lookup
+local ignored_buftypes_cache = {}
+local ignored_filetypes_cache = {}
+
+---Rebuild the ignored types caches from config
+local function rebuild_ignored_caches()
+  ignored_buftypes_cache = {}
+  ignored_filetypes_cache = {}
+  for _, buftype in ipairs(config.ignored_buftypes) do
+    ignored_buftypes_cache[buftype] = true
+  end
+  for _, filetype in ipairs(config.ignored_filetypes) do
+    ignored_filetypes_cache[filetype] = true
+  end
+end
+
+---Check if current buffer should be ignored
+---@return boolean
+local function is_ignored_buffer()
+  return ignored_buftypes_cache[vim.bo.buftype] or ignored_filetypes_cache[vim.bo.filetype]
+end
+
 ---@enum WinPosition
 local WinPosition = {
   start = 0,
@@ -67,14 +89,7 @@ local function next_window(direction, skip_ignore_lists)
   local cur_win = vim.api.nvim_get_current_win()
   if direction == DirectionKeys.down or direction == DirectionKeys.up then
     vim.cmd('wincmd ' .. direction)
-    if
-      not skip_ignore_lists
-      and is_resizing
-      and (
-        vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-        or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-      )
-    then
+    if not skip_ignore_lists and is_resizing and is_ignored_buffer() then
       vim.api.nvim_set_current_win(cur_win)
     end
     return
@@ -82,14 +97,7 @@ local function next_window(direction, skip_ignore_lists)
 
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   vim.cmd('wincmd ' .. direction)
-  if
-    not skip_ignore_lists
-    and is_resizing
-    and (
-      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-    )
-  then
+  if not skip_ignore_lists and is_resizing and is_ignored_buffer() then
     vim.api.nvim_set_current_win(cur_win)
     return nil
   end
@@ -119,26 +127,38 @@ local function at_right_edge()
   return vim.fn.winnr() == vim.fn.winnr('l')
 end
 
+---Get all edge states at once to minimize winnr() calls
+---@return boolean, boolean, boolean, boolean at_left, at_right, at_top, at_bottom
+local function get_edge_states()
+  local current = vim.fn.winnr()
+  return current == vim.fn.winnr('h'),
+    current == vim.fn.winnr('l'),
+    current == vim.fn.winnr('k'),
+    current == vim.fn.winnr('j')
+end
+
 ---@param direction SmartSplitsDirection
 ---@return WinPosition
 function M.win_position(direction)
+  local at_left, at_right, at_top, at_bottom = get_edge_states()
+  
   if direction == Direction.left or direction == Direction.right then
-    if at_left_edge() then
+    if at_left then
       return WinPosition.start
     end
 
-    if at_right_edge() then
+    if at_right then
       return WinPosition.last
     end
 
     return WinPosition.middle
   end
 
-  if at_top_edge() then
+  if at_top then
     return WinPosition.start
   end
 
-  if at_bottom_edge() then
+  if at_bottom then
     return WinPosition.last
   end
 
@@ -173,20 +193,14 @@ local function compute_direction_horizontal(direction)
   if direction == Direction.right and result == WincmdResizeDirection.bigger and at_left and at_right then
     local cur_win = vim.api.nvim_get_current_win()
     next_window(DirectionKeys.left, true)
-    if
-      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-    then
+    if is_ignored_buffer() then
       vim.api.nvim_set_current_win(cur_win)
       result = WincmdResizeDirection.smaller
     end
   elseif direction == Direction.left and result == WincmdResizeDirection.smaller and at_left and at_right then
     local cur_win = vim.api.nvim_get_current_win()
     next_window(DirectionKeys.left, true)
-    if
-      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-    then
+    if is_ignored_buffer() then
       vim.api.nvim_set_current_win(cur_win)
       result = WincmdResizeDirection.bigger
     end
@@ -396,10 +410,7 @@ local function move_cursor(direction, opts)
       return
     elseif at_edge == AtEdgeBehavior.split then
       -- if at_edge = 'split' and we're in an ignored buffer, just stop
-      if
-        vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-        or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-      then
+      if is_ignored_buffer() then
         return
       end
 
@@ -525,5 +536,8 @@ function M.move_cursor_previous()
     vim.api.nvim_set_current_win(win)
   end
 end
+
+-- Initialize the ignored caches on module load
+rebuild_ignored_caches()
 
 return M
