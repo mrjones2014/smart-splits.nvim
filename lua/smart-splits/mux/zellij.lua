@@ -10,14 +10,27 @@ local function zellij_exec(cmd)
   return result
 end
 
+-- Cache for current pane ID to avoid repeated system calls
+local pane_id_cache = nil
+local pane_id_cache_time = 0
+local PANE_ID_CACHE_TTL = 0.1 -- 100ms cache TTL
+
 ---@type SmartSplitsMultiplexer
 local M = {} ---@diagnostic disable-line: missing-fields
 
 M.type = 'zellij'
 
 function M.current_pane_id()
+  -- Check cache first
+  local now = vim.loop.hrtime() / 1e9
+  if pane_id_cache and (now - pane_id_cache_time) < PANE_ID_CACHE_TTL then
+    return pane_id_cache
+  end
+  
   local output = zellij_exec({ 'action', 'list-clients' })
   if not output[2] then
+    pane_id_cache = nil
+    pane_id_cache_time = now
     return nil
   end
 
@@ -32,6 +45,8 @@ function M.current_pane_id()
   -- `%w+` pattern to match any word prefix. Then we capture the ID with the `%d` pattern
   -- in the capture group.
   local pane_id = string.match(output[2], '%S+%s+%w+_(%d+)')
+  pane_id_cache = pane_id
+  pane_id_cache_time = now
   return pane_id
 end
 
@@ -42,6 +57,8 @@ function M.current_pane_at_edge()
     return false
   end
   zellij_exec({ 'action', 'move-focus', Direction.left })
+  -- Invalidate cache since we moved panes
+  pane_id_cache = nil
   local new_pane_id = M.current_pane_id()
 
   if new_pane_id == nil then
@@ -51,6 +68,8 @@ function M.current_pane_at_edge()
 
   -- move back to original pane
   zellij_exec({ 'action', 'move-focus', Direction.right })
+  -- Invalidate cache again since we moved back
+  pane_id_cache = nil
 
   return pane_id == new_pane_id
 end
@@ -62,6 +81,10 @@ function M.resize_pane(direction, _amount) ---@diagnostic disable-line: unused-l
   end
 
   local ok, _ = pcall(zellij_exec, { 'action', 'resize', 'increase', direction })
+  if ok then
+    -- Invalidate cache since pane size changed
+    pane_id_cache = nil
+  end
   return ok
 end
 
@@ -82,6 +105,10 @@ function M.next_pane(direction)
     action = 'move-focus-or-tab'
   end
   local ok, _ = pcall(zellij_exec, { 'action', action, direction })
+  if ok then
+    -- Invalidate cache since we moved panes
+    pane_id_cache = nil
+  end
   return ok
 end
 

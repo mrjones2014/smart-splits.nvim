@@ -21,10 +21,23 @@ local function kitty_exec(args)
   return vim.fn.system(arguments)
 end
 
+-- Cache for active tab info to avoid repeated system calls
+local active_tab_cache = nil
+local active_tab_cache_time = 0
+local ACTIVE_TAB_CACHE_TTL = 0.1 -- 100ms cache TTL
+
 local function get_active_tab()
+  -- Check cache first
+  local now = vim.loop.hrtime() / 1e9
+  if active_tab_cache and (now - active_tab_cache_time) < ACTIVE_TAB_CACHE_TTL then
+    return active_tab_cache
+  end
+  
   local output = kitty_exec({ 'ls' })
   local kitty_info = vim.json.decode(output)
   if #kitty_info == 0 then
+    active_tab_cache = nil
+    active_tab_cache_time = now
     return nil
   end
 
@@ -34,6 +47,8 @@ local function get_active_tab()
   end)
 
   if not active_client then
+    active_tab_cache = nil
+    active_tab_cache_time = now
     return nil
   end
 
@@ -43,9 +58,13 @@ local function get_active_tab()
   end)
 
   if not active_tab then
+    active_tab_cache = nil
+    active_tab_cache_time = now
     return nil
   end
 
+  active_tab_cache = active_tab
+  active_tab_cache_time = now
   return active_tab
 end
 
@@ -99,6 +118,10 @@ function M.next_pane(direction)
 
   direction = dir_keys_kitty[direction] ---@diagnostic disable-line
   local ok, _ = pcall(kitty_exec, { 'kitten', 'neighboring_window.py', direction })
+  if ok then
+    -- Invalidate cache since we moved panes
+    active_tab_cache = nil
+  end
   return ok
 end
 
@@ -108,7 +131,10 @@ function M.resize_pane(direction, amount)
   end
 
   local ok, _ = pcall(kitty_exec, { 'kitten', 'relative_resize.py', direction, amount })
-
+  if ok then
+    -- Invalidate cache since pane size changed
+    active_tab_cache = nil
+  end
   return ok
 end
 

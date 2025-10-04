@@ -537,6 +537,9 @@ function M.move_cursor_previous()
   end
 end
 
+-- Expose cache rebuilding for config updates
+M.rebuild_ignored_caches = rebuild_ignored_caches
+
 -- Initialize the ignored caches on module load
 rebuild_ignored_caches()
 
