@@ -1,5 +1,6 @@
 local Direction = require('smart-splits.types').Direction
 local config = require('smart-splits.config')
+local Cache = require('smart-splits.cache')
 
 local dir_keys_wezterm = {
   [Direction.left] = 'Left',
@@ -23,11 +24,7 @@ local function wezterm_exec(cmd)
 end
 
 local tab_id
-
--- Cache for current pane info to avoid repeated system calls
-local pane_info_cache = nil
-local pane_info_cache_time = 0
-local PANE_INFO_CACHE_TTL = 0.1 -- 100ms cache TTL
+local pane_info_cache = Cache.new(0.1)
 
 local function init_tab_id()
   local output = wezterm_exec({ 'list', '--format', 'json' })
@@ -50,41 +47,29 @@ local function init_tab_id()
 end
 
 local function current_pane_info()
-  -- Check cache first
-  local now = vim.loop.hrtime() / 1e9
-  if pane_info_cache and (now - pane_info_cache_time) < PANE_INFO_CACHE_TTL then
-    return pane_info_cache
-  end
-  
-  if tab_id == nil then
-    init_tab_id()
-  end
-
-  if tab_id == false then
-    pane_info_cache = nil
-    pane_info_cache_time = now
-    return nil
-  end
-
-  local output = wezterm_exec({ 'list', '--format', 'json' })
-  if vim.v.shell_error ~= 0 or not output or #output == 0 then
-    pane_info_cache = nil
-    pane_info_cache_time = now
-    return nil
-  end
-
-  local data = vim.json.decode(output) --[[@as table]]
-  for _, pane in ipairs(data) do
-    if pane.tab_id == tab_id and pane.is_active then
-      pane_info_cache = pane
-      pane_info_cache_time = now
-      return pane
+  return pane_info_cache:get_or_set(function()
+    if tab_id == nil then
+      init_tab_id()
     end
-  end
 
-  pane_info_cache = nil
-  pane_info_cache_time = now
-  return nil
+    if tab_id == false then
+      return nil
+    end
+
+    local output = wezterm_exec({ 'list', '--format', 'json' })
+    if vim.v.shell_error ~= 0 or not output or #output == 0 then
+      return nil
+    end
+
+    local data = vim.json.decode(output) --[[@as table]]
+    for _, pane in ipairs(data) do
+      if pane.tab_id == tab_id and pane.is_active then
+        return pane
+      end
+    end
+
+    return nil
+  end)
 end
 
 ---@type SmartSplitsMultiplexer
@@ -122,12 +107,10 @@ function M.current_pane_at_edge(direction)
   end
   local pane_id = M.current_pane_id()
   wezterm_exec({ 'activate-pane-direction', direction })
-  -- Invalidate cache since we moved panes
-  pane_info_cache = nil
+  pane_info_cache:invalidate()
   local new_pane_id = M.current_pane_id()
   wezterm_exec({ 'activate-pane', '--pane-id', pane_id })
-  -- Invalidate cache again since we moved back
-  pane_info_cache = nil
+  pane_info_cache:invalidate()
   return pane_id == new_pane_id
 end
 
@@ -152,8 +135,7 @@ function M.next_pane(direction)
   direction = dir_keys_wezterm[direction] ---@diagnostic disable-line
   local ok, _ = pcall(wezterm_exec, { 'activate-pane-direction', direction })
   if ok then
-    -- Invalidate cache since we moved panes
-    pane_info_cache = nil
+    pane_info_cache:invalidate()
   end
   return ok
 end
@@ -166,8 +148,7 @@ function M.resize_pane(direction, amount)
   direction = dir_keys_wezterm[direction] ---@diagnostic disable-line
   local ok, _ = pcall(wezterm_exec, { 'adjust-pane-size', '--amount', amount, direction })
   if ok then
-    -- Invalidate cache since pane size changed (though pane_id won't change)
-    pane_info_cache = nil
+    pane_info_cache:invalidate()
   end
   return ok
 end

@@ -2,6 +2,7 @@ local Direction = require('smart-splits.types').Direction
 local lazy = require('smart-splits.lazy')
 local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
 local log = require('smart-splits.log')
+local Cache = require('smart-splits.cache')
 
 local function zellij_exec(cmd)
   local command = vim.deepcopy(cmd)
@@ -10,10 +11,7 @@ local function zellij_exec(cmd)
   return result
 end
 
--- Cache for current pane ID to avoid repeated system calls
-local pane_id_cache = nil
-local pane_id_cache_time = 0
-local PANE_ID_CACHE_TTL = 0.1 -- 100ms cache TTL
+local pane_id_cache = Cache.new(0.1)
 
 ---@type SmartSplitsMultiplexer
 local M = {} ---@diagnostic disable-line: missing-fields
@@ -21,33 +19,24 @@ local M = {} ---@diagnostic disable-line: missing-fields
 M.type = 'zellij'
 
 function M.current_pane_id()
-  -- Check cache first
-  local now = vim.loop.hrtime() / 1e9
-  if pane_id_cache and (now - pane_id_cache_time) < PANE_ID_CACHE_TTL then
-    return pane_id_cache
-  end
-  
-  local output = zellij_exec({ 'action', 'list-clients' })
-  if not output[2] then
-    pane_id_cache = nil
-    pane_id_cache_time = now
-    return nil
-  end
+  return pane_id_cache:get_or_set(function()
+    local output = zellij_exec({ 'action', 'list-clients' })
+    if not output[2] then
+      return nil
+    end
 
-  -- The output format is like
-  -- ```
-  -- CLIENT_ID ZELLIJ_PANE_ID RUNNING_COMMAND
-  -- 1         terminal_0     /path/to/nvim --cmd lua print('some arguments')
-  -- ```
-  -- We are looking for the value `0` here in the `terminal_0` chunk.
-  -- The `terminal_` prefix might be something else, for example if a plugin's UI
-  -- is currently focused, but we still need to know the pane ID, so we're using the
-  -- `%w+` pattern to match any word prefix. Then we capture the ID with the `%d` pattern
-  -- in the capture group.
-  local pane_id = string.match(output[2], '%S+%s+%w+_(%d+)')
-  pane_id_cache = pane_id
-  pane_id_cache_time = now
-  return pane_id
+    -- The output format is like
+    -- ```
+    -- CLIENT_ID ZELLIJ_PANE_ID RUNNING_COMMAND
+    -- 1         terminal_0     /path/to/nvim --cmd lua print('some arguments')
+    -- ```
+    -- We are looking for the value `0` here in the `terminal_0` chunk.
+    -- The `terminal_` prefix might be something else, for example if a plugin's UI
+    -- is currently focused, but we still need to know the pane ID, so we're using the
+    -- `%w+` pattern to match any word prefix. Then we capture the ID with the `%d` pattern
+    -- in the capture group.
+    return string.match(output[2], '%S+%s+%w+_(%d+)')
+  end)
 end
 
 function M.current_pane_at_edge()
@@ -57,8 +46,7 @@ function M.current_pane_at_edge()
     return false
   end
   zellij_exec({ 'action', 'move-focus', Direction.left })
-  -- Invalidate cache since we moved panes
-  pane_id_cache = nil
+  pane_id_cache:invalidate()
   local new_pane_id = M.current_pane_id()
 
   if new_pane_id == nil then
@@ -68,8 +56,7 @@ function M.current_pane_at_edge()
 
   -- move back to original pane
   zellij_exec({ 'action', 'move-focus', Direction.right })
-  -- Invalidate cache again since we moved back
-  pane_id_cache = nil
+  pane_id_cache:invalidate()
 
   return pane_id == new_pane_id
 end
@@ -82,8 +69,7 @@ function M.resize_pane(direction, _amount) ---@diagnostic disable-line: unused-l
 
   local ok, _ = pcall(zellij_exec, { 'action', 'resize', 'increase', direction })
   if ok then
-    -- Invalidate cache since pane size changed
-    pane_id_cache = nil
+    pane_id_cache:invalidate()
   end
   return ok
 end
@@ -106,8 +92,7 @@ function M.next_pane(direction)
   end
   local ok, _ = pcall(zellij_exec, { 'action', action, direction })
   if ok then
-    -- Invalidate cache since we moved panes
-    pane_id_cache = nil
+    pane_id_cache:invalidate()
   end
   return ok
 end

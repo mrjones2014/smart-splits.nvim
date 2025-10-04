@@ -1,6 +1,7 @@
 local lazy = require('smart-splits.lazy')
 local utils = lazy.require_on_exported_call('smart-splits.utils')
 local Direction = require('smart-splits.types').Direction
+local Cache = require('smart-splits.cache')
 
 local dir_keys_kitty = {
   [Direction.left] = 'left',
@@ -21,51 +22,32 @@ local function kitty_exec(args)
   return vim.fn.system(arguments)
 end
 
--- Cache for active tab info to avoid repeated system calls
-local active_tab_cache = nil
-local active_tab_cache_time = 0
-local ACTIVE_TAB_CACHE_TTL = 0.1 -- 100ms cache TTL
+local active_tab_cache = Cache.new(0.1)
 
 local function get_active_tab()
-  -- Check cache first
-  local now = vim.loop.hrtime() / 1e9
-  if active_tab_cache and (now - active_tab_cache_time) < ACTIVE_TAB_CACHE_TTL then
-    return active_tab_cache
-  end
-  
-  local output = kitty_exec({ 'ls' })
-  local kitty_info = vim.json.decode(output)
-  if #kitty_info == 0 then
-    active_tab_cache = nil
-    active_tab_cache_time = now
-    return nil
-  end
+  return active_tab_cache:get_or_set(function()
+    local output = kitty_exec({ 'ls' })
+    local kitty_info = vim.json.decode(output)
+    if #kitty_info == 0 then
+      return nil
+    end
 
-  local active_client = utils.tbl_find(kitty_info, function(client)
-    -- if we're doing a keymap, obviously the terminal must be focused also
-    return client.is_active and client.is_focused
+    local active_client = utils.tbl_find(kitty_info, function(client)
+      -- if we're doing a keymap, obviously the terminal must be focused also
+      return client.is_active and client.is_focused
+    end)
+
+    if not active_client then
+      return nil
+    end
+
+    local active_tab = utils.tbl_find(active_client.tabs, function(tab)
+      -- different versions of Kitty have different output for this
+      return (tab.is_active or tab.is_active_tab) and tab.is_focused
+    end)
+
+    return active_tab
   end)
-
-  if not active_client then
-    active_tab_cache = nil
-    active_tab_cache_time = now
-    return nil
-  end
-
-  local active_tab = utils.tbl_find(active_client.tabs, function(tab)
-    -- different versions of Kitty have different output for this
-    return (tab.is_active or tab.is_active_tab) and tab.is_focused
-  end)
-
-  if not active_tab then
-    active_tab_cache = nil
-    active_tab_cache_time = now
-    return nil
-  end
-
-  active_tab_cache = active_tab
-  active_tab_cache_time = now
-  return active_tab
 end
 
 ---@type SmartSplitsMultiplexer
@@ -119,8 +101,7 @@ function M.next_pane(direction)
   direction = dir_keys_kitty[direction] ---@diagnostic disable-line
   local ok, _ = pcall(kitty_exec, { 'kitten', 'neighboring_window.py', direction })
   if ok then
-    -- Invalidate cache since we moved panes
-    active_tab_cache = nil
+    active_tab_cache:invalidate()
   end
   return ok
 end
@@ -132,8 +113,7 @@ function M.resize_pane(direction, amount)
 
   local ok, _ = pcall(kitty_exec, { 'kitten', 'relative_resize.py', direction, amount })
   if ok then
-    -- Invalidate cache since pane size changed
-    active_tab_cache = nil
+    active_tab_cache:invalidate()
   end
   return ok
 end
