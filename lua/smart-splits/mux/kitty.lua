@@ -1,6 +1,7 @@
 local lazy = require('smart-splits.lazy')
 local utils = lazy.require_on_exported_call('smart-splits.utils')
 local Direction = require('smart-splits.types').Direction
+local Cache = require('smart-splits.cache')
 
 local dir_keys_kitty = {
   [Direction.left] = 'left',
@@ -21,7 +22,7 @@ local function kitty_exec(args)
   return vim.fn.system(arguments)
 end
 
-local function get_active_tab()
+local function get_active_tab_impl()
   local output = kitty_exec({ 'ls' })
   local kitty_info = vim.json.decode(output)
   if #kitty_info == 0 then
@@ -42,11 +43,13 @@ local function get_active_tab()
     return (tab.is_active or tab.is_active_tab) and tab.is_focused
   end)
 
-  if not active_tab then
-    return nil
-  end
-
   return active_tab
+end
+
+local active_tab_cache = Cache.new(get_active_tab_impl, 100)
+
+local function get_active_tab()
+  return active_tab_cache:get()
 end
 
 ---@type SmartSplitsMultiplexer
@@ -99,6 +102,9 @@ function M.next_pane(direction)
 
   direction = dir_keys_kitty[direction] ---@diagnostic disable-line
   local ok, _ = pcall(kitty_exec, { 'kitten', 'neighboring_window.py', direction })
+  if ok then
+    active_tab_cache:invalidate()
+  end
   return ok
 end
 
@@ -108,7 +114,9 @@ function M.resize_pane(direction, amount)
   end
 
   local ok, _ = pcall(kitty_exec, { 'kitten', 'relative_resize.py', direction, amount })
-
+  if ok then
+    active_tab_cache:invalidate()
+  end
   return ok
 end
 

@@ -2,6 +2,7 @@ local Direction = require('smart-splits.types').Direction
 local lazy = require('smart-splits.lazy')
 local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
 local log = require('smart-splits.log')
+local Cache = require('smart-splits.cache')
 
 local function zellij_exec(cmd)
   local command = vim.deepcopy(cmd)
@@ -10,12 +11,7 @@ local function zellij_exec(cmd)
   return result
 end
 
----@type SmartSplitsMultiplexer
-local M = {} ---@diagnostic disable-line: missing-fields
-
-M.type = 'zellij'
-
-function M.current_pane_id()
+local function current_pane_id_impl()
   local output = zellij_exec({ 'action', 'list-clients' })
   if not output[2] then
     return nil
@@ -31,8 +27,18 @@ function M.current_pane_id()
   -- is currently focused, but we still need to know the pane ID, so we're using the
   -- `%w+` pattern to match any word prefix. Then we capture the ID with the `%d` pattern
   -- in the capture group.
-  local pane_id = string.match(output[2], '%S+%s+%w+_(%d+)')
-  return pane_id
+  return string.match(output[2], '%S+%s+%w+_(%d+)')
+end
+
+local pane_id_cache = Cache.new(current_pane_id_impl, 100)
+
+---@type SmartSplitsMultiplexer
+local M = {} ---@diagnostic disable-line: missing-fields
+
+M.type = 'zellij'
+
+function M.current_pane_id()
+  return pane_id_cache:get()
 end
 
 function M.current_pane_at_edge()
@@ -42,6 +48,7 @@ function M.current_pane_at_edge()
     return false
   end
   zellij_exec({ 'action', 'move-focus', Direction.left })
+  pane_id_cache:invalidate()
   local new_pane_id = M.current_pane_id()
 
   if new_pane_id == nil then
@@ -51,6 +58,7 @@ function M.current_pane_at_edge()
 
   -- move back to original pane
   zellij_exec({ 'action', 'move-focus', Direction.right })
+  pane_id_cache:invalidate()
 
   return pane_id == new_pane_id
 end
@@ -62,6 +70,9 @@ function M.resize_pane(direction, _amount) ---@diagnostic disable-line: unused-l
   end
 
   local ok, _ = pcall(zellij_exec, { 'action', 'resize', 'increase', direction })
+  if ok then
+    pane_id_cache:invalidate()
+  end
   return ok
 end
 
@@ -82,6 +93,9 @@ function M.next_pane(direction)
     action = 'move-focus-or-tab'
   end
   local ok, _ = pcall(zellij_exec, { 'action', action, direction })
+  if ok then
+    pane_id_cache:invalidate()
+  end
   return ok
 end
 
