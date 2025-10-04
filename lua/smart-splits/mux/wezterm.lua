@@ -24,7 +24,6 @@ local function wezterm_exec(cmd)
 end
 
 local tab_id
-local pane_info_cache = Cache.new(0.1)
 
 local function init_tab_id()
   local output = wezterm_exec({ 'list', '--format', 'json' })
@@ -46,30 +45,34 @@ local function init_tab_id()
   tab_id = false
 end
 
-local function current_pane_info()
-  return pane_info_cache:get_or_set(function()
-    if tab_id == nil then
-      init_tab_id()
-    end
+local function current_pane_info_impl()
+  if tab_id == nil then
+    init_tab_id()
+  end
 
-    if tab_id == false then
-      return nil
-    end
-
-    local output = wezterm_exec({ 'list', '--format', 'json' })
-    if vim.v.shell_error ~= 0 or not output or #output == 0 then
-      return nil
-    end
-
-    local data = vim.json.decode(output) --[[@as table]]
-    for _, pane in ipairs(data) do
-      if pane.tab_id == tab_id and pane.is_active then
-        return pane
-      end
-    end
-
+  if tab_id == false then
     return nil
-  end)
+  end
+
+  local output = wezterm_exec({ 'list', '--format', 'json' })
+  if vim.v.shell_error ~= 0 or not output or #output == 0 then
+    return nil
+  end
+
+  local data = vim.json.decode(output) --[[@as table]]
+  for _, pane in ipairs(data) do
+    if pane.tab_id == tab_id and pane.is_active then
+      return pane
+    end
+  end
+
+  return nil
+end
+
+local pane_info_cache = Cache.new(current_pane_info_impl, 100)
+
+local function current_pane_info()
+  return pane_info_cache:get()
 end
 
 ---@type SmartSplitsMultiplexer

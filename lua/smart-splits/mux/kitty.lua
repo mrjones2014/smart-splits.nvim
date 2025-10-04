@@ -22,32 +22,34 @@ local function kitty_exec(args)
   return vim.fn.system(arguments)
 end
 
-local active_tab_cache = Cache.new(0.1)
+local function get_active_tab_impl()
+  local output = kitty_exec({ 'ls' })
+  local kitty_info = vim.json.decode(output)
+  if #kitty_info == 0 then
+    return nil
+  end
+
+  local active_client = utils.tbl_find(kitty_info, function(client)
+    -- if we're doing a keymap, obviously the terminal must be focused also
+    return client.is_active and client.is_focused
+  end)
+
+  if not active_client then
+    return nil
+  end
+
+  local active_tab = utils.tbl_find(active_client.tabs, function(tab)
+    -- different versions of Kitty have different output for this
+    return (tab.is_active or tab.is_active_tab) and tab.is_focused
+  end)
+
+  return active_tab
+end
+
+local active_tab_cache = Cache.new(get_active_tab_impl, 100)
 
 local function get_active_tab()
-  return active_tab_cache:get_or_set(function()
-    local output = kitty_exec({ 'ls' })
-    local kitty_info = vim.json.decode(output)
-    if #kitty_info == 0 then
-      return nil
-    end
-
-    local active_client = utils.tbl_find(kitty_info, function(client)
-      -- if we're doing a keymap, obviously the terminal must be focused also
-      return client.is_active and client.is_focused
-    end)
-
-    if not active_client then
-      return nil
-    end
-
-    local active_tab = utils.tbl_find(active_client.tabs, function(tab)
-      -- different versions of Kitty have different output for this
-      return (tab.is_active or tab.is_active_tab) and tab.is_focused
-    end)
-
-    return active_tab
-  end)
+  return active_tab_cache:get()
 end
 
 ---@type SmartSplitsMultiplexer

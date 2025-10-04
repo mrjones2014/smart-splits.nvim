@@ -20,10 +20,14 @@ function M.rebuild(config)
   end
 end
 
----Check if current buffer should be ignored based on buftype or filetype
+---Check if a buffer should be ignored based on buftype or filetype
+---@param bufnr number|nil Buffer number (default: current buffer)
 ---@return boolean
-function M.is_ignored()
-  return ignored_buftypes[vim.bo.buftype] or ignored_filetypes[vim.bo.filetype]
+function M.is_ignored(bufnr)
+  bufnr = bufnr or 0
+  local buftype = vim.api.nvim_buf_get_option(bufnr, 'buftype')
+  local filetype = vim.api.nvim_buf_get_option(bufnr, 'filetype')
+  return ignored_buftypes[buftype] or ignored_filetypes[filetype]
 end
 
 return M

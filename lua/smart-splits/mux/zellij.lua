@@ -11,7 +11,26 @@ local function zellij_exec(cmd)
   return result
 end
 
-local pane_id_cache = Cache.new(0.1)
+local function current_pane_id_impl()
+  local output = zellij_exec({ 'action', 'list-clients' })
+  if not output[2] then
+    return nil
+  end
+
+  -- The output format is like
+  -- ```
+  -- CLIENT_ID ZELLIJ_PANE_ID RUNNING_COMMAND
+  -- 1         terminal_0     /path/to/nvim --cmd lua print('some arguments')
+  -- ```
+  -- We are looking for the value `0` here in the `terminal_0` chunk.
+  -- The `terminal_` prefix might be something else, for example if a plugin's UI
+  -- is currently focused, but we still need to know the pane ID, so we're using the
+  -- `%w+` pattern to match any word prefix. Then we capture the ID with the `%d` pattern
+  -- in the capture group.
+  return string.match(output[2], '%S+%s+%w+_(%d+)')
+end
+
+local pane_id_cache = Cache.new(current_pane_id_impl, 100)
 
 ---@type SmartSplitsMultiplexer
 local M = {} ---@diagnostic disable-line: missing-fields
@@ -19,24 +38,7 @@ local M = {} ---@diagnostic disable-line: missing-fields
 M.type = 'zellij'
 
 function M.current_pane_id()
-  return pane_id_cache:get_or_set(function()
-    local output = zellij_exec({ 'action', 'list-clients' })
-    if not output[2] then
-      return nil
-    end
-
-    -- The output format is like
-    -- ```
-    -- CLIENT_ID ZELLIJ_PANE_ID RUNNING_COMMAND
-    -- 1         terminal_0     /path/to/nvim --cmd lua print('some arguments')
-    -- ```
-    -- We are looking for the value `0` here in the `terminal_0` chunk.
-    -- The `terminal_` prefix might be something else, for example if a plugin's UI
-    -- is currently focused, but we still need to know the pane ID, so we're using the
-    -- `%w+` pattern to match any word prefix. Then we capture the ID with the `%d` pattern
-    -- in the capture group.
-    return string.match(output[2], '%S+%s+%w+_(%d+)')
-  end)
+  return pane_id_cache:get()
 end
 
 function M.current_pane_at_edge()

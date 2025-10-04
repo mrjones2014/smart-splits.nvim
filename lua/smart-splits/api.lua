@@ -107,38 +107,26 @@ local function at_right_edge()
   return vim.fn.winnr() == vim.fn.winnr('l')
 end
 
----Get all edge states at once to minimize winnr() calls
----@return boolean, boolean, boolean, boolean at_left, at_right, at_top, at_bottom
-local function get_edge_states()
-  local current = vim.fn.winnr()
-  return current == vim.fn.winnr('h'),
-    current == vim.fn.winnr('l'),
-    current == vim.fn.winnr('k'),
-    current == vim.fn.winnr('j')
-end
-
 ---@param direction SmartSplitsDirection
 ---@return WinPosition
 function M.win_position(direction)
-  local at_left, at_right, at_top, at_bottom = get_edge_states()
-  
   if direction == Direction.left or direction == Direction.right then
-    if at_left then
+    if at_left_edge() then
       return WinPosition.start
     end
 
-    if at_right then
+    if at_right_edge() then
       return WinPosition.last
     end
 
     return WinPosition.middle
   end
 
-  if at_top then
+  if at_top_edge() then
     return WinPosition.start
   end
 
-  if at_bottom then
+  if at_bottom_edge() then
     return WinPosition.last
   end
 
