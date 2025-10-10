@@ -118,6 +118,15 @@ function M.setup(new_config)
   local original_mux = config.multiplexer_integration
 
   config = vim.tbl_deep_extend('force', config, new_config or {})
+  
+  -- Notify api module to rebuild ignored caches if those configs changed
+  if new_config and (new_config.ignored_buftypes or new_config.ignored_filetypes) then
+    local api = package.loaded['smart-splits.api']
+    if api and api.rebuild_ignored_caches then
+      api.rebuild_ignored_caches()
+    end
+  end
+  
   -- if the mux setting changed, run startup again
   if
     original_mux ~= nil

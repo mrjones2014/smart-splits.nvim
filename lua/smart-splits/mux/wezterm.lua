@@ -1,5 +1,6 @@
 local Direction = require('smart-splits.types').Direction
 local config = require('smart-splits.config')
+local Cache = require('smart-splits.cache')
 
 local dir_keys_wezterm = {
   [Direction.left] = 'Left',
@@ -44,7 +45,7 @@ local function init_tab_id()
   tab_id = false
 end
 
-local function current_pane_info()
+local function current_pane_info_impl()
   if tab_id == nil then
     init_tab_id()
   end
@@ -66,6 +67,12 @@ local function current_pane_info()
   end
 
   return nil
+end
+
+local pane_info_cache = Cache.new(current_pane_info_impl, 100)
+
+local function current_pane_info()
+  return pane_info_cache:get()
 end
 
 ---@type SmartSplitsMultiplexer
@@ -103,8 +110,10 @@ function M.current_pane_at_edge(direction)
   end
   local pane_id = M.current_pane_id()
   wezterm_exec({ 'activate-pane-direction', direction })
+  pane_info_cache:invalidate()
   local new_pane_id = M.current_pane_id()
   wezterm_exec({ 'activate-pane', '--pane-id', pane_id })
+  pane_info_cache:invalidate()
   return pane_id == new_pane_id
 end
 
@@ -128,6 +137,9 @@ function M.next_pane(direction)
 
   direction = dir_keys_wezterm[direction] ---@diagnostic disable-line
   local ok, _ = pcall(wezterm_exec, { 'activate-pane-direction', direction })
+  if ok then
+    pane_info_cache:invalidate()
+  end
   return ok
 end
 
@@ -138,6 +150,9 @@ function M.resize_pane(direction, amount)
 
   direction = dir_keys_wezterm[direction] ---@diagnostic disable-line
   local ok, _ = pcall(wezterm_exec, { 'adjust-pane-size', '--amount', amount, direction })
+  if ok then
+    pane_info_cache:invalidate()
+  end
   return ok
 end
 
