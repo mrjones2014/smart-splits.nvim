@@ -1,11 +1,17 @@
 # this flake installs tmux and sets up a basic tmux config for testing the plugin integration
 {
   inputs = {
-    nixpkgs = { url = "github:nixos/nixpkgs/nixos-unstable"; };
-    flake-utils = { url = "github:numtide/flake-utils"; };
+    nixpkgs = {
+      url = "github:nixos/nixpkgs/nixos-unstable";
+    };
+    flake-utils = {
+      url = "github:numtide/flake-utils";
+    };
   };
-  outputs = { nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    { nixpkgs, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs { inherit system; };
         tmux_conf = pkgs.writeText "tmux.conf" ''
@@ -43,15 +49,24 @@
           # Underscore colours - needs tmux-3.0
           set -as terminal-overrides ',*:Setulc=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m'
         '';
-      in {
-        devShells.default = let
-          tmux_wrapper = pkgs.writeShellScriptBin "tmux" ''
-            ${pkgs.tmux}/bin/tmux -f ${tmux_conf} $@
-          '';
-        in pkgs.mkShell {
-          name = "shell with tmux";
+      in
+      {
+        devShells.default =
+          let
+            tmux_wrapper = pkgs.writeShellScriptBin "tmux" ''
+              ${pkgs.tmux}/bin/tmux -f ${tmux_conf} $@
+            '';
+          in
+          pkgs.mkShell {
+            name = "shell with tmux";
 
-          packages = with pkgs; [ tmux_wrapper stylua selene ];
-        };
-      });
+            packages = with pkgs; [
+              tmux_wrapper
+              stylua
+              selene
+              just
+            ];
+          };
+      }
+    );
 }
