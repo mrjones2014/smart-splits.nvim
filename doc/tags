@@ -1,3 +1,9 @@
+ARE	smart-splits.nvim.txt	/*ARE*
+ARE	smart-splits.txt	/*ARE*
+NOT	smart-splits.nvim.txt	/*NOT*
+NOT	smart-splits.txt	/*NOT*
+screen	smart-splits.nvim.txt	/*screen*
+screen	smart-splits.txt	/*screen*
 smart-splits-configuration	smart-splits.txt	/*smart-splits-configuration*
 smart-splits-credits	smart-splits.txt	/*smart-splits-credits*
 smart-splits-install	smart-splits.txt	/*smart-splits-install*
@@ -14,4 +20,17 @@ smart-splits-usage	smart-splits.txt	/*smart-splits-usage*
 smart-splits-wezterm	smart-splits.txt	/*smart-splits-wezterm*
 smart-splits-zellij	smart-splits.txt	/*smart-splits-zellij*
 smart-splits-🧠-`smart-splits.nvim	smart-splits.txt	/*smart-splits-🧠-`smart-splits.nvim*
+smart-splits.nvim-configuration	smart-splits.nvim.txt	/*smart-splits.nvim-configuration*
+smart-splits.nvim-install	smart-splits.nvim.txt	/*smart-splits.nvim-install*
+smart-splits.nvim-links	smart-splits.nvim.txt	/*smart-splits.nvim-links*
+smart-splits.nvim-table-of-contents	smart-splits.nvim.txt	/*smart-splits.nvim-table-of-contents*
+smart-splits.nvim-usage	smart-splits.nvim.txt	/*smart-splits.nvim-usage*
+smart-splits.nvim-usage-key-mappings	smart-splits.nvim.txt	/*smart-splits.nvim-usage-key-mappings*
+smart-splits.nvim-usage-lua-api	smart-splits.nvim.txt	/*smart-splits.nvim-usage-lua-api*
+smart-splits.nvim-usage-multiplexer-integrations	smart-splits.nvim.txt	/*smart-splits.nvim-usage-multiplexer-integrations*
+smart-splits.nvim-usage-multiplexer-lua-api	smart-splits.nvim.txt	/*smart-splits.nvim-usage-multiplexer-lua-api*
+smart-splits.nvim-usage-persistent-resize-mode	smart-splits.nvim.txt	/*smart-splits.nvim-usage-persistent-resize-mode*
+smart-splits.nvim.txt	smart-splits.nvim.txt	/*smart-splits.nvim.txt*
 smart-splits.txt	smart-splits.txt	/*smart-splits.txt*
+tab	smart-splits.nvim.txt	/*tab*
+tab	smart-splits.txt	/*tab*
