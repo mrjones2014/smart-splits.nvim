@@ -19,4 +19,27 @@ function M.is_floating_window(win_id)
   return win_cfg and (win_cfg.relative ~= '' or not win_cfg.relative)
 end
 
+local executables_cache = {}
+
+---Run a system command.
+---@param cmd string[] command arguments
+---@return string command output, whether stdout or stderr
+function M.system(cmd)
+  if #cmd == 0 then
+    error('No command provided')
+  end
+
+  executables_cache[cmd[1]] = executables_cache[cmd[1]] or vim.fn.executable(cmd[1]) == 1
+  if not executables_cache[cmd[1]] then
+    error(string.format('`%s` is not executable (not found on `$PATH`)', cmd[1]))
+  end
+
+  local result = vim.system(cmd, { text = true }):wait()
+  if result.code == 0 then
+    return result.stdout or ''
+  else
+    return result.stderr or ''
+  end
+end
+
 return M

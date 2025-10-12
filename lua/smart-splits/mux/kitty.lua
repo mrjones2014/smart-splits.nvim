@@ -18,7 +18,7 @@ local function kitty_exec(args)
     table.insert(arguments, 3, '--password')
     table.insert(arguments, 4, password)
   end
-  return vim.fn.system(arguments)
+  return require('smart-splits.utils').system(arguments)
 end
 
 local function get_active_tab()

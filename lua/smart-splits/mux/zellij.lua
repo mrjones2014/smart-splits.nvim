@@ -6,8 +6,7 @@ local log = require('smart-splits.log')
 local function zellij_exec(cmd)
   local command = vim.deepcopy(cmd)
   table.insert(command, 1, 'zellij')
-  local result = vim.fn.systemlist(command)
-  return result
+  return require('smart-splits.utils').system(command)
 end
 
 ---@type SmartSplitsMultiplexer
@@ -16,7 +15,7 @@ local M = {} ---@diagnostic disable-line: missing-fields
 M.type = 'zellij'
 
 function M.current_pane_id()
-  local output = zellij_exec({ 'action', 'list-clients' })
+  local output = vim.split(zellij_exec({ 'action', 'list-clients' }), '\n', { trimempty = true })
   if not output[2] then
     return nil
   end
@@ -102,7 +101,7 @@ function M.split_pane(direction, _size) ---@diagnostic disable-line: unused-loca
   end
   local split_ok, _ = pcall(zellij_exec, args)
   if need_swap ~= nil then
-    local swap_ok = pcall(zellij_exec, { 'action', 'move-pane', need_swap })
+    local swap_ok, _ = pcall(zellij_exec, { 'action', 'move-pane', need_swap })
     return split_ok and swap_ok
   end
   return split_ok
