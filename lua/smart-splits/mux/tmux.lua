@@ -32,10 +32,12 @@ local function tmux_exec(args, as_list)
       and vim.list_extend({ 'flatpak-spawn', '--host', 'tmux', '-S', socket }, args, 1, #args)
     or vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
 
+  local text = require('smart-splits.utils').system(cmd)
   if as_list then
-    return vim.fn.systemlist(cmd) --[[ @as string[] ]]
+    return vim.split(text, '\n', { trimempty = true })
+  else
+    return text
   end
-  return vim.fn.system(cmd)
 end
 
 ---@type SmartSplitsMultiplexer

@@ -19,7 +19,7 @@ local function wezterm_exec(cmd)
   local command = vim.deepcopy(cmd)
   table.insert(command, 1, config.wezterm_cli_path)
   table.insert(command, 2, 'cli')
-  return vim.fn.system(command)
+  return require('smart-splits.utils').system(command)
 end
 
 local tab_id
