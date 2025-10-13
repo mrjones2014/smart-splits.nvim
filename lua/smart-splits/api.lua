@@ -1,6 +1,7 @@
 local lazy = require('smart-splits.lazy')
 local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
 local mux = lazy.require_on_exported_call('smart-splits.mux') --[[@as SmartSplitsMuxApi]]
+local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplitsLogger]]
 local utils = require('smart-splits.utils')
 local mux_utils = require('smart-splits.mux.utils')
 local types = require('smart-splits.types')
@@ -217,6 +218,7 @@ local function handle_floating_window(mux_callback)
       return true
     end
   end
+  return false
 end
 
 ---@param direction SmartSplitsDirection
@@ -500,7 +502,10 @@ vim.tbl_map(function(direction)
     local cur_win_id = vim.api.nvim_get_current_win()
     is_resizing = true
     amount = amount or (vim.v.count1 * config.default_amount)
-    pcall(resize, direction, amount)
+    local ok, error = pcall(resize, direction, amount)
+    if not ok then
+      log.error('failed to resize: %s', error)
+    end
     -- guarantee we haven't moved the cursor by accident
     pcall(vim.api.nvim_set_current_win, cur_win_id)
     is_resizing = false
@@ -509,11 +514,17 @@ vim.tbl_map(function(direction)
   end
   M[string.format('move_cursor_%s', direction)] = function(opts)
     is_resizing = false
-    pcall(move_cursor, direction, opts)
+    local ok, error = pcall(move_cursor, direction, opts)
+    if not ok then
+      log.error('failed to move cursor: %s', error)
+    end
   end
   M[string.format('swap_buf_%s', direction)] = function(opts)
     is_resizing = false
-    swap_bufs(direction, opts)
+    local ok, error = pcall(swap_bufs, direction, opts)
+    if not ok then
+      log.error('failed to swap buffers: %s', error)
+    end
   end
 end, {
   Direction.left,
