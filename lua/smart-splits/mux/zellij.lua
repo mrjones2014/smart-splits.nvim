@@ -60,8 +60,8 @@ function M.resize_pane(direction, _amount) ---@diagnostic disable-line: unused-l
     return false
   end
 
-  local ok, _ = pcall(zellij_exec, { 'action', 'resize', 'increase', direction })
-  return ok
+  local _, code = zellij_exec({ 'action', 'resize', 'increase', direction })
+  return code == 0
 end
 
 function M.is_in_session()
@@ -80,8 +80,8 @@ function M.next_pane(direction)
   if config.zellij_move_focus_or_tab and (direction == Direction.left or direction == Direction.right) then
     action = 'move-focus-or-tab'
   end
-  local ok, _ = pcall(zellij_exec, { 'action', action, direction })
-  return ok
+  local _, code = zellij_exec({ 'action', action, direction })
+  return code == 0
 end
 
 -- size is not supported on zellij
@@ -99,12 +99,12 @@ function M.split_pane(direction, _size) ---@diagnostic disable-line: unused-loca
   else
     table.insert(args, direction)
   end
-  local split_ok, _ = pcall(zellij_exec, args)
+  local _, split_code = zellij_exec(args)
   if need_swap ~= nil then
-    local swap_ok, _ = pcall(zellij_exec, { 'action', 'move-pane', need_swap })
-    return split_ok and swap_ok
+    local _, swap_code = zellij_exec({ 'action', 'move-pane', need_swap })
+    return split_code == 0 and swap_code == 0
   end
-  return split_ok
+  return split_code == 0
 end
 
 return M

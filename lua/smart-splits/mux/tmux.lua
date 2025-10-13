@@ -81,42 +81,34 @@ function M.current_pane_id()
     return nil
   end
 
-  local ok, id = pcall(function()
-    local output = tmux_exec({ 'display-message', '-p', '#{pane_id}' }) --[[@as string]]
-    if not output or #output == 0 then
-      return nil
-    end
-
-    output = output:gsub('\n', '')
-    return output
-  end)
-
-  if not ok then
+  local output, code = tmux_exec({ 'display-message', '-p', '#{pane_id}' }) --[[@as string]]
+  if code ~= 0 then
+    log.error(output)
     return nil
-  else
-    return id
   end
+  if not output or #output == 0 then
+    return nil
+  end
+
+  local id = output:gsub('\n', '')
+  return id
 end
 
 function M.current_pane_is_zoomed()
-  local ok, is_zoomed = pcall(function()
-    -- '#F' format strings outputs pane creation flags,
-    -- if it it includes 'Z' then it's zoomed. A '*' indicates
-    -- current pane, and since we're only listing current pane flags,
-    -- we're expecting to see '*Z' if the current pane is zoomed
-    local output = tmux_exec({ 'display-message', '-p', '#F' })
-    if output then
-      output = vim.trim(output --[[@as string]])
-    end
-
-    return output == '*Z'
-  end)
-
-  if ok then
-    return is_zoomed
-  else
-    return ok
+  -- '#F' format strings outputs pane creation flags,
+  -- if it it includes 'Z' then it's zoomed. A '*' indicates
+  -- current pane, and since we're only listing current pane flags,
+  -- we're expecting to see '*Z' if the current pane is zoomed
+  local output, code = tmux_exec({ 'display-message', '-p', '#F' })
+  if code ~= 0 then
+    log.error(output)
+    return false
   end
+  if output then
+    output = vim.trim(output --[[@as string]])
+  end
+
+  return output == '*Z'
 end
 
 function M.next_pane(direction)
@@ -125,8 +117,8 @@ function M.next_pane(direction)
   end
 
   direction = dir_keys_tmux[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(tmux_exec, { 'select-pane', string.format('-%s', direction) })
-  return ok
+  local _, code = tmux_exec({ 'select-pane', string.format('-%s', direction) })
+  return code == 0
 end
 
 function M.resize_pane(direction, amount)
@@ -135,8 +127,8 @@ function M.resize_pane(direction, amount)
   end
 
   direction = dir_keys_tmux[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(tmux_exec, { 'resize-pane', string.format('-%s', direction), amount })
-  return ok
+  local _, code = tmux_exec({ 'resize-pane', string.format('-%s', direction), amount })
+  return code == 0
 end
 
 function M.split_pane(direction, size)
@@ -149,8 +141,8 @@ function M.split_pane(direction, size)
     table.insert(args, '-l')
     table.insert(args, size)
   end
-  local ok, _ = pcall(tmux_exec, args)
-  return ok
+  local _, code = tmux_exec(args)
+  return code == 0
 end
 
 function M.on_init()
@@ -163,8 +155,8 @@ function M.on_init()
     is_nested_vim = true
     return
   end
-  tmux_exec({ 'set-option', '-pt', pane_id, '@pane-is-vim', 1 })
-  if vim.v.shell_error ~= 0 then
+  local _, code = tmux_exec({ 'set-option', '-pt', pane_id, '@pane-is-vim', 1 })
+  if code ~= 0 then
     log.warn('tmux init: failed to detect pane_id')
   end
 end

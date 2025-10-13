@@ -25,8 +25,8 @@ end
 local tab_id
 
 local function init_tab_id()
-  local output = wezterm_exec({ 'list', '--format', 'json' })
-  if vim.v.shell_error ~= 0 or not output or #output == 0 then
+  local output, code = wezterm_exec({ 'list', '--format', 'json' })
+  if code ~= 0 or not output or #output == 0 then
     -- set to false to avoid trying again
     tab_id = false
     return
@@ -53,8 +53,8 @@ local function current_pane_info()
     return nil
   end
 
-  local output = wezterm_exec({ 'list', '--format', 'json' })
-  if vim.v.shell_error ~= 0 or not output or #output == 0 then
+  local output, code = wezterm_exec({ 'list', '--format', 'json' })
+  if code ~= 0 or not output or #output == 0 then
     return nil
   end
 
@@ -96,8 +96,8 @@ end
 
 function M.current_pane_at_edge(direction)
   -- try the new way first
-  local output = wezterm_exec({ 'get-pane-direction', direction })
-  if vim.v.shell_error == 0 then
+  local output, code = wezterm_exec({ 'get-pane-direction', direction })
+  if code == 0 then
     local ok, value = pcall(tonumber, output)
     return ok and value == nil
   end
@@ -127,8 +127,8 @@ function M.next_pane(direction)
   end
 
   direction = dir_keys_wezterm[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(wezterm_exec, { 'activate-pane-direction', direction })
-  return ok
+  local _, code = wezterm_exec({ 'activate-pane-direction', direction })
+  return code == 0
 end
 
 function M.resize_pane(direction, amount)
@@ -137,8 +137,8 @@ function M.resize_pane(direction, amount)
   end
 
   direction = dir_keys_wezterm[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(wezterm_exec, { 'adjust-pane-size', '--amount', amount, direction })
-  return ok
+  local _, code = wezterm_exec({ 'adjust-pane-size', '--amount', amount, direction })
+  return code == 0
 end
 
 function M.split_pane(direction, size)
@@ -147,8 +147,8 @@ function M.split_pane(direction, size)
     table.insert(args, '--cells')
     table.insert(args, size)
   end
-  local ok, _ = pcall(wezterm_exec, args)
-  return ok
+  local _, code = wezterm_exec(args)
+  return code == 0
 end
 
 function M.on_init()
