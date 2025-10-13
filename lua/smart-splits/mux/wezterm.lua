@@ -1,5 +1,6 @@
 local Direction = require('smart-splits.types').Direction
 local config = require('smart-splits.config')
+local log = require('smart-splits.log')
 
 local dir_keys_wezterm = {
   [Direction.left] = 'Left',
@@ -25,9 +26,10 @@ end
 local tab_id
 
 local function init_tab_id()
-  local output, code = wezterm_exec({ 'list', '--format', 'json' })
+  local output, code = wezterm_exec( { 'list', '--format', 'json' })
   if code ~= 0 or not output or #output == 0 then
     -- set to false to avoid trying again
+    log.warn(string.format("wezterm init: failed to detect tab_id: %s", output))
     tab_id = false
     return
   end
@@ -55,6 +57,7 @@ local function current_pane_info()
 
   local output, code = wezterm_exec({ 'list', '--format', 'json' })
   if code ~= 0 or not output or #output == 0 then
+	  log.warn(string.format("wezterm: failed to get current pane info", output))
     return nil
   end
 
