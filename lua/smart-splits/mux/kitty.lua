@@ -98,8 +98,8 @@ function M.next_pane(direction)
   end
 
   direction = dir_keys_kitty[direction] ---@diagnostic disable-line
-  local ok, _ = pcall(kitty_exec, { 'kitten', 'neighboring_window.py', direction })
-  return ok
+  local _, code = kitty_exec({ 'kitten', 'neighboring_window.py', direction })
+  return code == 0
 end
 
 function M.resize_pane(direction, amount)
@@ -107,9 +107,9 @@ function M.resize_pane(direction, amount)
     return false
   end
 
-  local ok, _ = pcall(kitty_exec, { 'kitten', 'relative_resize.py', direction, amount })
+  local code = kitty_exec({ 'kitten', 'relative_resize.py', direction, amount })
 
-  return ok
+  return code == 0
 end
 
 function M.on_init()
@@ -129,9 +129,9 @@ function M.split_pane(direction, _)
     return false
   end
 
-  local ok, _ = pcall(kitty_exec, { 'kitten', 'split_window.py', direction })
+  local _, code = kitty_exec({ 'kitten', 'split_window.py', direction })
 
-  return ok
+  return code == 0
 end
 
 return M

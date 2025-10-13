@@ -23,7 +23,7 @@ local executables_cache = {}
 
 ---Run a system command.
 ---@param cmd string[] command arguments
----@return string command output, whether stdout or stderr
+---@return string output, number exit_code the stderr/stdout and the exit code
 function M.system(cmd)
   if #cmd == 0 then
     error('No command provided')
@@ -35,11 +35,7 @@ function M.system(cmd)
   end
 
   local result = vim.system(cmd, { text = true }):wait()
-  if result.code == 0 then
-    return result.stdout or ''
-  else
-    return result.stderr or ''
-  end
+  return result.code == 0 and (result.stdout or '') or (result.stderr or ''), result.code
 end
 
 return M

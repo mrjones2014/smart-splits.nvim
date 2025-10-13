@@ -81,30 +81,39 @@ end
 ---@param at_edge SmartSplitsAtEdgeBehavior behavior at edge
 ---@return boolean success
 function M.move_pane(direction, will_wrap, at_edge)
-  at_edge = at_edge or config.at_edge
-  local multiplexer = M.get()
-  if not multiplexer or not multiplexer.is_in_session() then
+  local ok, result = pcall(function()
+    at_edge = at_edge or config.at_edge
+    local multiplexer = M.get()
+    if not multiplexer or not multiplexer.is_in_session() then
+      return false
+    end
+
+    if at_edge ~= AtEdgeBehavior.wrap and multiplexer.current_pane_at_edge(direction) then
+      return false
+    end
+
+    if config.disable_multiplexer_nav_when_zoomed and multiplexer.current_pane_is_zoomed() then
+      return false
+    end
+
+    local multiplexer_moved = move_multiplexer_inner(direction, multiplexer)
+    if multiplexer_moved or not will_wrap then
+      return multiplexer_moved
+    end
+
+    if at_edge == AtEdgeBehavior.wrap then
+      return move_multiplexer_inner(directions_reverse[direction], multiplexer)
+    end
+
+    return false
+  end)
+
+  if not ok then
+    log.error(result)
     return false
   end
 
-  if at_edge ~= AtEdgeBehavior.wrap and multiplexer.current_pane_at_edge(direction) then
-    return false
-  end
-
-  if config.disable_multiplexer_nav_when_zoomed and multiplexer.current_pane_is_zoomed() then
-    return false
-  end
-
-  local multiplexer_moved = move_multiplexer_inner(direction, multiplexer)
-  if multiplexer_moved or not will_wrap then
-    return multiplexer_moved
-  end
-
-  if at_edge == AtEdgeBehavior.wrap then
-    return move_multiplexer_inner(directions_reverse[direction], multiplexer)
-  end
-
-  return false
+  return result
 end
 
 ---Try resizing with multiplexer
@@ -112,20 +121,29 @@ end
 ---@param amount number amount to resize
 ---@return boolean success
 function M.resize_pane(direction, amount)
-  local multiplexer = M.get()
-  if not multiplexer or not multiplexer.is_in_session() then
-    return false
-  end
-  if config.disable_multiplexer_nav_when_zoomed and multiplexer.current_pane_is_zoomed() then
-    return false
-  end
+  local ok, result = pcall(function()
+    local multiplexer = M.get()
+    if not multiplexer or not multiplexer.is_in_session() then
+      return false
+    end
+    if config.disable_multiplexer_nav_when_zoomed and multiplexer.current_pane_is_zoomed() then
+      return false
+    end
 
-  local ok = multiplexer.resize_pane(direction, amount)
+    local resized = multiplexer.resize_pane(direction, amount)
+    if not resized then
+      log.debug('Failed to resize multiplexer pane')
+    end
+
+    return resized
+  end)
+
   if not ok then
-    log.debug('Failed to resize multiplexer pane')
+    log.error(result)
+    return false
   end
 
-  return ok
+  return result
 end
 
 ---Try creating a new mux split pane.
@@ -133,15 +151,24 @@ end
 ---@param size number|nil
 ---@return boolean success
 function M.split_pane(direction, size)
-  local mux = M.get()
-  if not mux or not mux.is_in_session() then
+  local ok, result = pcall(function()
+    local mux = M.get()
+    if not mux or not mux.is_in_session() then
+      return false
+    end
+    local did_split = mux.split_pane(direction, size)
+    if not did_split then
+      log.error('Failed to create a new mux pane')
+    end
+    return did_split
+  end)
+
+  if not ok then
+    log.error(result)
     return false
   end
-  local ok = mux.split_pane(direction, size)
-  if not ok then
-    log.error('Failed to create a new mux pane')
-  end
-  return ok
+
+  return result
 end
 
 return M
