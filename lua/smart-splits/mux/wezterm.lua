@@ -26,7 +26,7 @@ end
 local tab_id
 
 local function init_tab_id()
-  local output, code = wezterm_exec( { 'list', '--format', 'json' })
+  local output, code = wezterm_exec({ 'list', '--format', 'json' })
   if code ~= 0 or not output or #output == 0 then
     -- set to false to avoid trying again
     log.warn(string.format("wezterm init: failed to detect tab_id: %s", output))
