@@ -32,11 +32,11 @@ local function tmux_exec(args, as_list)
       and vim.list_extend({ 'flatpak-spawn', '--host', 'tmux', '-S', socket }, args, 1, #args)
     or vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
 
-  local text = require('smart-splits.utils').system(cmd)
+  local text, code = require('smart-splits.utils').system(cmd)
   if as_list then
-    return vim.split(text, '\n', { trimempty = true })
+    return vim.split(text, '\n', { trimempty = true }), code
   else
-    return text
+    return text, code
   end
 end
 
@@ -151,7 +151,8 @@ function M.on_init()
     log.warn('tmux init: could not detect pane ID!')
     return
   end
-  if tonumber(tmux_exec({ 'show-options', '-pqvt', pane_id, '@pane-is-vim' })) == 1 then
+  local pane_is_vim, _ = tmux_exec({ 'show-options', '-pqvt', pane_id, '@pane-is-vim' })
+  if tonumber(pane_is_vim) == 1 then
     is_nested_vim = true
     return
   end
