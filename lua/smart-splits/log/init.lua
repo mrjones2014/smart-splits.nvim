@@ -23,11 +23,12 @@ local prefix = '[smart-splits.nvim] '
 local prefix_hl = 'Comment'
 
 local function log_with_hl(msg, hl)
-  vim.cmd(string.format('echohl %s', prefix_hl))
-  vim.cmd(string.format('echom "%s"', vim.fn.escape(prefix, '"')))
-  vim.cmd(string.format('echohl %s', hl or 'NONE'))
-  vim.cmd(string.format('echom "%s"', vim.fn.escape(msg, '"')))
-  vim.cmd('echohl NONE')
+  -- Use nvim_echo to avoid quoting / escaping issues that caused E114 errors when
+  -- messages contained raw double quotes or other special characters.
+  if type(msg) ~= 'string' then
+    msg = vim.inspect(msg)
+  end
+  vim.api.nvim_echo({ { prefix, prefix_hl }, { msg, hl or 'None' } }, true, {})
 end
 
 local function should_log(level)
@@ -110,7 +111,7 @@ end
 function M.open_log_file()
   vim.cmd(string.format('e %s', logfile.filepath))
   local buf = vim.api.nvim_get_current_buf()
-  vim.api.nvim_buf_set_option(buf, 'modifiable', false)
+  vim.bo[buf].modifiable = false
   vim.api.nvim_create_autocmd({ 'BufEnter', 'CursorHold' }, { buffer = buf, command = 'checktime' })
 end
 
