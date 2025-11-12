@@ -1,6 +1,22 @@
 local lazy = require('smart-splits.lazy')
 local Direction = require('smart-splits.types').Direction
 
+---@class SmartSplits
+---@field resize_left fun(): nil
+---@field resize_right fun(): nil
+---@field resize_up fun(): nil
+---@field resize_down fun(): nil
+---@field move_cursor_left fun(): nil
+---@field move_cursor_right fun(): nil
+---@field move_cursor_up fun(): nil
+---@field move_cursor_down fun(): nil
+---@field swap_buf_left fun(): nil
+---@field swap_buf_right fun(): nil
+---@field swap_buf_up fun(): nil
+---@field swap_buf_down fun(): nil
+---@field move_cursor_previous fun(): nil
+---@field setup fun(config: SmartSplitsConfig): nil
+
 local M = {}
 
 function M.setup(config)
@@ -23,4 +39,5 @@ end, {
 
 M.move_cursor_previous = lazy.require_on_exported_call('smart-splits.api').move_cursor_previous
 
+---@cast M SmartSplits
 return M
