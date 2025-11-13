@@ -553,6 +553,9 @@ listen_on unix:/tmp/mykitty
 
 ##### Nvim over SSH with Kitty
 
+> [!NOTE]
+> The remote machine must have Nvim and this plugin installed.
+
 To make this work, you will need to forward the Kitty socket, what exposes your local computer to the remote machine.
 According to Kitty's [documentation](https://sw.kovidgoyal.net/kitty/kittens/ssh/#opt-kitten-ssh.forward_remote_control):
 
