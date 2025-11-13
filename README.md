@@ -551,6 +551,36 @@ allow_remote_control yes
 listen_on unix:/tmp/mykitty
 ```
 
+##### Nvim over SSH with Kitty
+
+> [!NOTE]
+> The remote machine must have Nvim and this plugin installed.
+
+To make this work, you will need to forward the Kitty socket, what exposes your local computer to the remote machine.
+According to Kitty's [documentation](https://sw.kovidgoyal.net/kitty/kittens/ssh/#opt-kitten-ssh.forward_remote_control):
+
+> **WARNING**: This allows any software on the remote host full access to the local computer, so only do it for trusted remote hosts.
+ 
+In addition to the above instructions, you will need to add the following to your local `~/.config/kitty/ssh.conf`:
+
+```
+forward_remote_control yes
+```
+
+Also, you need to change the socket type in `~/.config/kitty/kitty.conf` to unix file based:
+
+```
+listen_on unix:/tmp/mykitty
+```
+
+To ssh to a remote host with the forwarded socket, you need to use the `kitten ssh` command like so:
+
+```bash
+kitten ssh user@remotehost
+```
+
+For troubleshooting, please refer to Kitty's [SSH remote control documentation](https://sw.kovidgoyal.net/kitty/kittens/ssh/).
+
 ##### Credits
 
 Thanks @knubie for inspiration for the Kitty implementation from [vim-kitty-navigator](https://github.com/knubie/vim-kitty-navigator).
