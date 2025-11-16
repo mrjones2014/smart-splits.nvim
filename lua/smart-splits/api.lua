@@ -338,6 +338,44 @@ local function split_edge(direction)
   end
 end
 
+---@param direction SmartSplitsDirection direction to move
+---@param will_wrap boolean whether to wrap around edge
+---@param at_edge SmartSplitsAtEdgeBehavior behavior at edge
+local function handle_at_edge(direction, will_wrap, at_edge)
+  if type(at_edge) == 'function' then
+    local ctx = { ---@type SmartSplitsContext
+      mux = mux.get(),
+      direction = direction,
+      split = function()
+        split_edge(direction)
+      end,
+      wrap = function()
+        next_win_or_wrap(will_wrap, DirectionKeysReverse[direction])
+      end,
+    }
+    at_edge(ctx)
+    return
+  elseif at_edge == AtEdgeBehavior.stop then
+    return
+  elseif at_edge == AtEdgeBehavior.split then
+    -- if at_edge = 'split' and we're in an ignored buffer, just stop
+    if
+      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
+      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
+    then
+      return
+    end
+
+    split_edge(direction)
+    return
+  else -- at_edge == AtEdgeBehavior.wrap
+    -- shouldn't wrap if count is > 1
+    if vim.v.count1 == 1 then
+      dir_key = DirectionKeysReverse[direction]
+    end
+  end
+end
+
 ---@param direction SmartSplitsDirection
 ---@param opts table
 local function move_cursor(direction, opts)
@@ -361,12 +399,6 @@ local function move_cursor(direction, opts)
     end
   end
 
-  if handle_floating_window(function()
-    mux.move_pane(direction, true, at_edge)
-  end) then
-    return
-  end
-
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   local dir_key = DirectionKeys[direction]
 
@@ -377,6 +409,13 @@ local function move_cursor(direction, opts)
   -- if it is the same as the one one move closer - move is beyond
   local will_wrap = win_to_move_to == win_before
 
+  if handle_floating_window(function()
+    mux.move_pane(direction, true, at_edge)
+  end) then
+    handle_at_edge(direction, will_wrap, at_edge)
+    return
+  end
+
   if will_wrap then
     -- if we can move with mux, then we're good
     if mux.move_pane(direction, will_wrap, at_edge) then
@@ -384,38 +423,7 @@ local function move_cursor(direction, opts)
     end
 
     -- otherwise check at_edge behavior
-    if type(at_edge) == 'function' then
-      local ctx = { ---@type SmartSplitsContext
-        mux = mux.get(),
-        direction = direction,
-        split = function()
-          split_edge(direction)
-        end,
-        wrap = function()
-          next_win_or_wrap(will_wrap, DirectionKeysReverse[direction])
-        end,
-      }
-      at_edge(ctx)
-      return
-    elseif at_edge == AtEdgeBehavior.stop then
-      return
-    elseif at_edge == AtEdgeBehavior.split then
-      -- if at_edge = 'split' and we're in an ignored buffer, just stop
-      if
-        vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-        or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-      then
-        return
-      end
-
-      split_edge(direction)
-      return
-    else -- at_edge == AtEdgeBehavior.wrap
-      -- shouldn't wrap if count is > 1
-      if vim.v.count1 == 1 then
-        dir_key = DirectionKeysReverse[direction]
-      end
-    end
+    handle_at_edge(direction, will_wrap, at_edge)
   end
 
   next_win_or_wrap(will_wrap, dir_key)
