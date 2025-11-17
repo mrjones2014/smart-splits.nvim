@@ -540,4 +540,8 @@ function M.move_cursor_previous()
   end
 end
 
+function M.update_layout_details()
+  mux.update_layout_details()
+end
+
 return M
