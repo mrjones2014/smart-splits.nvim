@@ -102,9 +102,15 @@ function M.split_pane(direction, _size) ---@diagnostic disable-line: unused-loca
   local _, split_code = zellij_exec(args)
   if need_swap ~= nil then
     local _, swap_code = zellij_exec({ 'action', 'move-pane', need_swap })
+    M.update_mux_layout_details()
     return split_code == 0 and swap_code == 0
   end
+  M.update_mux_layout_details()
   return split_code == 0
+end
+
+function M.update_mux_layout_details()
+  -- Not implemented yet - check Kitty mux for reference
 end
 
 return M

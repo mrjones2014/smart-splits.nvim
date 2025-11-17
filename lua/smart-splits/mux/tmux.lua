@@ -142,6 +142,7 @@ function M.split_pane(direction, size)
     table.insert(args, size)
   end
   local _, code = tmux_exec(args)
+  M.update_mux_layout_details()
   return code == 0
 end
 
@@ -182,6 +183,10 @@ function M.on_exit()
     or vim.list_extend({ 'tmux', '-S', socket }, args, 1, #args)
 
   vim.fn.jobstart(cmd, { detach = true })
+end
+
+function M.update_mux_layout_details()
+  -- Not implemented yet - check Kitty mux for reference
 end
 
 return M

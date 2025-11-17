@@ -1,4 +1,5 @@
 local lazy = require('smart-splits.lazy')
+local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplitsLogger]]
 local utils = lazy.require_on_exported_call('smart-splits.utils')
 local Direction = require('smart-splits.types').Direction
 
@@ -9,7 +10,19 @@ local dir_keys_kitty = {
   [Direction.down] = 'bottom',
 }
 
-local function kitty_exec(args)
+local layout_details = {}
+
+local function layout_details_callback(result)
+  if result.code ~= 0 then
+    log.debug('Error executing async system : %s', result.stderr or '')
+    return
+  end
+
+  log.debug('Received output from async system with size: %s', #result.stdout or '')
+  layout_details = vim.json.decode(result.stdout)
+end
+
+local function kitty_exec(args, callback)
   local arguments = vim.deepcopy(args)
   table.insert(arguments, 1, 'kitty')
   table.insert(arguments, 2, '@')
@@ -18,17 +31,15 @@ local function kitty_exec(args)
     table.insert(arguments, 3, '--password')
     table.insert(arguments, 4, password)
   end
-  return require('smart-splits.utils').system(arguments)
+  return require('smart-splits.utils').system(arguments, callback)
 end
 
 local function get_active_tab()
-  local output = kitty_exec({ 'ls' })
-  local kitty_info = vim.json.decode(output)
-  if #kitty_info == 0 then
+  if #layout_details == 0 then
     return nil
   end
-
-  local active_client = utils.tbl_find(kitty_info, function(client)
+  log.trace('ReUsing "cached" layout details..')
+  local active_client = utils.tbl_find(layout_details, function(client)
     -- if we're doing a keymap, obviously the terminal must be focused also
     return client.is_active and client.is_focused
   end)
@@ -131,7 +142,12 @@ function M.split_pane(direction, _)
 
   local _, code = kitty_exec({ 'kitten', 'split_window.py', direction })
 
+  M.update_mux_layout_details()
   return code == 0
+end
+
+function M.update_mux_layout_details()
+  kitty_exec({ 'ls' }, layout_details_callback)
 end
 
 return M

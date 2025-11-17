@@ -171,4 +171,18 @@ function M.split_pane(direction, size)
   return result
 end
 
+function M.update_layout_details()
+  local ok, result = pcall(function()
+    local mux = M.get()
+    if not mux or not mux.is_in_session() then
+      return
+    end
+    mux.update_mux_layout_details()
+  end)
+
+  if not ok then
+    log.error(result)
+  end
+end
+
 return M
