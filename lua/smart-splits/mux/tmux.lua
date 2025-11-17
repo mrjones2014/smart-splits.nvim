@@ -184,7 +184,7 @@ function M.on_exit()
   vim.fn.jobstart(cmd, { detach = true })
 end
 
-function M.update_layout_details()
+function M.update_mux_layout_details()
   -- Not implemented yet - check Kitty mux for reference
 end
 

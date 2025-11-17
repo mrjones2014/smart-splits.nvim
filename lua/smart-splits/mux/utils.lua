@@ -75,10 +75,10 @@ function M.startup()
       end,
     })
   end
-  if mux.update_layout_details then
+  if mux.update_mux_layout_details then
     vim.api.nvim_create_autocmd({ 'VimResume', 'VimEnter', 'VimResized', 'FocusGained' }, {
       callback = function()
-        mux.update_layout_details()
+        mux.update_mux_layout_details()
       end,
     })
   end

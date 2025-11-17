@@ -145,7 +145,7 @@ function M.split_pane(direction, _)
   return code == 0
 end
 
-function M.update_layout_details()
+function M.update_mux_layout_details()
   kitty_exec({ 'ls' }, layout_details_callback)
 end
 

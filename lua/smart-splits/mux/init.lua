@@ -177,7 +177,7 @@ function M.update_layout_details()
     if not mux or not mux.is_in_session() then
       return
     end
-    mux.update_layout_details()
+    mux.update_mux_layout_details()
   end)
 
   if not ok then

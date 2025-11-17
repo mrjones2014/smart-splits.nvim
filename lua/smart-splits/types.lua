@@ -9,7 +9,7 @@
 ---@field type SmartSplitsMultiplexerType
 ---@field on_init fun()|nil
 ---@field on_exit fun()|nil
----@field update_layout_details fun():nil
+---@field update_mux_layout_details fun():nil
 
 ---@alias SmartSplitsDirection 'left'|'right'|'up'|'down'
 
