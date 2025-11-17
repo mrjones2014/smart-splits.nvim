@@ -151,6 +151,7 @@ function M.split_pane(direction, size)
     table.insert(args, size)
   end
   local _, code = wezterm_exec(args)
+  M.update_mux_layout_details()
   return code == 0
 end
 

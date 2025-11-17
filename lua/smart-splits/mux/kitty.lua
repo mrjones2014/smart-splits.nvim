@@ -142,6 +142,7 @@ function M.split_pane(direction, _)
 
   local _, code = kitty_exec({ 'kitten', 'split_window.py', direction })
 
+  M.update_mux_layout_details()
   return code == 0
 end
 

@@ -408,7 +408,10 @@ local function move_cursor(direction, opts)
         return
       end
 
-      split_edge(direction)
+      local did_split = mux.split_pane(direction)
+      if not did_split then
+        split_edge(direction)
+      end
       return
     else -- at_edge == AtEdgeBehavior.wrap
       -- shouldn't wrap if count is > 1
