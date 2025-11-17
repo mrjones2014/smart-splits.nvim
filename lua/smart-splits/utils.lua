@@ -24,7 +24,7 @@ local executables_cache = {}
 ---Run a system command.
 ---@param cmd string[] command arguments
 ---@param callback function |nil optional callback for async execution
----@return string|nil output|nil, number|nil exit_code|nil the stderr/stdout and the exit code
+---@return string|nil output, number|nil exit_code|nil the stderr/stdout and the exit code
 function M.system(cmd, callback)
   if #cmd == 0 then
     error('No command provided')
