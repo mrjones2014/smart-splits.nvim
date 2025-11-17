@@ -12,19 +12,17 @@ local dir_keys_kitty = {
 
 local layout_details = {}
 
-local function system_async(cmd)
-  vim.system(cmd, { text = true }, function(result)
-    if result.code ~= 0 then
-      log.debug('Error executing command "%s": %s', vim.inspect(cmd), result.stderr or '')
-      return
-    end
+local function layout_details_callback(result)
+  if result.code ~= 0 then
+    log.debug('Error executing async system : %s', result.stderr or '')
+    return
+  end
 
-    log.debug('Received output from command "%s" with size: %s', vim.inspect(cmd), #result.stdout or '')
-    layout_details = vim.json.decode(result.stdout)
-  end)
+  log.debug('Received output from async system with size: %s', #result.stdout or '')
+  layout_details = vim.json.decode(result.stdout)
 end
 
-local function kitty_exec(args)
+local function kitty_exec(args, callback)
   local arguments = vim.deepcopy(args)
   table.insert(arguments, 1, 'kitty')
   table.insert(arguments, 2, '@')
@@ -33,10 +31,7 @@ local function kitty_exec(args)
     table.insert(arguments, 3, '--password')
     table.insert(arguments, 4, password)
   end
-  if args[1] == 'ls' then
-    return system_async(arguments)
-  end
-  return require('smart-splits.utils').system(arguments)
+  return require('smart-splits.utils').system(arguments, callback)
 end
 
 local function get_active_tab()
@@ -151,7 +146,7 @@ function M.split_pane(direction, _)
 end
 
 function M.update_layout_details()
-  kitty_exec({ 'ls' })
+  kitty_exec({ 'ls' }, layout_details_callback)
 end
 
 return M
