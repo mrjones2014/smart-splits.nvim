@@ -134,4 +134,7 @@ function M.split_pane(direction, _)
   return code == 0
 end
 
+function M.update_layout_details()
+  log.warn('update_layout_details not implemented for kitty multiplexer')
+end
 return M

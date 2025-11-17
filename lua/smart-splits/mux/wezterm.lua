@@ -166,4 +166,8 @@ function M.on_exit()
   write_var(format_var('false'))
 end
 
+function M.update_layout_details()
+  -- Not implemented yet - check Kitty mux for reference
+end
+
 return M

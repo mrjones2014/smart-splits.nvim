@@ -107,4 +107,8 @@ function M.split_pane(direction, _size) ---@diagnostic disable-line: unused-loca
   return split_code == 0
 end
 
+function M.update_layout_details()
+  -- Not implemented yet - check Kitty mux for reference
+end
+
 return M
