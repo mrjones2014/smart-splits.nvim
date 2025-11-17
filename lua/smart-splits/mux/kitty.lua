@@ -1,4 +1,5 @@
 local lazy = require('smart-splits.lazy')
+local log = lazy.require_on_exported_call('smart-splits.log') --[[@as SmartSplitsLogger]]
 local utils = lazy.require_on_exported_call('smart-splits.utils')
 local Direction = require('smart-splits.types').Direction
 
@@ -9,6 +10,20 @@ local dir_keys_kitty = {
   [Direction.down] = 'bottom',
 }
 
+local layout_details = {}
+
+local function system_async(cmd)
+  vim.system(cmd, { text = true }, function(result)
+    if result.code ~= 0 then
+      log.debug('Error executing command "%s": %s', vim.inspect(cmd), result.stderr or '')
+      return
+    end
+
+    log.debug('Received output from command "%s" with size: %s', vim.inspect(cmd), #result.stdout or '')
+    layout_details = vim.json.decode(result.stdout)
+  end)
+end
+
 local function kitty_exec(args)
   local arguments = vim.deepcopy(args)
   table.insert(arguments, 1, 'kitty')
@@ -18,17 +33,18 @@ local function kitty_exec(args)
     table.insert(arguments, 3, '--password')
     table.insert(arguments, 4, password)
   end
+  if args[1] == 'ls' then
+    return system_async(arguments)
+  end
   return require('smart-splits.utils').system(arguments)
 end
 
 local function get_active_tab()
-  local output = kitty_exec({ 'ls' })
-  local kitty_info = vim.json.decode(output)
-  if #kitty_info == 0 then
+  if #layout_details == 0 then
     return nil
   end
-
-  local active_client = utils.tbl_find(kitty_info, function(client)
+  log.trace('ReUsing "cached" layout details..')
+  local active_client = utils.tbl_find(layout_details, function(client)
     -- if we're doing a keymap, obviously the terminal must be focused also
     return client.is_active and client.is_focused
   end)
@@ -135,6 +151,7 @@ function M.split_pane(direction, _)
 end
 
 function M.update_layout_details()
-  log.warn('update_layout_details not implemented for kitty multiplexer')
+  kitty_exec({ 'ls' })
 end
+
 return M
