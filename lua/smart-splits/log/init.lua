@@ -28,7 +28,9 @@ local function log_with_hl(msg, hl)
   if type(msg) ~= 'string' then
     msg = vim.inspect(msg)
   end
-  vim.api.nvim_echo({ { prefix, prefix_hl }, { msg, hl or 'None' } }, true, {})
+  vim.schedule(function()
+    vim.api.nvim_echo({ { prefix, prefix_hl }, { msg, hl or 'None' } }, true, {})
+  end)
 end
 
 local function should_log(level)
