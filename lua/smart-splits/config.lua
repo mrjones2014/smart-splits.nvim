@@ -41,7 +41,7 @@ local config = { ---@diagnostic disable-line:missing-fields
     'NvimTree',
   },
   default_amount = 3,
-  at_edge = AtEdgeBehavior.wrap,
+  at_edge = mux_utils.are_we_kitty() and AtEdgeBehavior.stop or AtEdgeBehavior.wrap,
   float_win_behavior = FloatWinBehavior.previous,
   move_cursor_same_row = false,
   cursor_follows_swapped_bufs = false,

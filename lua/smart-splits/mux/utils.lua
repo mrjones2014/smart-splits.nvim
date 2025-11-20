@@ -18,6 +18,14 @@ function M.are_we_wezterm()
   return term == 'wezterm'
 end
 
+function M.are_we_kitty()
+  if M.are_we_gui() then
+    return false
+  end
+
+  return vim.env.KITTY_WINDOW_ID ~= nil
+end
+
 --- Check if we're in WSL
 ---@return boolean
 function M.is_WSL()
