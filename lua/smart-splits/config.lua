@@ -128,7 +128,7 @@ function M.setup(new_config)
   end
 
   -- check for incompatible settings
-  if mux_utils.are_we_kitty() and config.at_edge == 'wrap' then
+  if mux_utils.are_we_kitty() and config.multiplexer_integration == Multiplexer.kitty and config.at_edge == 'wrap' then
     local msg = 'Kitty multiplexer integration does not support wrapping at edge, setting to "stop"'
     log.warn(msg)
     vim.notify_once(msg, vim.log.levels.WARN, { title = 'smart-splits.nvim' })
