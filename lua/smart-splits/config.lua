@@ -102,8 +102,7 @@ function M.set_default_multiplexer()
     config.multiplexer_integration = 'zellij'
   elseif term == 'wezterm' then
     config.multiplexer_integration = Multiplexer.wezterm
-  elseif vim.env.KITTY_LISTEN_ON ~= nil then
-    -- Kitty doesn't use $TERM_PROGRAM, and also requires remote control enabled anyway
+  elseif mux_utils.are_we_kitty() then
     config.multiplexer_integration = Multiplexer.kitty
   end
 
@@ -126,6 +125,14 @@ function M.setup(new_config)
     and original_mux ~= config.multiplexer_integration
   then
     mux_utils.startup()
+  end
+
+  -- check for incompatible settings
+  if mux_utils.are_we_kitty() and config.multiplexer_integration == Multiplexer.kitty and config.at_edge == 'wrap' then
+    local msg = 'Kitty multiplexer integration does not support wrapping at edge, setting to "stop"'
+    log.warn(msg)
+    vim.notify_once(msg, vim.log.levels.WARN, { title = 'smart-splits.nvim' })
+    config.at_edge = AtEdgeBehavior.stop
   end
 
   -- check deprecated settings

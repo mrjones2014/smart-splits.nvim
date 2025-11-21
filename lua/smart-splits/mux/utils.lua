@@ -23,7 +23,7 @@ function M.are_we_kitty()
     return false
   end
 
-  return vim.env.KITTY_WINDOW_ID ~= nil
+  return vim.env.KITTY_LISTEN_ON ~= nil
 end
 
 --- Check if we're in WSL
