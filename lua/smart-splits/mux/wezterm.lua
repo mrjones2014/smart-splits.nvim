@@ -151,6 +151,7 @@ function M.split_pane(direction, size)
     table.insert(args, size)
   end
   local _, code = wezterm_exec(args)
+  M.update_mux_layout_details()
   return code == 0
 end
 
@@ -164,6 +165,10 @@ function M.on_exit()
   local format_var = vim.fn['smart_splits#format_wezterm_var']
   local write_var = vim.fn['smart_splits#write_wezterm_var']
   write_var(format_var('false'))
+end
+
+function M.update_mux_layout_details()
+  -- Not implemented yet - check Kitty mux for reference
 end
 
 return M

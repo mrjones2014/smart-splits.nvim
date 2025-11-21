@@ -23,8 +23,9 @@ local executables_cache = {}
 
 ---Run a system command.
 ---@param cmd string[] command arguments
----@return string output, number exit_code the stderr/stdout and the exit code
-function M.system(cmd)
+---@param callback function |nil optional callback for async execution
+---@return string|nil output, number|nil exit_code|nil the stderr/stdout and the exit code
+function M.system(cmd, callback)
   if #cmd == 0 then
     error('No command provided')
   end
@@ -34,6 +35,10 @@ function M.system(cmd)
     error(string.format('`%s` is not executable (not found on `$PATH`)', cmd[1]))
   end
 
+  if callback and type(callback) == 'function' then
+    vim.system(cmd, { text = true }, callback)
+    return
+  end
   local result = vim.system(cmd, { text = true }):wait()
   return result.code == 0 and (result.stdout or '') or (result.stderr or ''), result.code
 end

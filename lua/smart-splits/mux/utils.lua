@@ -18,6 +18,14 @@ function M.are_we_wezterm()
   return term == 'wezterm'
 end
 
+function M.are_we_kitty()
+  if M.are_we_gui() then
+    return false
+  end
+
+  return vim.env.KITTY_WINDOW_ID ~= nil
+end
+
 --- Check if we're in WSL
 ---@return boolean
 function M.is_WSL()
@@ -72,6 +80,13 @@ function M.startup()
     vim.api.nvim_create_autocmd({ 'VimSuspend', 'VimLeavePre' }, {
       callback = function()
         mux.on_exit()
+      end,
+    })
+  end
+  if mux.update_mux_layout_details then
+    vim.api.nvim_create_autocmd({ 'VimResume', 'VimEnter', 'VimResized', 'FocusGained' }, {
+      callback = function()
+        mux.update_mux_layout_details()
       end,
     })
   end
