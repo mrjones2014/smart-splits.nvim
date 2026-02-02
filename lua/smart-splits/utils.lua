@@ -16,7 +16,22 @@ end
 function M.is_floating_window(win_id)
   win_id = win_id or 0
   local win_cfg = vim.api.nvim_win_get_config(win_id)
-  return win_cfg and (win_cfg.relative ~= '' or not win_cfg.relative)
+  return win_cfg and win_cfg.relative ~= ''
+end
+
+---Check if a window is an "embedded" floating window — one that is
+---technically floating (relative ~= '') but visually behaves like a
+---sidebar or panel (e.g. snacks explorer at zindex 33).
+---Neovim's default floating zindex is 50; anything explicitly set
+---below that signals the window is meant to coexist with normal splits.
+---@param win_id number|nil window ID to check, defaults to current window (0)
+---@return boolean
+function M.is_embedded_floating_window(win_id)
+  if not M.is_floating_window(win_id) then
+    return false
+  end
+  local win_cfg = vim.api.nvim_win_get_config(win_id or 0)
+  return win_cfg.zindex ~= nil and win_cfg.zindex < 50
 end
 
 local executables_cache = {}

@@ -197,27 +197,38 @@ local function compute_direction_horizontal(direction)
 end
 
 ---@param mux_callback fun()|nil
+---@param allow_embedded_nav boolean|nil when true, embedded floating windows (low zindex) are treated as normal splits
 ---@return boolean
-local function handle_floating_window(mux_callback)
-  if utils.is_floating_window() then
-    if config.float_win_behavior == FloatWinBehavior.previous then
-      -- focus the last accessed window.
-      -- if it's also floating, do not attempt to perform the action.
-      local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
-      if utils.is_floating_window(prev_win) then
-        return true
-      end
+local function handle_floating_window(mux_callback, allow_embedded_nav)
+  if not utils.is_floating_window() then
+    return false
+  end
 
-      vim.api.nvim_set_current_win(prev_win)
-      return false
-    elseif config.float_win_behavior == FloatWinBehavior.mux then
-      -- always forward the action to the multiplexer
-      if mux_callback then
-        mux_callback()
-      end
+  -- Embedded floating windows (sidebars/panels with low zindex, e.g.
+  -- snacks explorer) should allow normal wincmd navigation but not resizing.
+  -- See https://github.com/mrjones2014/smart-splits.nvim/issues/342
+  if allow_embedded_nav and utils.is_embedded_floating_window() then
+    return false
+  end
+
+  if config.float_win_behavior == FloatWinBehavior.previous then
+    -- focus the last accessed window.
+    -- if it's also floating, do not attempt to perform the action.
+    local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
+    if utils.is_floating_window(prev_win) then
       return true
     end
+
+    vim.api.nvim_set_current_win(prev_win)
+    return false
+  elseif config.float_win_behavior == FloatWinBehavior.mux then
+    -- always forward the action to the multiplexer
+    if mux_callback then
+      mux_callback()
+    end
+    return true
   end
+
   return false
 end
 
@@ -363,7 +374,7 @@ local function move_cursor(direction, opts)
 
   if handle_floating_window(function()
     mux.move_pane(direction, true, at_edge)
-  end) then
+  end, true) then
     return
   end
 
