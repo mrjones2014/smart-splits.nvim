@@ -34,6 +34,29 @@ function M.is_embedded_floating_window(win_id)
   return win_cfg.zindex ~= nil and win_cfg.zindex < 50
 end
 
+---@param win_id number|nil window ID, defaults to current window
+---@param direction 'left'|'right'|'up'|'down'
+---@return boolean
+function M.is_floating_window_at_screen_edge(win_id, direction)
+  win_id = win_id or vim.api.nvim_get_current_win()
+  if not M.is_floating_window(win_id) then
+    return false
+  end
+  local cfg = vim.api.nvim_win_get_config(win_id)
+  local col = type(cfg.col) == 'number' and cfg.col or 0
+  local row = type(cfg.row) == 'number' and cfg.row or 0
+  if direction == 'left' then
+    return col <= 0
+  elseif direction == 'right' then
+    return col + cfg.width >= vim.o.columns
+  elseif direction == 'up' then
+    return row <= 0
+  elseif direction == 'down' then
+    return row + cfg.height >= vim.o.lines - vim.o.cmdheight
+  end
+  return false
+end
+
 local executables_cache = {}
 
 ---Run a system command.

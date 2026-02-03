@@ -381,6 +381,21 @@ local function move_cursor(direction, opts)
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
   local dir_key = DirectionKeys[direction]
 
+  if utils.is_embedded_floating_window() then
+    if utils.is_floating_window_at_screen_edge(nil, direction) then
+      if mux.move_pane(direction, true, at_edge) then
+        return
+      end
+      return
+    end
+    vim.cmd('wincmd ' .. dir_key)
+    if (direction == Direction.left or direction == Direction.right) and same_row then
+      offset = offset - vim.api.nvim_win_get_position(0)[1]
+      vim.cmd('normal! ' .. offset .. 'H')
+    end
+    return
+  end
+
   -- are we at an edge and attempting to move in the direction of the edge we're already at?
   local win_to_move_to = vim.fn.winnr(vim.v.count1 .. dir_key)
   local win_before = vim.v.count1 == 1 and vim.fn.winnr() or vim.fn.winnr(vim.v.count1 - 1 .. dir_key)
