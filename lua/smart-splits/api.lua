@@ -375,7 +375,6 @@ local function move_cursor(direction, opts)
     end
     return
   end
-
   if handle_floating_window(function()
     mux.move_pane(direction, true, at_edge)
   end) then
