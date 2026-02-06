@@ -199,25 +199,24 @@ end
 ---@param mux_callback fun()|nil
 ---@return boolean
 local function handle_floating_window(mux_callback)
-  if utils.is_floating_window() then
-    if config.float_win_behavior == FloatWinBehavior.previous then
-      -- focus the last accessed window.
-      -- if it's also floating, do not attempt to perform the action.
-      local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
-      if utils.is_floating_window(prev_win) then
-        return true
-      end
+  if not utils.is_floating_window() then
+    return false
+  end
 
-      vim.api.nvim_set_current_win(prev_win)
-      return false
-    elseif config.float_win_behavior == FloatWinBehavior.mux then
-      -- always forward the action to the multiplexer
-      if mux_callback then
-        mux_callback()
-      end
+  if config.float_win_behavior == FloatWinBehavior.previous then
+    local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
+    if utils.is_floating_window(prev_win) then
       return true
     end
+    vim.api.nvim_set_current_win(prev_win)
+    return false
+  elseif config.float_win_behavior == FloatWinBehavior.mux then
+    if mux_callback then
+      mux_callback()
+    end
+    return true
   end
+
   return false
 end
 
@@ -361,14 +360,26 @@ local function move_cursor(direction, opts)
     end
   end
 
+  local dir_key = DirectionKeys[direction]
+  local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
+
+  if utils.is_embedded_floating_window() then
+    if utils.is_floating_window_at_screen_edge(nil, direction) then
+      mux.move_pane(direction, true, at_edge)
+      return
+    end
+    vim.cmd('wincmd ' .. dir_key)
+    if (direction == Direction.left or direction == Direction.right) and same_row then
+      offset = offset - vim.api.nvim_win_get_position(0)[1]
+      vim.cmd('normal! ' .. offset .. 'H')
+    end
+    return
+  end
   if handle_floating_window(function()
     mux.move_pane(direction, true, at_edge)
   end) then
     return
   end
-
-  local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
-  local dir_key = DirectionKeys[direction]
 
   -- are we at an edge and attempting to move in the direction of the edge we're already at?
   local win_to_move_to = vim.fn.winnr(vim.v.count1 .. dir_key)
