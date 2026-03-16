@@ -17,7 +17,7 @@
 ---
 ---@alias SmartSplitsFloatWinBehavior 'previous'|'mux'
 
----@alias SmartSplitsMultiplexerType 'tmux'|'wezterm'|'kitty'|'zellij'
+---@alias SmartSplitsMultiplexerType 'tmux'|'wezterm'|'kitty'|'zellij'|'ghostty'
 
 ---@class SmartSplitsContext
 ---@field mux SmartSplitsMultiplexer|nil Multiplexer API, if one is currently in use
@@ -58,6 +58,8 @@ local M = {
     kitty = 'kitty',
     ---@type SmartSplitsMultiplexerType
     zellij = 'zellij',
+    ---@type SmartSplitsMultiplexerType
+    ghostty = 'ghostty',
   },
 }
 

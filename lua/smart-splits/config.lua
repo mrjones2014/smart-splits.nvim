@@ -41,7 +41,7 @@ local config = { ---@diagnostic disable-line:missing-fields
     'NvimTree',
   },
   default_amount = 3,
-  at_edge = mux_utils.are_we_kitty() and AtEdgeBehavior.stop or AtEdgeBehavior.wrap,
+  at_edge = (mux_utils.are_we_kitty() or mux_utils.are_we_ghostty()) and AtEdgeBehavior.stop or AtEdgeBehavior.wrap,
   float_win_behavior = FloatWinBehavior.previous,
   move_cursor_same_row = false,
   cursor_follows_swapped_bufs = false,
@@ -104,6 +104,8 @@ function M.set_default_multiplexer()
     config.multiplexer_integration = Multiplexer.wezterm
   elseif mux_utils.are_we_kitty() then
     config.multiplexer_integration = Multiplexer.kitty
+  elseif mux_utils.are_we_ghostty() then
+    config.multiplexer_integration = Multiplexer.ghostty
   end
 
   if type(config.multiplexer_integration) == 'string' then
@@ -130,6 +132,17 @@ function M.setup(new_config)
   -- check for incompatible settings
   if mux_utils.are_we_kitty() and config.multiplexer_integration == Multiplexer.kitty and config.at_edge == 'wrap' then
     local msg = 'Kitty multiplexer integration does not support wrapping at edge, setting to "stop"'
+    log.warn(msg)
+    vim.notify_once(msg, vim.log.levels.WARN, { title = 'smart-splits.nvim' })
+    config.at_edge = AtEdgeBehavior.stop
+  end
+
+  if
+    mux_utils.are_we_ghostty()
+    and config.multiplexer_integration == Multiplexer.ghostty
+    and config.at_edge == 'wrap'
+  then
+    local msg = 'Ghostty multiplexer integration does not support wrapping at edge, setting to "stop"'
     log.warn(msg)
     vim.notify_once(msg, vim.log.levels.WARN, { title = 'smart-splits.nvim' })
     config.at_edge = AtEdgeBehavior.stop
