@@ -42,6 +42,25 @@ local WincmdResizeDirection = {
 
 local is_resizing = false
 
+---@param winid number|nil window ID, defaults to current window (0)
+---@return boolean
+local function is_ignored_win(winid)
+  local bufnr = vim.api.nvim_win_get_buf(winid or 0)
+  return vim.tbl_contains(config.ignored_buftypes, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
+    or vim.tbl_contains(config.ignored_filetypes, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
+end
+
+---@param dir_key DirectionKeys
+---@return number|nil window ID of neighbor, or nil if at edge
+local function neighbor_win_id(dir_key)
+  local cur = vim.fn.winnr()
+  local neighbor = vim.fn.winnr(dir_key)
+  if neighbor == cur then
+    return nil
+  end
+  return vim.fn.win_getid(neighbor)
+end
+
 ---@param winnr number|nil window ID, defaults to current window
 ---@return boolean
 local function is_full_height(winnr)
@@ -249,6 +268,16 @@ local function resize(direction, amount)
     -- permanently stuck with empty space below the status bar
     and (mux.resize_pane(direction, amount) or mux.get() ~= nil)
   then
+    return
+  end
+
+  -- don't resize if the current window or the neighbor in the resize direction is ignored
+  if is_ignored_win() then
+    return
+  end
+  local dir_key = DirectionKeys[direction]
+  local neighbor = neighbor_win_id(dir_key)
+  if neighbor and is_ignored_win(neighbor) then
     return
   end
 
