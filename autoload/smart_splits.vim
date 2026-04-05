@@ -49,7 +49,9 @@ function s:encode_b64(str, size)
 endfunction
 
 function smart_splits#write_wezterm_var(var)
-  if filewritable('/dev/fd/2') == 1
+  if filewritable('/dev/tty') == 1
+    let l:success = writefile([a:var], '/dev/tty', 'b') == 0
+  elseif filewritable('/dev/fd/2') == 1
     let l:success = writefile([a:var], '/dev/fd/2', 'b') == 0
   else
     let l:success = chansend(v:stderr, a:var) > 0

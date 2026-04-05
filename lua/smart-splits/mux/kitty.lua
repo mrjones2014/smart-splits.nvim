@@ -123,16 +123,24 @@ function M.resize_pane(direction, amount)
   return code == 0
 end
 
+local function write_tty(data)
+  local tty = io.open('/dev/tty', 'w')
+  if tty then
+    tty:write(data)
+    tty:close()
+  else
+    io.stdout:write(data)
+  end
+end
+
 function M.on_init()
-  -- selene: allow(incorrect_standard_library_use)
   -- selene: allow(bad_string_escape)
-  io.stdout:write('\x1b]1337;SetUserVar=IS_NVIM=MQo\007')
+  write_tty('\x1b]1337;SetUserVar=IS_NVIM=MQo\007')
 end
 
 function M.on_exit()
-  -- selene: allow(incorrect_standard_library_use)
   -- selene: allow(bad_string_escape)
-  io.stdout:write('\x1b]1337;SetUserVar=IS_NVIM\007')
+  write_tty('\x1b]1337;SetUserVar=IS_NVIM\007')
 end
 
 function M.split_pane(direction, _)

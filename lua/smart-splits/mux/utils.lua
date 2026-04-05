@@ -69,12 +69,13 @@ function M.startup()
     return
   end
   if mux.on_init then
-    mux.on_init()
     vim.api.nvim_create_autocmd('VimResume', {
       callback = function()
         mux.on_init()
       end,
     })
+
+    mux.on_init()
   end
   if mux.on_exit then
     vim.api.nvim_create_autocmd({ 'VimSuspend', 'VimLeavePre' }, {
