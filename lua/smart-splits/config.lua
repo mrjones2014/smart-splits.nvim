@@ -31,7 +31,7 @@ local mux_utils = require('smart-splits.mux.utils')
 
 ---@type SmartSplitsConfig
 local config = { ---@diagnostic disable-line:missing-fields
-  wezterm_cli_path = mux_utils.is_WSL() and 'wezterm.exe' or 'wezterm',
+  wezterm_cli_path = mux_utils.are_we_WSL() and 'wezterm.exe' or 'wezterm',
   ignored_buftypes = {
     'nofile',
     'quickfix',
@@ -134,35 +134,6 @@ function M.setup(new_config)
     vim.notify_once(msg, vim.log.levels.WARN, { title = 'smart-splits.nvim' })
     config.at_edge = AtEdgeBehavior.stop
   end
-
-  -- check deprecated settings
-  ---@diagnostic disable:undefined-field
-
-  if config.tmux_integration then
-    vim.deprecate(
-      'config.tmux_integration = true',
-      "config.multiplexer_integration = 'tmux'|'wezterm'|'kitty'",
-      'smart-splits.nvim'
-    )
-    config.multiplexer_integration = Multiplexer.tmux
-  elseif config.tmux_integration == false then
-    config.multiplexer_integration = false
-  end
-
-  if config.disable_tmux_nav_when_zoomed then
-    vim.deprecate(
-      'config.disable_tmux_nav_when_zoomed = true',
-      'config.disable_multiplexer_nav_when_zoomed = true',
-      'smart-splits.nvim'
-    )
-    config.disable_multiplexer_nav_when_zoomed = true
-  end
-
-  if config.wrap_at_edge == false or config.wrap_at_edge == true then
-    config.at_edge = config.wrap_at_edge == true and AtEdgeBehavior.wrap or AtEdgeBehavior.stop
-    vim.deprecate('config.wrap_at_edge', "config.at_edge = 'wrap'|'split'|'stop'", 'smart-splits.nvim')
-  end
-  ---@diagnostic enable:undefined-field
 end
 
 return M

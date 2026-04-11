@@ -28,7 +28,7 @@ end
 
 --- Check if we're in WSL
 ---@return boolean
-function M.is_WSL()
+function M.are_we_WSL()
   return vim.env.WSL_DISTRO_NAME ~= nil and vim.env.WSL_DISTRO_NAME ~= ''
 end
 
