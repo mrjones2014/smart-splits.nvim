@@ -65,8 +65,22 @@
               stylua
               selene
               just
+              lua51Packages.nlua
+              lua51Packages.busted
             ];
           };
+        devShells.ci = pkgs.mkShell {
+          name = "ci";
+
+          packages = with pkgs; [
+            stylua
+            selene
+            just
+            neovim
+            lua51Packages.nlua
+            lua51Packages.busted
+          ];
+        };
       }
     );
 }
