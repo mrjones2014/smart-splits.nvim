@@ -192,6 +192,12 @@ end
 ---@param will_wrap boolean
 ---@param dir_key DirectionKeys
 function M.next_win_or_wrap(will_wrap, dir_key)
+  -- See https://github.com/mrjones2014/smart-splits.nvim/issues/463
+  -- This is really a bug in Neovim, but if we try to do this while in
+  -- cmdwin, it leaves nvim in an invalid state sometimes.
+  if vim.fn.getcmdwintype() ~= '' then
+    return
+  end
   vim.api.nvim_set_current_win(
     vim.fn.win_getid(vim.fn.winnr(string.format('%s%s', will_wrap and '99999' or vim.v.count1, dir_key)))
   )
