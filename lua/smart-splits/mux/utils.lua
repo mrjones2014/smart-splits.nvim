@@ -26,6 +26,16 @@ function M.are_we_kitty()
   return vim.env.KITTY_LISTEN_ON ~= nil
 end
 
+---Check if we're in a Herdr session
+---@return boolean
+function M.are_we_herdr()
+  if M.are_we_gui() then
+    return false
+  end
+
+  return vim.env.HERDR_SOCKET_PATH ~= nil and vim.env.HERDR_SOCKET_PATH ~= ''
+end
+
 --- Check if we're in WSL
 ---@return boolean
 function M.are_we_WSL()

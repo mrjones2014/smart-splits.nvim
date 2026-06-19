@@ -1,0 +1,54 @@
+id = "smart-splits.nvim"
+name = "smart-splits.nvim"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "smart navigation between Neovim windows and Herdr panes."
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "move-left"
+title = "Smart move left"
+contexts = ["pane"]
+command = ["bash", "dispatch.sh", "move", "left"]
+
+[[actions]]
+id = "move-down"
+title = "Smart move down"
+contexts = ["pane"]
+command = ["bash", "dispatch.sh", "move", "down"]
+
+[[actions]]
+id = "move-up"
+title = "Smart move up"
+contexts = ["pane"]
+command = ["bash", "dispatch.sh", "move", "up"]
+
+[[actions]]
+id = "move-right"
+title = "Smart move right"
+contexts = ["pane"]
+command = ["bash", "dispatch.sh", "move", "right"]
+
+[[actions]]
+id = "resize-left"
+title = "Smart resize left"
+contexts = ["pane"]
+command = ["bash", "dispatch.sh", "resize", "left"]
+
+[[actions]]
+id = "resize-down"
+title = "Smart resize down"
+contexts = ["pane"]
+command = ["bash", "dispatch.sh", "resize", "down"]
+
+[[actions]]
+id = "resize-up"
+title = "Smart resize up"
+contexts = ["pane"]
+command = ["bash", "dispatch.sh", "resize", "up"]
+
+[[actions]]
+id = "resize-right"
+title = "Smart resize right"
+contexts = ["pane"]
+command = ["bash", "dispatch.sh", "resize", "right"]

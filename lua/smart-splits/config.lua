@@ -25,6 +25,7 @@ local mux_utils = require('smart-splits.mux.utils')
 ---@field wezterm_cli_path string|nil
 ---@field kitty_password string|nil
 ---@field zellij_move_focus_or_tab boolean
+---@field herdr_cli_path string|nil
 ---@field setup fun(cfg:table)
 ---@field set_default_multiplexer fun():string|nil
 ---@field log_level 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
@@ -53,6 +54,7 @@ local config = { ---@diagnostic disable-line:missing-fields
   disable_multiplexer_nav_when_zoomed = true,
   kitty_password = nil,
   zellij_move_focus_or_tab = false,
+  herdr_cli_path = nil,
   log_level = 'info',
 }
 
@@ -96,7 +98,9 @@ function M.set_default_multiplexer()
   end
 
   local term = vim.trim((vim.env.TERM_PROGRAM or ''):lower())
-  if term == 'tmux' then
+  if mux_utils.are_we_herdr() then
+    config.multiplexer_integration = Multiplexer.herdr
+  elseif term == 'tmux' then
     config.multiplexer_integration = Multiplexer.tmux
   elseif vim.env.ZELLIJ ~= nil then
     config.multiplexer_integration = 'zellij'
