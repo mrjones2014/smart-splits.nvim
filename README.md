@@ -226,7 +226,7 @@ require('smart-splits').swap_buf_right({ move_cursor = true })
 ### Multiplexer Integrations
 
 `smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `zellij`, `wezterm`, `kitty`, or `herdr` panes.
-You will need to set up keymaps in your terminal multiplexer config to match the Neovim keymaps.
+You will need to set up keymaps in your `tmux`, `wezterm`, `kitty`, or `herdr` configs to match the Neovim keymaps.
 
 You can also set the desired multiplexer integration in lazy environments before the plugin is loaded by setting
 `vim.g.smart_splits_multiplexer_integration`. The values are the same as described in [Configuration](#configuration).
@@ -563,7 +563,7 @@ To make this work, you will need to forward the Kitty socket, what exposes your 
 According to Kitty's [documentation](https://sw.kovidgoyal.net/kitty/kittens/ssh/#opt-kitten-ssh.forward_remote_control):
 
 > **WARNING**: This allows any software on the remote host full access to the local computer, so only do it for trusted remote hosts.
-
+ 
 In addition to the above instructions, you will need to add the following to your local `~/.config/kitty/ssh.conf`:
 
 ```
@@ -600,17 +600,13 @@ require('smart-splits').setup({
 })
 ```
 
-Install the bundled Herdr plugin and operate the directly through the plugin:
-
-```sh
-herdr plugin install mrjones2014/smart-splits.nvim/herdr
-```
-
-If you are developing locally, link the working checkout instead:
+To enable tmux-style direct keybindings in both Neovim and non-Neovim panes, link the bundled Herdr plugin from your local checkout and route the keys through plugin actions:
 
 ```sh
 herdr plugin link /path/to/smart-splits.nvim/herdr
 ```
+
+Then add the following to your Herdr keybindings:
 
 ```toml
 [[keys.command]]
@@ -654,11 +650,11 @@ type = "plugin_action"
 command = "smart-splits.nvim.resize-right"
 ```
 
-The Herdr plugin invokes smart-splits commands directly in Neovim when the focused pane is a Neovim pane; otherwise it focuses or resizes the adjacent Herdr pane. Neovim panes are identified using a marker recorded on startup, which keeps dispatch responsive without coupling Herdr keybindings to Neovim keymaps.
+The dispatch script routes the keypress to Neovim when the focused pane is a Neovim pane (identified via a marker file written on startup), otherwise it focuses or resizes the adjacent Herdr pane.
 
 #### Configuring the Herdr resize amount
 
-By default the plugin resizes non-Neovim Herdr panes by 0.03. To customize this, create a `config.sh` file in the plugin config directory Herdr creates for you:
+By default the dispatch script resizes non-Neovim Herdr panes by `0.03`. To customize this, create a `config.sh` file in the plugin config directory Herdr creates for you:
 
 ```sh
 herdr plugin config-dir smart-splits.nvim
@@ -670,9 +666,7 @@ Create `config.sh` in that directory and set `SMART_SPLITS_HERDR_RESIZE_AMOUNT`:
 SMART_SPLITS_HERDR_RESIZE_AMOUNT=0.01
 ```
 
-The dispatch script sources this file before each resize, so changes take effect on the next key press — no restart needed.
-
-If you prefer, you can still export `SMART_SPLITS_HERDR_RESIZE_AMOUNT` as an environment variable; a config file value takes precedence over the default, and an exported variable overrides both.
+The dispatch script sources this file before each resize, so changes take effect on the next key press. You can also export `SMART_SPLITS_HERDR_RESIZE_AMOUNT` as an environment variable; an exported variable takes precedence over the config file.
 
 ### Multiplexer Lua API
 

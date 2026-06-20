@@ -235,8 +235,9 @@ LUA API                                      *smart-splits.nvim-usage-lua-api*
 MULTIPLEXER INTEGRATIONS    *smart-splits.nvim-usage-multiplexer-integrations*
 
 `smart-splits.nvim` can also enable seamless navigation between Neovim splits
-and `tmux`, `zellij`, `wezterm`, `kitty`, or `herdr` panes. You will need to set
-up keymaps in your terminal multiplexer config to match the Neovim keymaps.
+and `tmux`, `zellij`, `wezterm`, `kitty`, or `herdr` panes. You will need to
+set up keymaps in your `tmux`, `wezterm`, `kitty`, or `herdr` configs to match
+the Neovim keymaps.
 
 You can also set the desired multiplexer integration in lazy environments
 before the plugin is loaded by setting
@@ -624,7 +625,6 @@ For troubleshooting, please refer to Kitty’s SSH remote control documentation
 <https://sw.kovidgoyal.net/kitty/kittens/ssh/>.
 
 
-
 CREDITS
 
 Thanks @knubie for inspiration for the Kitty implementation from
@@ -645,78 +645,60 @@ is set, the integration is auto-detected; otherwise set it explicitly:
     })
 <
 
-For Neovim-only smart navigation, keep Herdr pane navigation on prefix bindings
-so `Ctrl+h/j/k/l` reaches Neovim:
-
->toml
-    [keys]
-    focus_pane_left = "prefix+h"
-    focus_pane_down = "prefix+j"
-    focus_pane_up = "prefix+k"
-    focus_pane_right = "prefix+l"
-<
-
-To get tmux-style direct bindings in both Neovim and non-Neovim panes, link the
-bundled Herdr plugin and route the direct keys through plugin actions:
+To enable tmux-style direct keybindings in both Neovim and non-Neovim panes,
+link the bundled Herdr plugin and route the keys through plugin actions:
 
 >sh
     herdr plugin link /path/to/smart-splits.nvim/herdr
 <
 
 >toml
-    [keys]
-    focus_pane_left = "prefix+h"
-    focus_pane_down = "prefix+j"
-    focus_pane_up = "prefix+k"
-    focus_pane_right = "prefix+l"
-    
     [[keys.command]]
     key = "ctrl+h"
     type = "plugin_action"
     command = "smart-splits.nvim.move-left"
-    
+
     [[keys.command]]
     key = "ctrl+j"
     type = "plugin_action"
     command = "smart-splits.nvim.move-down"
-    
+
     [[keys.command]]
     key = "ctrl+k"
     type = "plugin_action"
     command = "smart-splits.nvim.move-up"
-    
+
     [[keys.command]]
     key = "ctrl+l"
     type = "plugin_action"
     command = "smart-splits.nvim.move-right"
-    
+
     [[keys.command]]
     key = "alt+h"
     type = "plugin_action"
     command = "smart-splits.nvim.resize-left"
-    
+
     [[keys.command]]
     key = "alt+j"
     type = "plugin_action"
     command = "smart-splits.nvim.resize-down"
-    
+
     [[keys.command]]
     key = "alt+k"
     type = "plugin_action"
     command = "smart-splits.nvim.resize-up"
-    
+
     [[keys.command]]
     key = "alt+l"
     type = "plugin_action"
     command = "smart-splits.nvim.resize-right"
 <
 
-The Herdr plugin invokes smart-splits commands directly in Neovim when the
-focused pane is a Neovim pane; otherwise it focuses or resizes the adjacent
-Herdr pane. Neovim panes are identified using a marker recorded on startup,
-which keeps dispatch responsive without coupling Herdr keybindings to Neovim
-keymaps. Set `SMART_SPLITS_HERDR_RESIZE_AMOUNT` in the Herdr environment to
-customize the non-Neovim resize step size.
+The dispatch script routes the keypress to Neovim when the focused pane is a
+Neovim pane (identified via a marker file written on startup), otherwise it
+focuses or resizes the adjacent Herdr pane. Set
+`SMART_SPLITS_HERDR_RESIZE_AMOUNT` in the Herdr environment to customize the
+non-Neovim resize step size.
 
 MULTIPLEXER LUA API              *smart-splits.nvim-usage-multiplexer-lua-api*
 

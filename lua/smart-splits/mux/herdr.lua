@@ -38,18 +38,16 @@ local function nvim_server_address()
   if servername ~= nil and servername ~= '' then
     return servername
   end
-
-  local ok, address = pcall(vim.fn.serverstart)
-  if ok and type(address) == 'string' and address ~= '' then
-    return address
-  end
   return nil
 end
 
 local function write_marker(pane_id)
   pcall(vim.fn.mkdir, marker_dir(), 'p')
 
-  local lines = { 'version=1' }
+  local lines = {
+    'version=2',
+    'pid=' .. tostring(vim.fn.getpid()),
+  }
   local server = nvim_server_address()
   if server then
     table.insert(lines, 'server=' .. server)
@@ -65,42 +63,30 @@ local function remove_marker(pane_id)
   pcall(vim.fn.delete, marker_path(pane_id))
 end
 
----@param output string|table|nil
----@param key string|nil
----@return table|nil
 local function herdr_result(output, key)
-  if type(output) ~= 'string' or #output == 0 then
+  if not output or #output == 0 then
     return nil
   end
-
   local ok, decoded = pcall(vim.json.decode, output)
-  if not ok or type(decoded) ~= 'table' or decoded.error ~= nil or type(decoded.result) ~= 'table' then
+  if not ok or type(decoded) ~= 'table' then
     return nil
   end
-
+  local result = decoded.result or decoded
   if key then
-    return decoded.result[key]
+    return result[key]
   end
-  return decoded.result
+  return result
 end
 
----Execute a herdr CLI command
----@param args string[]
----@param as_list boolean|nil return output as list instead of string
----@return string|table|nil, number|nil
-local function herdr_exec(args, as_list)
+local function herdr_exec(args)
   local cli_path = config.herdr_cli_path or 'herdr'
   local cmd = vim.list_extend({ cli_path }, args)
   local ok, output, code = pcall(require('smart-splits.utils').system, cmd)
   if not ok then
-    log.debug('herdr command failed: %s %s', table.concat(cmd, ' '), output)
+    log.debug('herdr command failed: %s', table.concat(cmd, ' '))
     return nil, 1
   end
-  if as_list then
-    return vim.split(output or '', '\n', { trimempty = true }), code
-  else
-    return output, code
-  end
+  return output, code
 end
 
 ---@type SmartSplitsMultiplexer
@@ -117,8 +103,8 @@ function M.current_pane_id()
     return nil
   end
 
-  local list_output, list_code = herdr_exec({ 'pane', 'list' })
-  local panes = list_code == 0 and herdr_result(list_output, 'panes') or nil
+  local output, code = herdr_exec({ 'pane', 'list' })
+  local panes = code == 0 and herdr_result(output, 'panes') or nil
   if type(panes) == 'table' then
     for _, pane in ipairs(panes) do
       if pane.focused == true and pane.pane_id ~= nil then
@@ -133,17 +119,14 @@ function M.current_pane_id()
     return tostring(pane_id)
   end
 
-  local output, code = herdr_exec({ 'pane', 'current' })
-  local pane = code == 0 and herdr_result(output, 'pane') or nil
+  local current_output, current_code = herdr_exec({ 'pane', 'current' })
+  local pane = current_code == 0 and herdr_result(current_output, 'pane') or nil
   if type(pane) == 'table' and pane.pane_id ~= nil then
     return tostring(pane.pane_id)
   end
   return nil
 end
 
----Check if the current pane is at the edge in the given direction.
----@param direction SmartSplitsDirection
----@return boolean
 function M.current_pane_at_edge(direction)
   if not M.is_in_session() then
     return false
@@ -153,8 +136,8 @@ function M.current_pane_at_edge(direction)
     return false
   end
 
-  local edges_output, edges_code = herdr_exec({ 'pane', 'edges', '--current' })
-  local edges = edges_code == 0 and herdr_result(edges_output, 'edges') or nil
+  local output, code = herdr_exec({ 'pane', 'edges', '--current' })
+  local edges = code == 0 and herdr_result(output, 'edges') or nil
   if type(edges) == 'table' and edges[dir] ~= nil then
     return edges[dir] == true
   end
@@ -184,15 +167,8 @@ function M.next_pane(direction)
   if not dir then
     return false
   end
-  local output, code = herdr_exec({ 'pane', 'focus', '--direction', dir, '--current' })
-  if code ~= 0 then
-    return false
-  end
-  local focus = herdr_result(output, 'focus')
-  if type(focus) == 'table' then
-    return focus.changed == true
-  end
-  return true
+  local _, code = herdr_exec({ 'pane', 'focus', '--direction', dir, '--current' })
+  return code == 0
 end
 
 function M.resize_pane(direction, amount)
@@ -203,15 +179,8 @@ function M.resize_pane(direction, amount)
   if not dir then
     return false
   end
-  local output, code = herdr_exec({ 'pane', 'resize', '--direction', dir, '--amount', tostring(amount), '--current' })
-  if code ~= 0 then
-    return false
-  end
-  local resize = herdr_result(output, 'resize')
-  if type(resize) == 'table' then
-    return resize.changed == true
-  end
-  return true
+  local _, code = herdr_exec({ 'pane', 'resize', '--direction', dir, '--amount', tostring(amount), '--current' })
+  return code == 0
 end
 
 function M.split_pane(direction, size)
@@ -246,55 +215,46 @@ end
 
 function M.on_init()
   local pane_id = M.current_pane_id()
-  if pane_id then
-    registered_pane_id = tostring(pane_id)
-    write_marker(registered_pane_id)
-    vim.system(
-      {
-        config.herdr_cli_path or 'herdr',
-        'pane',
-        'report-agent',
-        registered_pane_id,
-        '--source',
-        'smart-splits',
-        '--agent',
-        'neovim',
-        '--state',
-        'idle',
-      },
-      { detach = true }
-    )
+  if not pane_id then
+    return
   end
-
+  registered_pane_id = tostring(pane_id)
+  write_marker(registered_pane_id)
+  vim.fn.jobstart({
+    config.herdr_cli_path or 'herdr',
+    'pane',
+    'report-agent',
+    registered_pane_id,
+    '--source',
+    'smart-splits',
+    '--agent',
+    'neovim',
+    '--state',
+    'idle',
+  }, { detach = true })
 end
 
 function M.on_exit()
   local pane_id = registered_pane_id or M.current_pane_id()
-  if pane_id then
-    remove_marker(pane_id)
-    vim.system(
-      {
-        config.herdr_cli_path or 'herdr',
-        'pane',
-        'release-agent',
-        tostring(pane_id),
-        '--source',
-        'smart-splits',
-        '--agent',
-        'neovim',
-      },
-      { detach = true }
-    )
+  if not pane_id then
+    return
   end
+  remove_marker(pane_id)
+  vim.fn.jobstart({
+    config.herdr_cli_path or 'herdr',
+    'pane',
+    'release-agent',
+    tostring(pane_id),
+    '--source',
+    'smart-splits',
+    '--agent',
+    'neovim',
+  }, { detach = true })
   registered_pane_id = nil
 end
 
 function M.update_mux_layout_details()
-  if not M.is_in_session() then
-    return
-  end
-  -- Fetch layout details for potential future caching/optimization.
-  herdr_exec({ 'pane', 'list' })
+  -- Not implemented yet - check Kitty mux for reference
 end
 
 return M
