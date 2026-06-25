@@ -51,13 +51,18 @@ end
 
 describe('mux delegation', function()
   local mux_api
+  local original_env = {}
 
   before_each(function()
+    original_env.HERDR_ENV = vim.env.HERDR_ENV
+    original_env.HERDR_PANE_ID = vim.env.HERDR_PANE_ID
     fresh_modules()
     mux_api = require('smart-splits.mux')
   end)
 
   after_each(function()
+    vim.env.HERDR_ENV = original_env.HERDR_ENV
+    vim.env.HERDR_PANE_ID = original_env.HERDR_PANE_ID
     fresh_modules()
   end)
 
@@ -138,6 +143,202 @@ describe('mux delegation', function()
       mux_api.__mux = mock.mux
       local result = mux_api.resize_pane('right', 3)
       assert.is_false(result)
+    end)
+  end)
+
+  describe('with herdr backend', function()
+    before_each(function()
+      fresh_modules()
+      require('smart-splits.config').setup({ multiplexer_integration = 'herdr' })
+      mux_api = require('smart-splits.mux')
+      vim.env.HERDR_ENV = '1'
+      vim.env.HERDR_PANE_ID = 'ws1:p2'
+    end)
+
+    it('loads the herdr backend when configured', function()
+      local backend = mux_api.get()
+
+      assert.is_not_nil(backend)
+      assert.equals('herdr', backend.type)
+    end)
+
+    it('maps herdr CLI operations correctly', function()
+      local original_system = vim.system
+      local calls = {}
+
+      vim.system = function(cmd, opts)
+        table.insert(calls, vim.deepcopy(cmd))
+        local stdout = ''
+
+        if cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'list' then
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              panes = {
+                { pane_id = 'ws1:p2', focused = true },
+                { pane_id = 'ws1:p3', focused = false },
+              },
+            },
+          })
+        elseif cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'edges' then
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              edges = {
+                left = false,
+                right = true,
+                up = false,
+                down = false,
+              },
+            },
+          })
+        elseif cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'focus' then
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              focus = {
+                changed = true,
+              },
+            },
+          })
+        elseif cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'resize' then
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              resize = {
+                changed = true,
+              },
+            },
+          })
+        elseif cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'split' then
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              pane = {
+                pane_id = 'ws1:p3',
+              },
+            },
+          })
+        elseif cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'swap' then
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              swap = {
+                changed = true,
+              },
+            },
+          })
+        end
+
+        return {
+          wait = function()
+            return { code = 0, stdout = stdout, stderr = '', opts = opts }
+          end,
+        }
+      end
+
+      local backend = mux_api.get()
+      assert.is_true(backend.is_in_session())
+      assert.equals('ws1:p2', backend.current_pane_id())
+      assert.is_true(backend.current_pane_at_edge('right'))
+      assert.is_true(backend.next_pane('left'))
+      assert.is_true(backend.resize_pane('left', 3))
+      assert.is_true(backend.split_pane('right'))
+
+      assert.same({ 'herdr', 'pane', 'list' }, calls[1])
+      assert.same({ 'herdr', 'pane', 'edges', '--current' }, calls[2])
+      assert.same({ 'herdr', 'pane', 'focus', '--direction', 'left', '--current' }, calls[3])
+      assert.same({ 'herdr', 'pane', 'resize', '--direction', 'left', '--amount', '3', '--current' }, calls[4])
+      assert.same({ 'herdr', 'pane', 'split', '--direction', 'right', '--current', '--focus' }, calls[5])
+
+      vim.system = original_system
+    end)
+
+    it('maps left splits to split-then-swap', function()
+      local original_system = vim.system
+      local calls = {}
+
+      vim.system = function(cmd)
+        table.insert(calls, vim.deepcopy(cmd))
+        local stdout = ''
+
+        if cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'split' then
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              pane = {
+                pane_id = 'ws1:p3',
+              },
+            },
+          })
+        elseif cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'swap' then
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              swap = {
+                changed = true,
+              },
+            },
+          })
+        end
+
+        return {
+          wait = function()
+            return { code = 0, stdout = stdout, stderr = '' }
+          end,
+        }
+      end
+
+      local backend = mux_api.get()
+      assert.is_true(backend.split_pane('left'))
+
+      assert.same({ 'herdr', 'pane', 'split', '--direction', 'right', '--current', '--focus' }, calls[1])
+      assert.same({ 'herdr', 'pane', 'swap', '--direction', 'right', '--current' }, calls[2])
+
+      vim.system = original_system
+    end)
+
+    it('reports a successful mux move when herdr focus changes the focused pane', function()
+      local original_system = vim.system
+      local focused_pane = 'ws1:p2'
+
+      vim.system = function(cmd)
+        local stdout = ''
+
+        if cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'list' then
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              panes = {
+                { pane_id = 'ws1:p2', focused = focused_pane == 'ws1:p2' },
+                { pane_id = 'ws1:p3', focused = focused_pane == 'ws1:p3' },
+              },
+            },
+          })
+        elseif cmd[1] == 'herdr' and cmd[2] == 'pane' and cmd[3] == 'focus' then
+          focused_pane = 'ws1:p3'
+          stdout = vim.json.encode({
+            ok = true,
+            result = {
+              focus = {
+                changed = true,
+                focused_pane_id = focused_pane,
+              },
+            },
+          })
+        end
+
+        return {
+          wait = function()
+            return { code = 0, stdout = stdout, stderr = '' }
+          end,
+        }
+      end
+
+      local result = mux_api.move_pane('right', false, 'wrap')
+      assert.is_true(result)
+
+      vim.system = original_system
     end)
   end)
 end)

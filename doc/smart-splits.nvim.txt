@@ -100,7 +100,7 @@ Defaults are shown below:
       -- a context object with the following fields:
       -- {
       --    mux = {
-      --      type:'tmux'|'wezterm'|'kitty'|'zellij'
+      --      type:'tmux'|'wezterm'|'kitty'|'zellij'|'herdr'
       --      current_pane_id():number,
       --      is_in_session(): boolean
       --      current_pane_is_zoomed():boolean,
@@ -235,14 +235,57 @@ LUA API                                      *smart-splits.nvim-usage-lua-api*
 MULTIPLEXER INTEGRATIONS    *smart-splits.nvim-usage-multiplexer-integrations*
 
 `smart-splits.nvim` can also enable seamless navigation between Neovim splits
-and `tmux`, `zellij`, `wezterm`, or `kitty` panes. You will need to set up
-keymaps in your `tmux`, `wezterm`, or `kitty` configs to match the Neovim
+and `tmux`, `zellij`, `wezterm`, `kitty`, or `herdr` panes. You will need to set up
+keymaps in your terminal multiplexer config to match the Neovim
 keymaps.
 
 You can also set the desired multiplexer integration in lazy environments
 before the plugin is loaded by setting
 `vim.g.smart_splits_multiplexer_integration`. The values are the same as
 described in |smart-splits.nvim-configuration|.
+
+
+HERDR ~
+
+Herdr support works from the Neovim side with `smart-splits.nvim`, but if you
+want the same navigation keys to work in non-Neovim Herdr panes as well, you
+should add direct Herdr bindings.
+
+Herdr's default pane movement keys are `prefix+h/j/k/l`. To get tmux-style
+"same keys everywhere" behavior, add direct bindings in
+`~/.config/herdr/config.toml` while keeping the prefix bindings:
+
+>toml
+    [keys]
+    focus_pane_left = ["prefix+h", "ctrl+alt+h"]
+    focus_pane_down = ["prefix+j", "ctrl+alt+j"]
+    focus_pane_up = ["prefix+k", "ctrl+alt+k"]
+    focus_pane_right = ["prefix+l", "ctrl+alt+l"]
+<
+
+Then map the same keys in Neovim:
+
+>lua
+    vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
+    vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
+    vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
+    vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
+<
+
+With that setup:
+
+- in Neovim panes, `<C-h/j/k/l>` moves between Neovim splits first, then
+  crosses into Herdr panes at the edge
+- in non-Neovim Herdr panes, `ctrl+alt+h/j/k/l` moves between Herdr panes
+  directly
+- `prefix+h/j/k/l` continues to work everywhere in Herdr
+
+
+  [!NOTE] Herdr's own documentation recommends `ctrl+alt` as the safest
+  direct-chord family across terminals and operating systems. Using plain
+  `ctrl+h/j/k/l` as Herdr-wide direct bindings is usually a bad idea because
+  those chords are commonly consumed by terminal applications, shells, and
+  editors before Herdr sees them.
 
 
 TMUX ~
@@ -657,7 +700,7 @@ currently in use. The API offers the following methods:
     ---@field next_pane fun(direction:'left'|'right'|'up'|'down'):boolean
     ---@field resize_pane fun(direction:'left'|'right'|'up'|'down', amount:number):boolean
     ---@field split_pane fun(direction:'left'|'right'|'up'|'down',size:number|nil):boolean
-    ---@field type 'tmux'|'wezterm'|'kitty'|'zellij'
+    ---@field type 'tmux'|'wezterm'|'kitty'|'zellij'|'herdr'
 <
 
 

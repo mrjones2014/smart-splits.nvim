@@ -10,9 +10,21 @@ end
 
 describe('smart-splits.config', function()
   local config
+  local original_env = {}
 
   before_each(function()
+    original_env.HERDR_ENV = vim.env.HERDR_ENV
+    original_env.TERM_PROGRAM = vim.env.TERM_PROGRAM
+    original_env.ZELLIJ = vim.env.ZELLIJ
+    original_env.KITTY_LISTEN_ON = vim.env.KITTY_LISTEN_ON
     config = fresh_config()
+  end)
+
+  after_each(function()
+    vim.env.HERDR_ENV = original_env.HERDR_ENV
+    vim.env.TERM_PROGRAM = original_env.TERM_PROGRAM
+    vim.env.ZELLIJ = original_env.ZELLIJ
+    vim.env.KITTY_LISTEN_ON = original_env.KITTY_LISTEN_ON
   end)
 
   describe('setup', function()
@@ -65,6 +77,19 @@ describe('smart-splits.config', function()
     it('can disable multiplexer integration', function()
       config.setup({ multiplexer_integration = false })
       assert.equals(false, config.multiplexer_integration)
+    end)
+  end)
+
+  describe('set_default_multiplexer', function()
+    it('auto-detects herdr from HERDR_ENV', function()
+      vim.env.HERDR_ENV = '1'
+      vim.env.TERM_PROGRAM = ''
+      vim.env.ZELLIJ = nil
+      vim.env.KITTY_LISTEN_ON = nil
+
+      config.set_default_multiplexer()
+
+      assert.equals('herdr', config.multiplexer_integration)
     end)
   end)
 end)
