@@ -152,7 +152,6 @@ describe('mux delegation', function()
       require('smart-splits.config').setup({ multiplexer_integration = 'herdr' })
       mux_api = require('smart-splits.mux')
       vim.env.HERDR_ENV = '1'
-      vim.env.HERDR_PANE_ID = 'ws1:p2'
     end)
 
     it('loads the herdr backend when configured', function()

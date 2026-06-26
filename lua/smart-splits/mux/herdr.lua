@@ -48,14 +48,7 @@ function M.current_pane_id()
       end
     end
   end
-
-  local pane_id = vim.env.HERDR_PANE_ID
-  if pane_id ~= nil and #pane_id > 0 then
-    return pane_id
-  end
-
-  data = herdr_exec_json({ 'pane', 'current', '--current' })
-  return data and data.result and data.result.pane and data.result.pane.pane_id or nil
+  return nil
 end
 
 function M.current_pane_at_edge(direction)
