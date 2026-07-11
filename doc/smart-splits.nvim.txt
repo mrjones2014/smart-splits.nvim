@@ -638,8 +638,19 @@ Thanks to @chancez for the relative resize Python kitten
 HERDR ~
 
 Herdr support works from the Neovim side with `smart-splits.nvim`: when you
-press your Neovim mappings, `smart-splits.nvim` can cross from a Neovim edge
-split into a neighboring Herdr pane.
+press your Neovim mappings, `smart-splits.nvim` moves between Neovim splits,
+and crosses into a neighboring Herdr pane when Neovim hits a split edge.
+
+For seamless `<C-h/j/k/l>` that works the same inside and outside Neovim —
+just like the tmux integration — `smart-splits.nvim` ships a small Herdr
+plugin (`herdr-plugin.toml` + `scripts/herdr-navigate.sh`). It intercepts the
+keys in Herdr, asks `herdr pane process-info` whether the focused pane is
+running Vim/Neovim, and either forwards the key into the pane (so Vim can
+handle its own splits, and at an edge call back into herdr to cross the pane
+boundary) or moves Herdr focus directly. When the pane is already at an edge
+in the requested direction (no neighbor), the key is forwarded back to the
+running app so shell defaults like `<C-l>` (clear screen) and `<C-h>`
+(backspace) keep working. Requirements: herdr `>= 0.7.0` and `jq` on `PATH`.
 
 Map the movement keys in Neovim as usual:
 
@@ -650,74 +661,61 @@ Map the movement keys in Neovim as usual:
     vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
 <
 
-If you run Herdr inside `tmux`, and you want direct `ctrl+alt+h/j/k/l` pane
-navigation in non-Neovim Herdr panes, you can make it work by configuring both
-Herdr and tmux.
+Link the plugin and add the key bindings in `~/.config/herdr/config.toml`.
+Replace the path below with where your plugin manager cloned
+`smart-splits.nvim` (the `herdr-plugin.toml` lives at the repo root):
 
-Set the Herdr bindings in `~/.config/herdr/config.toml`:
+>bash
+    herdr plugin link /path/to/smart-splits.nvim
+<
 
 >toml
-    [keys]
-    focus_pane_left = ["prefix+h", "ctrl+alt+h"]
-    focus_pane_down = ["prefix+j", "ctrl+alt+j"]
-    focus_pane_up = ["prefix+k", "ctrl+alt+k"]
-    focus_pane_right = ["prefix+l", "ctrl+alt+l"]
+    [[keys.command]]
+    key = "ctrl+h"
+    type = "plugin_action"
+    command = "smart-splits.nvim.left"
+    description = "navigate left (vim/herdr)"
+
+    [[keys.command]]
+    key = "ctrl+j"
+    type = "plugin_action"
+    command = "smart-splits.nvim.down"
+    description = "navigate down (vim/herdr)"
+
+    [[keys.command]]
+    key = "ctrl+k"
+    type = "plugin_action"
+    command = "smart-splits.nvim.up"
+    description = "navigate up (vim/herdr)"
+
+    [[keys.command]]
+    key = "ctrl+l"
+    type = "plugin_action"
+    command = "smart-splits.nvim.right"
+    description = "navigate right (vim/herdr)"
 <
 
-If Herdr is running inside `tmux`, add the following to
-`~/.tmux.conf`/`~/.config/tmux/tmux.conf`:
-
->tmux
-    set -s extended-keys always
-    set -s extended-keys-format xterm
-    # Replace `xterm-kitty` with your tmux client terminal name if needed.
-    # Check it with: tmux display-message -p '#{client_termname}'
-    set -as terminal-features ",xterm-kitty:extkeys"
-
-    # Forward Ctrl+Alt+h/j/k/l to pane apps as raw CSI-u sequences that Herdr can parse.
-    bind -n C-M-h send-keys -H 1b 5b 31 30 34 3b 37 75
-    bind -n C-M-j send-keys -H 1b 5b 31 30 36 3b 37 75
-    bind -n C-M-k send-keys -H 1b 5b 31 30 37 3b 37 75
-    bind -n C-M-l send-keys -H 1b 5b 31 30 38 3b 37 75
-<
-
-Reload both configs:
+Reload herdr:
 
 >bash
     herdr server reload-config
-    tmux source-file ~/.tmux.conf
 <
 
-With that setup:
+Other TUIs that own `Ctrl+h/j/k/l` themselves (for example `lazygit`, `k9s`)
+can be added to the forwarding list by setting
+`SMART_SPLITS_HERDR_PASSTHROUGH_RE` in herdr's environment to a regex matched
+against the lower-cased foreground process name:
 
-- in Neovim panes, `<C-h/j/k/l>` moves between Neovim splits first, then
-  crosses into Herdr panes at the edge
-- in non-Neovim Herdr panes, `ctrl+alt+h/j/k/l` moves between Herdr panes
-  directly
-- `prefix+h/j/k/l` continues to work everywhere in Herdr as a fallback
+>bash
+    export SMART_SPLITS_HERDR_PASSTHROUGH_RE='^(lazygit|k9s|vi-sql)$'
+<
 
-
-  [!NOTE] This is not equivalent to the tmux integration. tmux can
-  conditionally decide whether to send `<C-h/j/k/l>` into Neovim or use them
-  for pane navigation. Herdr's documented keybinding config does not currently
-  expose an equivalent pane-aware conditional.
-
-  In particular, binding `ctrl+h/j/k/l` as Herdr direct keys or custom
-  commands will cause Herdr to intercept those keys before Neovim sees them, so
-  they are not drop-in replacements for the tmux setup.
-
-  The `ctrl+alt+h/j/k/l` solution above is specifically for the `tmux ->
-  herdr` case. The important piece is the raw `send-keys -H ...` forwarding in
-  tmux; without it, tmux may recognize `C-M-h/j/k/l` itself but fail to pass a
-  Herdr-compatible sequence into the pane.
-
-  The reason tmux can do this more cleanly is that `smart-splits.nvim` writes
-  pane-local state into tmux (the `@pane-is-vim` flag), and tmux key bindings
-  can branch on that state before deciding whether to forward a key into the
-  pane or to move between tmux panes. Herdr currently exposes direct bindings
-  and custom commands, but not a documented equivalent of that pane-local
-  conditional dispatch in its keybinding config. Once a key is bound in Herdr,
-  Herdr handles it first.
+  [!NOTE] `Ctrl+H` and Backspace share byte `0x08` unless the kitty keyboard
+  protocol is active. Neovim ≥ 0.10 enables it automatically in herdr panes,
+  keeping `<C-h>` distinct. On older Vim you may need to map `<BS>`
+  separately. `Ctrl+L` (clear screen) and `Ctrl+K` (kill line) in the shell
+  keep working in single-pane windows thanks to edge passthrough; across
+  panes the navigation chord wins (same as in tmux).
 
 
 MULTIPLEXER LUA API              *smart-splits.nvim-usage-multiplexer-lua-api*
