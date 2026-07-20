@@ -167,9 +167,10 @@ function M.on_exit()
   if is_nested_vim then
     return
   end
-  local pane_id = M.current_pane_id()
+  -- Clear the marker from the pane that owns this Neovim process.
+  local pane_id = os.getenv('TMUX_PANE')
   if not pane_id then
-    log.warn('tmux init: could not detect pane ID!')
+    log.warn('tmux exit: could not detect pane ID!')
     return
   end
   local socket = get_socket_path()
