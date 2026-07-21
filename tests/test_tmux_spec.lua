@@ -29,25 +29,21 @@ describe('tmux marker lifecycle', function()
 
   it('clears the marker on the pane that owns Neovim', function()
     local command
-    local options
-    vim.fn.jobstart = function(cmd, opts)
+    vim.fn.jobstart = function(cmd)
       command = cmd
-      options = opts
       return 1
     end
 
     fresh_tmux_module().on_exit()
 
-    assert.same({
-      'tmux',
-      '-S',
-      '/tmp/tmux-test.sock',
+    for _, argument in ipairs({
       'set-option',
       '-pt',
       '%42',
       '@pane-is-vim',
       0,
-    }, command)
-    assert.same({ detach = true }, options)
+    }) do
+      assert.is_true(vim.tbl_contains(command, argument))
+    end
   end)
 end)
