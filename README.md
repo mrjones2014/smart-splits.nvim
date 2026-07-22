@@ -26,6 +26,7 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
     - [Wezterm](#wezterm)
     - [Kitty](#kitty)
       - [Credits](#credits)
+    - [Herdr](#herdr)
   - [Multiplexer Lua API](#multiplexer-lua-api)
 
 <!--toc:end-->
@@ -91,7 +92,7 @@ require('smart-splits').setup({
   -- a context object with the following fields:
   -- {
   --    mux = {
-  --      type:'tmux'|'wezterm'|'kitty'|'zellij'
+  --      type:'tmux'|'wezterm'|'kitty'|'zellij'|'herdr'
   --      current_pane_id():number,
   --      is_in_session(): boolean
   --      current_pane_is_zoomed():boolean,
@@ -222,8 +223,8 @@ require('smart-splits').swap_buf_right({ move_cursor = true })
 
 ### Multiplexer Integrations
 
-`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `zellij`, `wezterm`, or `kitty` panes.
-You will need to set up keymaps in your `tmux`, `wezterm`, or `kitty` configs to match the Neovim keymaps.
+`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `zellij`, `wezterm`, `kitty`, or `herdr` panes.
+You will need to set up keymaps in your terminal multiplexer config to match the Neovim keymaps.
 
 You can also set the desired multiplexer integration in lazy environments before the plugin is loaded by setting
 `vim.g.smart_splits_multiplexer_integration`. The values are the same as described in [Configuration](#configuration).
@@ -587,6 +588,84 @@ Thanks @knubie for inspiration for the Kitty implementation from [vim-kitty-navi
 
 Thanks to @chancez for the relative resize [Python kitten](https://github.com/chancez/dotfiles/blob/badc69d3895a6a942285126b8c372a55d77533e1/kitty/.config/kitty/relative_resize.py).
 
+#### Herdr
+
+Herdr support works from the Neovim side with `smart-splits.nvim`: when you press your Neovim mappings,
+`smart-splits.nvim` moves between Neovim splits, and crosses into a neighboring Herdr pane when Neovim
+hits a split edge.
+
+For seamless `<C-h/j/k/l>` that works the same inside and outside Neovim — just like the tmux integration
+— `smart-splits.nvim` ships a small Herdr plugin (`herdr-plugin.toml` + `scripts/herdr-navigate.sh`).
+It intercepts the keys in Herdr, asks `herdr pane process-info` whether the focused pane is running
+Vim/Neovim, and either forwards the key into the pane (so Vim can handle its own splits, and at an edge
+call back into herdr to cross the pane boundary) or moves Herdr focus directly. When the pane is already
+at an edge in the requested direction (no neighbor), the key is forwarded back to the running app so
+shell defaults like `<C-l>` (clear screen) and `<C-h>` (backspace) keep working. Requirements: herdr
+`>= 0.7.0` and `jq` on `PATH`.
+
+Map the movement keys in Neovim as usual:
+
+```lua
+vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
+vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
+vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
+vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
+```
+
+Link the plugin and add the key bindings in `~/.config/herdr/config.toml`. Replace the path below with
+where your plugin manager cloned `smart-splits.nvim` (the `herdr-plugin.toml` lives at the repo root):
+
+```bash
+herdr plugin link /path/to/smart-splits.nvim
+```
+
+```toml
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "smart-splits.nvim.left"
+description = "navigate left (vim/herdr)"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "smart-splits.nvim.down"
+description = "navigate down (vim/herdr)"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "smart-splits.nvim.up"
+description = "navigate up (vim/herdr)"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "smart-splits.nvim.right"
+description = "navigate right (vim/herdr)"
+```
+
+Reload herdr:
+
+```bash
+herdr server reload-config
+```
+
+Other TUIs that own `Ctrl+h/j/k/l` themselves (for example `lazygit`, `k9s`) can be added to the
+forwarding list by setting `SMART_SPLITS_HERDR_PASSTHROUGH_RE` in herdr's environment to a regex
+matched against the lower-cased foreground process name:
+
+```bash
+export SMART_SPLITS_HERDR_PASSTHROUGH_RE='^(lazygit|k9s|vi-sql)$'
+```
+
+> [!NOTE]
+> `Ctrl+H` and Backspace share byte `0x08` unless the kitty keyboard protocol is active. Neovim ≥ 0.10
+> enables it automatically in herdr panes, keeping `<C-h>` distinct. On older Vim you may need to map
+> `<BS>` separately. `Ctrl+L` (clear screen) and `Ctrl+K` (kill line) in the shell keep working in
+> single-pane windows thanks to edge passthrough; across panes the navigation chord wins (same as in
+> tmux).
+
 ### Multiplexer Lua API
 
 You can directly access the multiplexer API for scripting purposes as well.
@@ -610,7 +689,7 @@ local mux = require('smart-splits.mux').get()
 ---@field next_pane fun(direction:'left'|'right'|'up'|'down'):boolean
 ---@field resize_pane fun(direction:'left'|'right'|'up'|'down', amount:number):boolean
 ---@field split_pane fun(direction:'left'|'right'|'up'|'down',size:number|nil):boolean
----@field type 'tmux'|'wezterm'|'kitty'|'zellij'
+---@field type 'tmux'|'wezterm'|'kitty'|'zellij'|'herdr'
 ```
 
 ### Persistent Resize Mode

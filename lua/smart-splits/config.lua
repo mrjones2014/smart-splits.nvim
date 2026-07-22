@@ -96,7 +96,9 @@ function M.set_default_multiplexer()
   end
 
   local term = vim.trim((vim.env.TERM_PROGRAM or ''):lower())
-  if term == 'tmux' then
+  if mux_utils.are_we_herdr() then
+    config.multiplexer_integration = Multiplexer.herdr
+  elseif term == 'tmux' then
     config.multiplexer_integration = Multiplexer.tmux
   elseif vim.env.ZELLIJ ~= nil then
     config.multiplexer_integration = 'zellij'
