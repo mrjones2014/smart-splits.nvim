@@ -56,6 +56,7 @@ describe('mux delegation', function()
   before_each(function()
     original_env.HERDR_ENV = vim.env.HERDR_ENV
     original_env.HERDR_PANE_ID = vim.env.HERDR_PANE_ID
+    original_env.HERDR_BIN_PATH = vim.env.HERDR_BIN_PATH
     fresh_modules()
     mux_api = require('smart-splits.mux')
   end)
@@ -63,6 +64,7 @@ describe('mux delegation', function()
   after_each(function()
     vim.env.HERDR_ENV = original_env.HERDR_ENV
     vim.env.HERDR_PANE_ID = original_env.HERDR_PANE_ID
+    vim.env.HERDR_BIN_PATH = original_env.HERDR_BIN_PATH
     fresh_modules()
   end)
 
@@ -152,7 +154,7 @@ describe('mux delegation', function()
     before_each(function()
       original_executable = vim.fn.executable
       vim.fn.executable = function(cmd)
-        if cmd == 'herdr' then
+        if cmd == 'herdr' or cmd == '/custom/bin/herdr' then
           return 1
         end
         return original_executable(cmd)
@@ -263,6 +265,40 @@ describe('mux delegation', function()
       assert.same({ 'herdr', 'pane', 'focus', '--direction', 'left', '--current' }, calls[3])
       assert.same({ 'herdr', 'pane', 'resize', '--direction', 'left', '--amount', '3', '--current' }, calls[4])
       assert.same({ 'herdr', 'pane', 'split', '--direction', 'right', '--current', '--focus' }, calls[5])
+
+      vim.system = original_system
+    end)
+
+    it('uses HERDR_BIN_PATH when provided', function()
+      local original_system = vim.system
+      local calls = {}
+
+      vim.env.HERDR_BIN_PATH = '/custom/bin/herdr'
+
+      vim.system = function(cmd)
+        table.insert(calls, vim.deepcopy(cmd))
+
+        return {
+          wait = function()
+            return {
+              code = 0,
+              stdout = vim.json.encode({
+                ok = true,
+                result = {
+                  panes = {
+                    { pane_id = 'ws1:p2', focused = true },
+                  },
+                },
+              }),
+              stderr = '',
+            }
+          end,
+        }
+      end
+
+      local backend = mux_api.get()
+      assert.equals('ws1:p2', backend.current_pane_id())
+      assert.same({ '/custom/bin/herdr', 'pane', 'list' }, calls[1])
 
       vim.system = original_system
     end)

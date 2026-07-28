@@ -14,9 +14,13 @@ local split_keys_herdr = {
   [Direction.down] = 'down',
 }
 
+local function herdr_bin()
+  return vim.env.HERDR_BIN_PATH ~= nil and vim.env.HERDR_BIN_PATH ~= '' and vim.env.HERDR_BIN_PATH or 'herdr'
+end
+
 local function herdr_exec(cmd)
   local command = vim.deepcopy(cmd)
-  table.insert(command, 1, 'herdr')
+  table.insert(command, 1, herdr_bin())
   return require('smart-splits.utils').system(command)
 end
 
