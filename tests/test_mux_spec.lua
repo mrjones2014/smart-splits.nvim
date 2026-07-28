@@ -147,11 +147,25 @@ describe('mux delegation', function()
   end)
 
   describe('with herdr backend', function()
+    local original_executable
+
     before_each(function()
+      original_executable = vim.fn.executable
+      vim.fn.executable = function(cmd)
+        if cmd == 'herdr' then
+          return 1
+        end
+        return original_executable(cmd)
+      end
+
       fresh_modules()
       require('smart-splits.config').setup({ multiplexer_integration = 'herdr' })
       mux_api = require('smart-splits.mux')
       vim.env.HERDR_ENV = '1'
+    end)
+
+    after_each(function()
+      vim.fn.executable = original_executable
     end)
 
     it('loads the herdr backend when configured', function()
