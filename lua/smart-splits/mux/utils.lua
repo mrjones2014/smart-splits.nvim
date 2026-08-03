@@ -26,6 +26,14 @@ function M.are_we_kitty()
   return vim.env.KITTY_LISTEN_ON ~= nil
 end
 
+function M.are_we_herdr()
+  if M.are_we_gui() then
+    return false
+  end
+
+  return vim.env.HERDR_ENV ~= nil and vim.env.HERDR_ENV ~= ''
+end
+
 --- Check if we're in WSL
 ---@return boolean
 function M.are_we_WSL()
