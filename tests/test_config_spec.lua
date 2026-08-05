@@ -54,6 +54,20 @@ describe('smart-splits.config', function()
       assert.same({ 'neo-tree' }, config.ignored_filetypes)
     end)
 
+    it('set at_edge to stop when we are zellij', function()
+      vim.env.ZELLIJ = '0'
+      config = fresh_config()
+      config.setup()
+      assert.equals('stop', config.at_edge)
+    end)
+
+    it('set at_edge to stop when we are kitty', function()
+      vim.env.KITTY_LISTEN_ON = 'unix:/tmp/kitty-abc123.sock'
+      config = fresh_config()
+      config.setup()
+      assert.equals('stop', config.at_edge)
+    end)
+
     it('sets at_edge', function()
       config.setup({ at_edge = 'stop' })
       assert.equals('stop', config.at_edge)

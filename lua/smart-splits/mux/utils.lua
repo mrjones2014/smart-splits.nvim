@@ -34,6 +34,14 @@ function M.are_we_herdr()
   return vim.env.HERDR_ENV ~= nil and vim.env.HERDR_ENV ~= ''
 end
 
+function M.are_we_zellij()
+  if M.are_we_gui() then
+    return false
+  end
+
+  return vim.env.ZELLIJ ~= nil
+end
+
 --- Check if we're in WSL
 ---@return boolean
 function M.are_we_WSL()

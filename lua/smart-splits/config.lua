@@ -41,7 +41,7 @@ local config = { ---@diagnostic disable-line:missing-fields
     'NvimTree',
   },
   default_amount = 3,
-  at_edge = mux_utils.are_we_kitty() and AtEdgeBehavior.stop or AtEdgeBehavior.wrap,
+  at_edge = (mux_utils.are_we_kitty() or mux_utils.are_we_zellij()) and AtEdgeBehavior.stop or AtEdgeBehavior.wrap,
   float_win_behavior = FloatWinBehavior.previous,
   move_cursor_same_row = false,
   cursor_follows_swapped_bufs = false,
@@ -100,8 +100,8 @@ function M.set_default_multiplexer()
     config.multiplexer_integration = Multiplexer.herdr
   elseif term == 'tmux' then
     config.multiplexer_integration = Multiplexer.tmux
-  elseif vim.env.ZELLIJ ~= nil then
-    config.multiplexer_integration = 'zellij'
+  elseif mux_utils.are_we_zellij() then
+    config.multiplexer_integration = Multiplexer.zellij
   elseif term == 'wezterm' then
     config.multiplexer_integration = Multiplexer.wezterm
   elseif mux_utils.are_we_kitty() then
@@ -129,9 +129,23 @@ function M.setup(new_config)
     mux_utils.startup()
   end
 
-  -- check for incompatible settings
+  -- check for incompatible kitty settings
   if mux_utils.are_we_kitty() and config.multiplexer_integration == Multiplexer.kitty and config.at_edge == 'wrap' then
     local msg = 'Kitty multiplexer integration does not support wrapping at edge, setting to "stop"'
+    log.warn(msg)
+    vim.notify_once(msg, vim.log.levels.WARN, { title = 'smart-splits.nvim' })
+    config.at_edge = AtEdgeBehavior.stop
+  end
+
+  -- check for incompatible zellij settings
+  if
+    mux_utils.are_we_zellij()
+    and config.multiplexer_integration == Multiplexer.zellij
+    and config.at_edge ~= 'stop'
+  then
+    local msg = config.at_edge == 'wrap'
+        and 'Zellij multiplexer integration does not support wrapping at edge, setting to stop'
+      or 'Zellij multiplexer integration does not support splitting at edge, setting to stop'
     log.warn(msg)
     vim.notify_once(msg, vim.log.levels.WARN, { title = 'smart-splits.nvim' })
     config.at_edge = AtEdgeBehavior.stop
