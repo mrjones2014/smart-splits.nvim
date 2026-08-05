@@ -37,12 +37,8 @@ function M.resize_pane(direction, _amount) ---@diagnostic disable-line: unused-l
   return code == 0
 end
 
-local session_name = nil
 function M.is_in_session()
-  if session_name == nil then
-    session_name = vim.trim(os.getenv('ZELLIJ_SESSION_NAME') or '')
-  end
-  return session_name ~= ''
+  return vim.env.ZELLIJ ~= nil
 end
 
 function M.current_pane_is_zoomed()
