@@ -1,7 +1,6 @@
 local Direction = require('smart-splits.types').Direction
 local lazy = require('smart-splits.lazy')
 local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
-local log = require('smart-splits.log')
 
 local function zellij_exec(cmd)
   local command = vim.deepcopy(cmd)
@@ -57,7 +56,7 @@ function M.next_pane(direction)
   return code == 0
 end
 
-function M.split_pane(direction, _size) ---@diagnostic disable-line: unused-local
+function M.split_pane(_direction, _size) ---@diagnostic disable-line: unused-local
   return false
 end
 
