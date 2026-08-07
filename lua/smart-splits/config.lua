@@ -141,7 +141,7 @@ function M.setup(new_config)
   if
     mux_utils.are_we_zellij()
     and config.multiplexer_integration == Multiplexer.zellij
-    and config.at_edge ~= 'stop'
+    and (config.at_edge == 'wrap' or config.at_edge == 'split')
   then
     local msg = config.at_edge == 'wrap'
         and 'Zellij multiplexer integration does not support wrapping at edge, setting to stop'
