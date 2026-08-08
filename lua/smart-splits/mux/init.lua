@@ -35,6 +35,11 @@ local function move_multiplexer_inner(direction, multiplexer)
     return true
   end
 
+  -- zellij does not support multiplexer.current_pane_id(), so we will just assume that it was successfull
+  if multiplexer.type == 'zellij' then
+    return true
+  end
+
   return false
 end
 

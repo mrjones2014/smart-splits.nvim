@@ -106,8 +106,9 @@ require('smart-splits').setup({
   --    split(), -- utility function to split current Neovim pane in the current direction
   --    wrap(), -- utility function to wrap to opposite Neovim pane
   -- }
-  -- NOTE: `at_edge = 'wrap'` is not supported on Kitty terminal
-  -- multiplexer, as there is no way to determine layout via the CLI
+  -- NOTE:
+  -- * `at_edge = 'wrap'` is not supported on Kitty terminal or zellij
+  -- * `at_edge = 'split'` is not supported on zellij
   at_edge = 'wrap',
   -- Desired behavior when the current window is floating:
   -- 'previous' => Focus previous Vim window and perform action
