@@ -10,8 +10,8 @@
 > for details.
 
 🧠 Smarter and more intuitive split pane management that uses a mental model of left/right/up/down
-instead of wider/narrower/taller/shorter for resizing. Supports seamless navigation between Neovim and terminal
-multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integrations).
+instead of wider/narrower/taller/shorter for resizing. Navigate seamlessly between Neovim windows and
+terminal multiplexer panes.
 
 <video src="https://github.com/user-attachments/assets/e516399d-0c49-4c3d-b748-3ee0e4262898"></video>
 
@@ -19,165 +19,48 @@ multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integration
 
 <!--toc:start-->
 
-- [Install](#install)
-- [Configuration](#configuration)
-- [Usage](#usage)
-  - [Key Mappings](#key-mappings)
-  - [Lua API](#lua-api)
-  - [Multiplexer Integrations](#multiplexer-integrations)
-    - [Tmux](#tmux)
-    - [Zellij](#zellij)
-      - [Troubleshooting](#troubleshooting)
-    - [Wezterm](#wezterm)
-    - [Kitty](#kitty)
-      - [Credits](#credits)
-    - [Herdr](#herdr)
-  - [Multiplexer Lua API](#multiplexer-lua-api)
-
-<!--toc:end-->
+- [🧠 `smart-splits.nvim`](#🧠-smart-splitsnvim)
+  - [Install](#install)
+  - [Usage](#usage)
+    - [Key Mappings](#key-mappings)
+    - [Lua API](#lua-api)
+    - [Commands](#commands)
+  - [Configuration](#configuration)
+    - [Ignore Lists](#ignore-lists)
+    - [At Edge Behavior](#at-edge-behavior)
+  - [Multiplexer Backends](#multiplexer-backends)
+    - [Available Backends](#available-backends)
+    - [Multiple Backends](#multiple-backends)
+    - [Writing a Backend](#writing-a-backend)
+  - [Troubleshooting](#troubleshooting)
+  - [Migrating from v2](#migrating-from-v2)
+  <!--toc:end-->
 
 ## Install
 
-`smart-splits.nvim` now supports semantic versioning via git tags. See [Releases](https://github.com/mrjones2014/smart-splits.nvim/releases)
-for a full list of versions and their changelogs, starting from 1.0.0.
+Requires Neovim 0.11 or newer. Versions are tagged, see
+[Releases](https://github.com/mrjones2014/smart-splits.nvim/releases).
 
-With Packer.nvim:
-
-```lua
-use('mrjones2014/smart-splits.nvim')
--- or use a specific version
-use({ 'mrjones2014/smart-splits.nvim', tag = 'v1.0.0' })
--- to use Kitty multiplexer support, run the post install hook
-use({ 'mrjones2014/smart-splits.nvim', run = './kitty/install-kittens.bash' })
-```
-
-With Lazy.nvim:
+With lazy.nvim:
 
 ```lua
-{ 'mrjones2014/smart-splits.nvim' }
--- or use a specific version, or a range of versions using lazy.nvim's version API
-{ 'mrjones2014/smart-splits.nvim', version = '>=1.0.0' }
--- to use Kitty multiplexer support, run the post install hook
-{ 'mrjones2014/smart-splits.nvim', build = './kitty/install-kittens.bash' }
+{
+  'mrjones2014/smart-splits.nvim',
+  -- pin a major version to opt out of protocol changes
+  version = '^3.0.0',
+}
 ```
 
-## Configuration
-
-You can set ignored `buftype`s or `filetype`s which will be ignored when
-figuring out if your cursor is currently at an edge split for resizing.
-This is useful in order to ignore "sidebar" type buffers while resizing,
-such as [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua)
-which tries to maintain its own width unless manually resized. Note that
-nothing is ignored when moving between splits, only when resizing.
-
-> [!NOTE]
-> smart-splits.nvim does not map any keys on it's own. See [Usage](#usage).
-
-Defaults are shown below:
-
-```lua
-require('smart-splits').setup({
-  -- Ignored buffer types (only while resizing)
-  ignored_buftypes = {
-    'nofile',
-    'quickfix',
-    'prompt',
-  },
-  -- Ignored filetypes (only while resizing)
-  ignored_filetypes = { 'NvimTree' },
-  -- the default number of lines/columns to resize by at a time
-  default_amount = 3,
-  -- Desired behavior when your cursor is at an edge and you
-  -- are moving towards that same edge:
-  -- 'wrap' => Wrap to opposite side
-  -- 'split' => Create a new split in the desired direction
-  -- 'stop' => Do nothing
-  -- function => You handle the behavior yourself
-  -- NOTE: If using a function, the function will be called with
-  -- a context object with the following fields:
-  -- {
-  --    mux = {
-  --      type:'tmux'|'wezterm'|'kitty'|'zellij'|'herdr'
-  --      current_pane_id():number,
-  --      is_in_session(): boolean
-  --      current_pane_is_zoomed():boolean,
-  --      -- following methods return a boolean to indicate success or failure
-  --      current_pane_at_edge(direction:'left'|'right'|'up'|'down'):boolean
-  --      next_pane(direction:'left'|'right'|'up'|'down'):boolean
-  --      resize_pane(direction:'left'|'right'|'up'|'down'):boolean
-  --      split_pane(direction:'left'|'right'|'up'|'down',size:number|nil):boolean
-  --    },
-  --    direction = 'left'|'right'|'up'|'down',
-  --    split(), -- utility function to split current Neovim pane in the current direction
-  --    wrap(), -- utility function to wrap to opposite Neovim pane
-  -- }
-  -- NOTE:
-  -- * `at_edge = 'wrap'` is not supported on Kitty terminal or zellij
-  -- * `at_edge = 'split'` is not supported on zellij
-  at_edge = 'wrap',
-  -- Desired behavior when the current window is floating:
-  -- 'previous' => Focus previous Vim window and perform action
-  -- 'mux' => Always forward action to multiplexer
-  float_win_behavior = 'previous',
-  -- when moving cursor between splits left or right,
-  -- place the cursor on the same row of the *screen*
-  -- regardless of line numbers. False by default.
-  -- Can be overridden via function parameter, see Usage.
-  move_cursor_same_row = false,
-  -- whether the cursor should follow the buffer when swapping
-  -- buffers by default; it can also be controlled by passing
-  -- `{ move_cursor = true }` or `{ move_cursor = false }`
-  -- when calling the Lua function.
-  cursor_follows_swapped_bufs = false,
-  -- ignore these autocmd events (via :h eventignore) while processing
-  -- smart-splits.nvim computations, which involve visiting different
-  -- buffers and windows. These events will be ignored during processing,
-  -- and un-ignored on completed. This only applies to resize events,
-  -- not cursor movement events.
-  ignored_events = {
-    'BufEnter',
-    'WinEnter',
-  },
-  -- enable or disable a multiplexer integration;
-  -- automatically determined, unless explicitly disabled or set,
-  -- by checking the $TERM_PROGRAM environment variable,
-  -- and the $KITTY_LISTEN_ON environment variable for Kitty.
-  -- You can also set this value by setting `vim.g.smart_splits_multiplexer_integration`
-  -- before the plugin is loaded (e.g. for lazy environments).
-  multiplexer_integration = nil,
-  -- disable multiplexer navigation if current multiplexer pane is zoomed
-  -- NOTE: This does not work on Zellij as there is no way to determine the
-  -- pane zoom state outside of the Zellij Plugin API, which does not apply here
-  disable_multiplexer_nav_when_zoomed = true,
-  -- Supply a Kitty remote control password if needed,
-  -- or you can also set vim.g.smart_splits_kitty_password
-  -- see https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.remote_control_password
-  kitty_password = nil,
-  -- In Zellij, set this to true if you would like to move to the next *tab*
-  -- when the current pane is at the edge of the zellij tab/window
-  zellij_move_focus_or_tab = false,
-  -- default logging level, one of: 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
-  log_level = 'info',
-})
-```
+Calling `setup()` is optional. Without it you get the defaults and no multiplexer integration.
 
 ## Usage
 
 ### Key Mappings
 
-> [!NOTE]
-> The recommended mappings use the Alt/Meta key. In some terminals, such as Alacritty
-> and Ghostty, on macOS you will need to set a configuration option for it to treat
-> the macOS Option key as Alt.
->
-> See: [https://ghostty.org/docs/config/reference#macos-option-as-alt](https://ghostty.org/docs/config/reference#macos-option-as-alt) \
-> See: [https://alacritty.org/config-alacritty.html#s20](https://alacritty.org/config-alacritty.html#s20)
+`smart-splits.nvim` sets no mappings for you. The recommended set:
 
 ```lua
--- recommended mappings
--- resizing splits
--- these keymaps will also accept a range,
--- for example `10<A-h>` will `resize_left` by `(10 * config.default_amount)`
+-- resizing splits, these accept a count, so `10<A-h>` resizes by 10 * config.resize.amount
 vim.keymap.set('n', '<A-h>', require('smart-splits').resize_left)
 vim.keymap.set('n', '<A-j>', require('smart-splits').resize_down)
 vim.keymap.set('n', '<A-k>', require('smart-splits').resize_up)
@@ -187,7 +70,6 @@ vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
 vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
 vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
 vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
-vim.keymap.set('n', '<C-\\>', require('smart-splits').move_cursor_previous)
 -- swapping buffers between windows
 vim.keymap.set('n', '<leader><leader>h', require('smart-splits').swap_buf_left)
 vim.keymap.set('n', '<leader><leader>j', require('smart-splits').swap_buf_down)
@@ -198,555 +80,294 @@ vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
 ### Lua API
 
 ```lua
--- resizing splits
--- amount defaults to 3 if not specified
--- use absolute values, no + or -
--- the functions also check for a range,
--- so for example if you bind `<A-h>` to `resize_left`,
--- then `10<A-h>` will `resize_left` by `(10 * config.default_amount)`
-require('smart-splits').resize_up(amount)
-require('smart-splits').resize_down(amount)
-require('smart-splits').resize_left(amount)
-require('smart-splits').resize_right(amount)
--- moving between splits
--- You can override config.at_edge and
--- config.move_cursor_same_row via opts
--- See Configuration.
-require('smart-splits').move_cursor_up({ same_row = boolean, at_edge = 'wrap' | 'split' | 'stop' })
-require('smart-splits').move_cursor_down()
-require('smart-splits').move_cursor_left()
-require('smart-splits').move_cursor_right()
-require('smart-splits').move_cursor_previous()
--- Swapping buffers directionally with the window to the specified direction
-require('smart-splits').swap_buf_up()
-require('smart-splits').swap_buf_down()
-require('smart-splits').swap_buf_left()
-require('smart-splits').swap_buf_right()
--- the buffer swap functions can also take an `opts` table to override the
--- default behavior of whether or not the cursor follows the buffer
-require('smart-splits').swap_buf_right({ move_cursor = true })
+local ss = require('smart-splits')
+
+-- resize, `amount` defaults to `v:count1 * config.resize.amount`
+ss.resize_left(amount)
+ss.resize_right(amount)
+ss.resize_up(amount)
+ss.resize_down(amount)
+
+-- move the cursor, `opts` may override `same_row` and `at_edge` for this call
+ss.move_cursor_left(opts)
+ss.move_cursor_right(opts)
+ss.move_cursor_up(opts)
+ss.move_cursor_down(opts)
+
+-- swap the current buffer with a neighbor, `opts` may override `move_cursor`
+ss.swap_buf_left(opts)
+ss.swap_buf_right(opts)
+ss.swap_buf_up(opts)
+ss.swap_buf_down(opts)
 ```
 
-### Multiplexer Integrations
+### Commands
 
-`smart-splits.nvim` can also enable seamless navigation between Neovim splits and `tmux`, `zellij`, `wezterm`, `kitty`, or `herdr` panes.
-You will need to set up keymaps in your terminal multiplexer config to match the Neovim keymaps.
+| Command                        | Description                           |
+| ------------------------------ | ------------------------------------- |
+| `:SmartResizeLeft [amount]`    | Resize left                           |
+| `:SmartResizeRight [amount]`   | Resize right                          |
+| `:SmartResizeUp [amount]`      | Resize up                             |
+| `:SmartResizeDown [amount]`    | Resize down                           |
+| `:SmartCursorMoveLeft`         | Move the cursor left                  |
+| `:SmartCursorMoveRight`        | Move the cursor right                 |
+| `:SmartCursorMoveUp`           | Move the cursor up                    |
+| `:SmartCursorMoveDown`         | Move the cursor down                  |
+| `:SmartSwapLeft`               | Swap the buffer left                  |
+| `:SmartSwapRight`              | Swap the buffer right                 |
+| `:SmartSwapUp`                 | Swap the buffer up                    |
+| `:SmartSwapDown`               | Swap the buffer down                  |
+| `:SmartSplitsLog`              | Open the log file                     |
+| `:SmartSplitsLogLevel {level}` | Change the log level for this session |
 
-You can also set the desired multiplexer integration in lazy environments before the plugin is loaded by setting
-`vim.g.smart_splits_multiplexer_integration`. The values are the same as described in [Configuration](#configuration).
+## Configuration
 
-#### Tmux
-
-You can use the package manager [TPM](https://github.com/tmux-plugins/tpm) to configure your Tmux setup:
-
-> [!NOTE]
-> It is recommended to _not_ lazy load `smart-splits.nvim` when using this integration. It depends on the plugin
-> setting the `@pane-is-vim` tmux variable, which won't happen until the plugin is loaded.
->
-> Currently, jumping to the last viewed pane is not supported. Feel free to submit a PR for it!
-
-```tmux
-set -g @plugin 'mrjones2014/smart-splits.nvim'
-
-# Optional configurations with their default values if omitted:
-
-set -g @smart-splits_no_wrap '' # to disable wrapping. (any value disables wrapping)
-
-set -g @smart-splits_move_left_key  'C-h' # key-mapping for navigation.
-set -g @smart-splits_move_down_key  'C-j' #  --"--
-set -g @smart-splits_move_up_key    'C-k' #  --"--
-set -g @smart-splits_move_right_key 'C-l' #  --"--
-
-set -g @smart-splits_resize_left_key  'M-h' # key-mapping for resizing.
-set -g @smart-splits_resize_down_key  'M-j' #  --"--
-set -g @smart-splits_resize_up_key    'M-k' #  --"--
-set -g @smart-splits_resize_right_key 'M-l' #  --"--
-
-set -g @smart-splits_resize_step_size '3' # change the step-size for resizing.
-```
-
-Alternatively, add the following snippet to your `~/.tmux.conf`/`~/.config/tmux/tmux.conf` file (customizing the keys and resize amount if desired):
-
-```tmux
-# '@pane-is-vim' is a pane-local option that is set by the plugin on load,
-# and unset when Neovim exits or suspends; note that this means you'll probably
-# not want to lazy-load smart-splits.nvim, as the variable won't be set until
-# the plugin is loaded
-
-# Smart pane switching with awareness of Neovim splits.
-bind-key -n C-h if -F "#{@pane-is-vim}" 'send-keys C-h'  'select-pane -L'
-bind-key -n C-j if -F "#{@pane-is-vim}" 'send-keys C-j'  'select-pane -D'
-bind-key -n C-k if -F "#{@pane-is-vim}" 'send-keys C-k'  'select-pane -U'
-bind-key -n C-l if -F "#{@pane-is-vim}" 'send-keys C-l'  'select-pane -R'
-
-# Alternatively, if you want to disable wrapping when moving in non-neovim panes, use these bindings
-# bind-key -n C-h if -F '#{@pane-is-vim}' { send-keys C-h } { if -F '#{pane_at_left}'   '' 'select-pane -L' }
-# bind-key -n C-j if -F '#{@pane-is-vim}' { send-keys C-j } { if -F '#{pane_at_bottom}' '' 'select-pane -D' }
-# bind-key -n C-k if -F '#{@pane-is-vim}' { send-keys C-k } { if -F '#{pane_at_top}'    '' 'select-pane -U' }
-# bind-key -n C-l if -F '#{@pane-is-vim}' { send-keys C-l } { if -F '#{pane_at_right}'  '' 'select-pane -R' }
-
-# Smart pane resizing with awareness of Neovim splits.
-bind-key -n M-h if -F "#{@pane-is-vim}" 'send-keys M-h' 'resize-pane -L 3'
-bind-key -n M-j if -F "#{@pane-is-vim}" 'send-keys M-j' 'resize-pane -D 3'
-bind-key -n M-k if -F "#{@pane-is-vim}" 'send-keys M-k' 'resize-pane -U 3'
-bind-key -n M-l if -F "#{@pane-is-vim}" 'send-keys M-l' 'resize-pane -R 3'
-
-tmux_version='$(tmux -V | sed -En "s/^tmux ([0-9]+(.[0-9]+)?).*/\1/p")'
-if-shell -b '[ "$(echo "$tmux_version < 3.0" | bc)" = 1 ]' \
-    "bind-key -n 'C-\\' if -F \"#{@pane-is-vim}\" 'send-keys C-\\'  'select-pane -l'"
-if-shell -b '[ "$(echo "$tmux_version >= 3.0" | bc)" = 1 ]' \
-    "bind-key -n 'C-\\' if -F \"#{@pane-is-vim}\" 'send-keys C-\\\\'  'select-pane -l'"
-
-bind-key -T copy-mode-vi 'C-h' select-pane -L
-bind-key -T copy-mode-vi 'C-j' select-pane -D
-bind-key -T copy-mode-vi 'C-k' select-pane -U
-bind-key -T copy-mode-vi 'C-l' select-pane -R
-bind-key -T copy-mode-vi 'C-\' select-pane -l
-```
-
-#### Zellij
-
-Zellij support is implemented with help from [vim-zellij-navigator](https://github.com/hiasr/vim-zellij-navigator).
-Add the following keymap config to your Zellij KDL config, adjusting the keys you wish to use as necessary.
-Consult the documentation from [vim-zellij-navigator](https://github.com/hiasr/vim-zellij-navigator) for more customization options.
-No configuration should be needed on the Neovim side.
-
-**Resizing by a specific amount from Neovim and presetting new split size is unsupported.**
-
-> [!NOTE]
-> This is an example. It is highly recommended to manually install the plugins and use `MessagePlugin "file:/path/to/plugin.wasm"`
-> instead of the GitHub URL!
-
-```kdl
-keybinds {
-  shared_except "locked" {
-    bind "Ctrl h" {
-        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "move_focus";
-            payload "left";
-        };
-    }
-    bind "Ctrl j" {
-        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "move_focus";
-            payload "down";
-        };
-    }
-    bind "Ctrl k" {
-        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "move_focus";
-            payload "up";
-        };
-    }
-    bind "Ctrl l" {
-        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "move_focus";
-            payload "right";
-        };
-    }
-    bind "Alt h" {
-        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "resize";
-            payload "left";
-        };
-    }
-    bind "Alt j" {
-        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "resize";
-            payload "down";
-        };
-    }
-    bind "Alt k" {
-        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "resize";
-            payload "up";
-        };
-    }
-    bind "Alt l" {
-        MessagePlugin "https://github.com/hiasr/vim-zellij-navigator/releases/download/0.2.1/vim-zellij-navigator.wasm" {
-            name "resize";
-            payload "right";
-        };
-    }
-  }
-}
-```
-
-##### Troubleshooting
-
-If you are able to move between and resize Zellij splits, but not Neovim splits, it could be that the `zellij` command is not
-on the `$PATH` that is made available to the Zellij process itself. The `vim-zellij-navigator` plugin currently uses `zellij action list-clients`
-to determine if the current pane is running Neovim (this will go away in a future release when that information is made available directly via the Zellij plugin API).
-
-To troubleshoot this, from within your Zellij session, you can run `zellij run -- env` to see Zellij's current environment, which should include it's `$PATH` variable.
-
-#### Wezterm
-
-> [!NOTE]
-> It is recommended _not to lazy load_ `smart-splits.nvim` if using the Wezterm integration.
-> If you need to lazy load, you need to use a different `is_vim()` implementation below.
-> The plugin is small, and smart about not loading modules unnecessarily, so it should
-> have minimal impact on your startup time. It adds about 0.07ms on my setup.
-
-> [!NOTE]
-> Pane resizing currently requires a nightly build of Wezterm.
-> Check the output of `wezterm cli adjust-pane-size --help` to see if your build supports it; if not,
-> you can check how to obtain a nightly build by [following the instructions here](https://wezfurlong.org/wezterm/installation.html).
-
-First, ensure that the `wezterm` CLI is on your `$PATH`, as the CLI is used by the integration.
-
-Then, if you're on Wezterm nightly, you can use Wezterm's [experimental plugin loader](https://github.com/wez/wezterm/commit/e4ae8a844d8feaa43e1de34c5cc8b4f07ce525dd):
+Defaults:
 
 ```lua
-local wezterm = require('wezterm')
-local smart_splits = wezterm.plugin.require('https://github.com/mrjones2014/smart-splits.nvim')
-local config = wezterm.config_builder()
--- you can put the rest of your Wezterm config here
-smart_splits.apply_to_config(config, {
-  -- the default config is here, if you'd like to use the default keys,
-  -- you can omit this configuration table parameter and just use
-  -- smart_splits.apply_to_config(config)
+require('smart-splits').setup({
+  -- buffers to leave alone, see Ignore Lists below
+  ignored_buftypes = { 'nofile', 'quickfix', 'prompt' },
+  ignored_filetypes = { 'NvimTree' },
 
-  -- directional keys to use in order of: left, down, up, right
-  direction_keys = { 'h', 'j', 'k', 'l' },
-  -- if you want to use separate direction keys for move vs. resize, you
-  -- can also do this:
-  direction_keys = {
-    move = { 'h', 'j', 'k', 'l' },
-    resize = { 'LeftArrow', 'DownArrow', 'UpArrow', 'RightArrow' },
+  resize = {
+    -- cells to resize by, multiplied by `v:count1`
+    amount = 3,
+    -- added to `eventignore` for the duration of a resize
+    ignored_events = { 'BufEnter', 'WinEnter' },
   },
-  -- modifier keys to combine with direction_keys
-  modifiers = {
-    move = 'CTRL', -- modifier to use for pane movement, e.g. CTRL+h to move left
-    resize = 'META', -- modifier to use for pane resize, e.g. META+h to resize to the left
+
+  move = {
+    -- 'stop' | 'wrap' | 'split' | fun(ctx), see At Edge Behavior below
+    at_edge = 'wrap',
+    -- keep the cursor on the same screen row when moving horizontally
+    same_row = false,
   },
-  -- log level to use: info, warn, error
-  log_level = 'info',
+
+  swap = {
+    -- follow the buffer into its new window
+    move_cursor = false,
+  },
+
+  mux = {
+    -- a backend, a list of backends in priority order, or a function returning
+    -- either; see Multiplexer Backends below
+    backend = nil,
+    -- warn when backends are configured but none of them detected
+    warn_if_unusable = true,
+  },
+
+  log = {
+    -- 'trace' | 'debug' | 'info' | 'warn' | 'error'
+    level = 'info',
+    -- `true` for the default path, a string for a custom one, `false` to disable
+    file = true,
+  },
 })
 ```
 
-Otherwise, add the following snippet to your `~/.config/wezterm/wezterm.lua`:
+### Ignore Lists
+
+`ignored_buftypes` and `ignored_filetypes` mark windows that `smart-splits.nvim` should leave alone:
+they are skipped when working out resize geometry, and `at_edge = 'split'` will not split them.
+
+Both can be overridden per feature. A bare list replaces the top level one:
 
 ```lua
-local w = require('wezterm')
-
--- if you are *NOT* lazy-loading smart-splits.nvim (recommended)
-local function is_vim(pane)
-  -- this is set by the plugin, and unset on ExitPre in Neovim
-  return pane:get_user_vars().IS_NVIM == 'true'
-end
-
--- if you *ARE* lazy-loading smart-splits.nvim (not recommended)
--- you have to use this instead, but note that this will not work
--- in all cases (e.g. over an SSH connection). Also note that
--- `pane:get_foreground_process_name()` can have high and highly variable
--- latency, so the other implementation of `is_vim()` will be more
--- performant as well.
-local function is_vim(pane)
-  -- This gsub is equivalent to POSIX basename(3)
-  -- Given "/foo/bar" returns "bar"
-  -- Given "c:\\foo\\bar" returns "bar"
-  local process_name = string.gsub(pane:get_foreground_process_name(), '(.*[/\\])(.*)', '%2')
-  return process_name == 'nvim' or process_name == 'vim'
-end
-
-local direction_keys = {
-  h = 'Left',
-  j = 'Down',
-  k = 'Up',
-  l = 'Right',
+{
+  ignored_filetypes = { 'NvimTree' },
+  -- resizing ignores only Trouble, moving still ignores only NvimTree
+  resize = { ignored_filetypes = { 'Trouble' } },
 }
+```
 
-local function split_nav(resize_or_move, key)
-  return {
-    key = key,
-    mods = resize_or_move == 'resize' and 'META' or 'CTRL',
-    action = w.action_callback(function(win, pane)
-      if is_vim(pane) then
-        -- pass the keys through to vim/nvim
-        win:perform_action({
-          SendKey = { key = key, mods = resize_or_move == 'resize' and 'META' or 'CTRL' },
-        }, pane)
-      else
-        if resize_or_move == 'resize' then
-          win:perform_action({ AdjustPaneSize = { direction_keys[key], 3 } }, pane)
-        else
-          win:perform_action({ ActivatePaneDirection = direction_keys[key] }, pane)
-        end
+Set `inherit = true` to add to the top level list instead of replacing it:
+
+```lua
+{
+  ignored_filetypes = { 'NvimTree', 'neo-tree' },
+  -- resizing ignores NvimTree, neo-tree and Trouble
+  resize = { ignored_filetypes = { inherit = true, 'Trouble' } },
+}
+```
+
+### At Edge Behavior
+
+`move.at_edge` decides what happens when there is no Neovim window in the direction you moved, and
+the multiplexer backend did not handle it either.
+
+| Value      | Behavior                                                                 |
+| ---------- | ------------------------------------------------------------------------ |
+| `'wrap'`   | Jump to the Neovim window on the opposite edge                           |
+| `'stop'`   | Stay where you are                                                       |
+| `'split'`  | Create a split, asking the backend first, falling back to a Neovim split |
+| `fun(ctx)` | Decide for yourself                                                      |
+
+`at_edge` only ever runs when the backend declined the move, so how far `'wrap'` reaches depends on
+the multiplexer. Take a Neovim pane sitting at the right edge of the multiplexer, with another pane to
+its left, and press the "move right" key from Neovim's rightmost window:
+
+- A multiplexer that can wrap around its own edges moves focus to that left pane and reports the move
+  as handled, so you wrap across the whole screen and `at_edge` never runs.
+- One that cannot reports the move as unhandled, and `'wrap'` then wraps among Neovim's own windows.
+
+Core tells the backend which behavior you asked for, so `'stop'` also stops at the multiplexer's
+edges rather than letting a multiplexer that wraps by default wrap anyway. Backends are expected to
+honour that, but it is their code doing it, so check yours if `'stop'` does not stop.
+
+The function form receives:
+
+```lua
+---@class SmartSplitsAtEdgeContext
+---@field backend SmartSplitsBackend|nil the resolved backend, `nil` if none resolved
+---@field direction SmartSplitsDirection the direction you moved, so also the edge you are on
+---@field split fun() split the current window towards `direction`
+---@field wrap fun() jump to the window on the opposite edge
+```
+
+For example, wrap horizontally but stop vertically:
+
+```lua
+{
+  move = {
+    at_edge = function(ctx)
+      if ctx.direction == 'left' or ctx.direction == 'right' then
+        ctx.wrap()
       end
-    end),
-  }
-end
-
-return {
-  keys = {
-    -- move between split panes
-    split_nav('move', 'h'),
-    split_nav('move', 'j'),
-    split_nav('move', 'k'),
-    split_nav('move', 'l'),
-    -- resize panes
-    split_nav('resize', 'h'),
-    split_nav('resize', 'j'),
-    split_nav('resize', 'k'),
-    split_nav('resize', 'l'),
+    end,
   },
 }
 ```
 
-#### Kitty
+## Multiplexer Backends
 
-> [!NOTE]
-> It is recommended _not to lazy load_ `smart-splits.nvim` if using the Kitty integration,
-> since it depends on the plugin setting the `IS_NVIM` Kitty user variable on startup.
-> The plugin is small, and smart about not loading modules unnecessarily, so it should
-> have minimal impact on your startup time. It adds about 0.07ms on my setup.
+**Core ships no backends.** Support for tmux, Zellij, WezTerm, Kitty and anything else lives in
+separate plugins, so each one can be maintained by people who actually use it.
 
-> [!NOTE]
-> The `config.at_edge = 'wrap'` option is not supoprted in Kitty terminal multiplexer due to inability to determine
-> pane layout from CLI.
-
-By default the plugin sets a kitty user-var `IS_NVIM` when it loads. You can take advantage of this together with kittys
-[conditional mappings feature](https://sw.kovidgoyal.net/kitty/mapping/#conditional-mappings-depending-on-the-state-of-the-focused-window) to use the same keybind for both kitty and neovim.
-
-Add the following snippet to `~/.config/kitty/kitty.conf`, adjusting the keymaps and resize amount as desired.
-
-```
-map ctrl+j neighboring_window down
-map ctrl+k neighboring_window up
-map ctrl+h neighboring_window left
-map ctrl+l neighboring_window right
-
-# Unset the mapping to pass the keys to neovim
-map --when-focus-on var:IS_NVIM ctrl+j
-map --when-focus-on var:IS_NVIM ctrl+k
-map --when-focus-on var:IS_NVIM ctrl+h
-map --when-focus-on var:IS_NVIM ctrl+l
-
-# the 3 here is the resize amount, adjust as needed
-map alt+j kitten relative_resize.py down  3
-map alt+k kitten relative_resize.py up    3
-map alt+h kitten relative_resize.py left  3
-map alt+l kitten relative_resize.py right 3
-
-map --when-focus-on var:IS_NVIM alt+j
-map --when-focus-on var:IS_NVIM alt+k
-map --when-focus-on var:IS_NVIM alt+h
-map --when-focus-on var:IS_NVIM alt+l
-```
-
-Then, you must allow Kitty to listen for remote commands on a socket. You can do this
-either by running Kitty with the following command:
-
-```bash
-# For linux only:
-kitty -o allow_remote_control=yes --single-instance --listen-on unix:@mykitty
-
-# Other unix systems:
-kitty -o allow_remote_control=yes --single-instance --listen-on unix:/tmp/mykitty
-```
-
-Or, by adding the following to `~/.config/kitty/kitty.conf`:
-
-```
-# For linux only:
-allow_remote_control yes
-listen_on unix:@mykitty
-
-# Other unix systems:
-allow_remote_control yes
-listen_on unix:/tmp/mykitty
-```
-
-##### Nvim over SSH with Kitty
-
-> [!NOTE]
-> The remote machine must have Nvim and this plugin installed.
-
-To make this work, you will need to forward the Kitty socket, what exposes your local computer to the remote machine.
-According to Kitty's [documentation](https://sw.kovidgoyal.net/kitty/kittens/ssh/#opt-kitten-ssh.forward_remote_control):
-
-> **WARNING**: This allows any software on the remote host full access to the local computer, so only do it for trusted remote hosts.
- 
-In addition to the above instructions, you will need to add the following to your local `~/.config/kitty/ssh.conf`:
-
-```
-forward_remote_control yes
-```
-
-Also, you need to change the socket type in `~/.config/kitty/kitty.conf` to unix file based:
-
-```
-listen_on unix:/tmp/mykitty
-```
-
-To ssh to a remote host with the forwarded socket, you need to use the `kitten ssh` command like so:
-
-```bash
-kitten ssh user@remotehost
-```
-
-For troubleshooting, please refer to Kitty's [SSH remote control documentation](https://sw.kovidgoyal.net/kitty/kittens/ssh/).
-
-##### Credits
-
-Thanks @knubie for inspiration for the Kitty implementation from [vim-kitty-navigator](https://github.com/knubie/vim-kitty-navigator).
-
-Thanks to @chancez for the relative resize [Python kitten](https://github.com/chancez/dotfiles/blob/badc69d3895a6a942285126b8c372a55d77533e1/kitty/.config/kitty/relative_resize.py).
-
-#### Herdr
-
-Herdr support works from the Neovim side with `smart-splits.nvim`: when you press your Neovim mappings,
-`smart-splits.nvim` moves between Neovim splits, and crosses into a neighboring Herdr pane when Neovim
-hits a split edge.
-
-For seamless `<C-h/j/k/l>` that works the same inside and outside Neovim — just like the tmux integration
-— `smart-splits.nvim` ships a small Herdr plugin (`herdr-plugin.toml` + `scripts/herdr-navigate.sh`).
-It intercepts the keys in Herdr, asks `herdr pane process-info` whether the focused pane is running
-Vim/Neovim, and either forwards the key into the pane (so Vim can handle its own splits, and at an edge
-call back into herdr to cross the pane boundary) or moves Herdr focus directly. When the pane is already
-at an edge in the requested direction (no neighbor), the key is forwarded back to the running app so
-shell defaults like `<C-l>` (clear screen) and `<C-h>` (backspace) keep working. Requirements: herdr
-`>= 0.7.0` and `jq` on `PATH`.
-
-Map the movement keys in Neovim as usual:
-
-```lua
-vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
-vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
-vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
-vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
-```
-
-Link the plugin and add the key bindings in `~/.config/herdr/config.toml`. Replace the path below with
-where your plugin manager cloned `smart-splits.nvim` (the `herdr-plugin.toml` lives at the repo root):
-
-```bash
-herdr plugin link /path/to/smart-splits.nvim
-```
-
-```toml
-[[keys.command]]
-key = "ctrl+h"
-type = "plugin_action"
-command = "smart-splits.nvim.left"
-description = "navigate left (vim/herdr)"
-
-[[keys.command]]
-key = "ctrl+j"
-type = "plugin_action"
-command = "smart-splits.nvim.down"
-description = "navigate down (vim/herdr)"
-
-[[keys.command]]
-key = "ctrl+k"
-type = "plugin_action"
-command = "smart-splits.nvim.up"
-description = "navigate up (vim/herdr)"
-
-[[keys.command]]
-key = "ctrl+l"
-type = "plugin_action"
-command = "smart-splits.nvim.right"
-description = "navigate right (vim/herdr)"
-```
-
-Reload herdr:
-
-```bash
-herdr server reload-config
-```
-
-Other TUIs that own `Ctrl+h/j/k/l` themselves (for example `lazygit`, `k9s`) can be added to the
-forwarding list by setting `SMART_SPLITS_HERDR_PASSTHROUGH_RE` in herdr's environment to a regex
-matched against the lower-cased foreground process name:
-
-```bash
-export SMART_SPLITS_HERDR_PASSTHROUGH_RE='^(lazygit|k9s|vi-sql)$'
-```
-
-> [!NOTE]
-> `Ctrl+H` and Backspace share byte `0x08` unless the kitty keyboard protocol is active. Neovim ≥ 0.10
-> enables it automatically in herdr panes, keeping `<C-h>` distinct. On older Vim you may need to map
-> `<BS>` separately. `Ctrl+L` (clear screen) and `Ctrl+K` (kill line) in the shell keep working in
-> single-pane windows thanks to edge passthrough; across panes the navigation chord wins (same as in
-> tmux).
-
-### Multiplexer Lua API
-
-You can directly access the multiplexer API for scripting purposes as well.
-To get a handle to the current multiplexer backend, you can do:
-
-```lua
-local mux = require('smart-splits.mux').get()
-```
-
-This returns the currently enabled multiplexer backend, or `nil` if none is currently in use.
-The API offers the following methods:
-
-```lua
-local mux = require('smart-splits.mux').get()
--- mux matches the following type annotations
----@class SmartSplitsMultiplexer
----@field current_pane_id fun():number|nil
----@field current_pane_at_edge fun(direction:'left'|'right'|'up'|'down'):boolean
----@field is_in_session fun():boolean
----@field current_pane_is_zoomed fun():boolean
----@field next_pane fun(direction:'left'|'right'|'up'|'down'):boolean
----@field resize_pane fun(direction:'left'|'right'|'up'|'down', amount:number):boolean
----@field split_pane fun(direction:'left'|'right'|'up'|'down',size:number|nil):boolean
----@field type 'tmux'|'wezterm'|'kitty'|'zellij'|'herdr'
-```
-
-### Persistent Resize Mode
-
-Previously, `smart-splits.nvim` included a "persistent resize mode" feature, which temporarily allowed you to
-resize windows by pressing just your directional keys without a modifier, until exiting resize mode. This feature
-had a lot of bugs and was too much of a maintenance burden, and is much better handled by other plugins that are
-designed to do that sort of thing, and the feature was therefore removed.
-
-Instead, you should use something like [submode.nvim](https://github.com/pogyomo/submode.nvim) with a configuration like:
+Install a backend plugin and name it:
 
 ```lua
 {
   'mrjones2014/smart-splits.nvim',
-  event = 'VeryLazy',
   dependencies = {
-    'pogyomo/submode.nvim',
+    {
+      'smart-splits-nvim/smart-splits-backend-zellij',
+      -- backend options belong to the backend plugin
+      opts = { disable_nav_when_zoomed = true },
+    },
   },
-  config = function()
-    -- Resize
-    local submode = require 'submode'
-    submode.create('WinResize', {
-      mode = 'n',
-      enter = '<C-w>r',
-      leave = { '<Esc>', 'q', '<C-c>' },
-      hook = {
-        on_enter = function()
-          vim.notify 'Use { h, j, k, l } or { <Left>, <Down>, <Up>, <Right> } to resize the window'
-        end,
-        on_leave = function()
-          vim.notify ''
-        end,
-      },
-      default = function(register)
-        register('h', require('smart-splits').resize_left, { desc = 'Resize left' })
-        register('j', require('smart-splits').resize_down, { desc = 'Resize down' })
-        register('k', require('smart-splits').resize_up, { desc = 'Resize up' })
-        register('l', require('smart-splits').resize_right, { desc = 'Resize right' })
-        register('<Left>', require('smart-splits').resize_left, { desc = 'Resize left' })
-        register('<Down>', require('smart-splits').resize_down, { desc = 'Resize down' })
-        register('<Up>', require('smart-splits').resize_up, { desc = 'Resize up' })
-        register('<Right>', require('smart-splits').resize_right, { desc = 'Resize right' })
-      end,
-    })
+  opts = {
+    mux = { backend = 'smart-splits-backend-zellij' },
+  },
+}
+```
+
+There is no auto-detection. Naming your backend explicitly is what replaced it.
+
+### Available Backends
+
+| Multiplexer | Backend                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| Zellij      | [smart-splits-backend-zellij](https://github.com/smart-splits-nvim/smart-splits-backend-zellij) |
+
+Using tmux, WezTerm, Kitty or Herdr? Those backends shipped in core through v2 and need maintainers.
+Either stay on the `v2` tag, or [volunteer to maintain
+one](https://github.com/mrjones2014/smart-splits.nvim/issues/488).
+
+### Multiple Backends
+
+`mux.backend` accepts a list in priority order. The first backend whose `detect()` returns `true`
+wins, which covers the case where you are usually in one multiplexer and occasionally in another:
+
+```lua
+{
+  mux = {
+    -- inside tmux, use tmux; otherwise fall back to Kitty
+    backend = { 'smart-splits-backend-tmux', 'smart-splits-backend-kitty' },
+  },
+}
+```
+
+It also accepts a module table directly, or a function returning any of the above. The function form
+defers the `require` until startup, which helps if your backend plugin is lazy loaded:
+
+```lua
+{
+  mux = {
+    backend = function()
+      return { require('smart-splits-backend-tmux'), require('smart-splits-backend-kitty') }
+    end,
+  },
+}
+```
+
+Resolution happens once, during `setup()`. A backend that fails to load, implements an unsupported
+protocol version, or is missing a required field is reported and skipped, and the next one is tried.
+
+### Writing a Backend
+
+See [`PROTOCOL.md`](./PROTOCOL.md), or `:help smart-splits-protocol`. A backend needs four fields:
+
+```lua
+return {
+  name = 'my-mux',
+  protocol_version = 3,
+  detect = function()
+    return vim.env.MY_MUX ~= nil
+  end,
+  move = function(direction, opts)
+    return focus_pane(direction, { wrap = opts.wrap })
   end,
 }
 ```
 
-Special thank you to [@drowining-cat](https://github.com/drowning-cat) for putting this example together.
+You can also pass a table like this inline, without publishing a plugin at all.
 
-Other alternative plugins to do this include:
+## Troubleshooting
 
-- [hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
-- [mini.clue](https://github.com/echasnovski/mini.nvim/blob/main/doc/mini-clue.txt#L357)
+Start with `:checkhealth smart-splits`. It reports your resolved config, every backend it tried and
+why each one was accepted or skipped, and runs each backend's own health check.
+
+For anything involving movement or resizing, turn the log up and reproduce it:
+
+```vim
+:SmartSplitsLogLevel debug
+:SmartSplitsLog
+```
+
+## Migrating from v2
+
+v2 remains available via its git tag. To move to v3:
+
+**1. Install a backend plugin.** Core ships none. See [Available Backends](#available-backends).
+
+**2. Rename your config keys.** Everything is grouped by feature now. `setup()` reports any v2 keys
+it finds, with the new location, and `:checkhealth smart-splits` repeats the report.
+
+| v2                            | v3                      |
+| ----------------------------- | ----------------------- |
+| `default_amount`              | `resize.amount`         |
+| `ignored_events`              | `resize.ignored_events` |
+| `at_edge`                     | `move.at_edge`          |
+| `move_cursor_same_row`        | `move.same_row`         |
+| `cursor_follows_swapped_bufs` | `swap.move_cursor`      |
+| `multiplexer_integration`     | `mux.backend`           |
+| `log_level`                   | `log.level`             |
+| `ignored_buftypes`            | unchanged               |
+| `ignored_filetypes`           | unchanged               |
+
+**3. Drop what no longer exists.**
+
+| Removed                                                          | Why                                                        |
+| ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| `disable_multiplexer_nav_when_zoomed`                            | Zoom is handled inside the backend, configure it there     |
+| `float_win_behavior`                                             | Floating windows always act on the previous window         |
+| `wezterm_cli_path`, `kitty_password`, `zellij_move_focus_or_tab` | Moved to their backend plugins                             |
+| `tmux_integration`, `wrap_at_edge`                               | Deprecated in v2, now gone                                 |
+| `vim.g.smart_splits_multiplexer_integration`                     | Unnecessary, backends are required lazily                  |
+| `move_cursor_previous`                                           | Removed, it could never work across a multiplexer boundary |
+| `require('smart-splits.mux')`                                    | Replaced by `require('smart-splits.backend')`              |
+| `ctx.mux` in `at_edge`                                           | Now `ctx.backend`                                          |
+
+**4. Post install hooks are gone.** The Kitty kittens, the tmux plugin file, the WezTerm plugin and
+the Herdr manifest all moved out of this repository. Remove any `build`/`run` hook you had.

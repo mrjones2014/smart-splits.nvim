@@ -5,6 +5,11 @@ labels: ["bug"]
 assignees:
   - mrjones2014
 body:
+  - type: markdown
+    attributes:
+      value: |
+        If the bug involves a multiplexer, please check whether it belongs in the backend's
+        repository first. Backends are maintained separately from core.
   - type: checkboxes
     id: similar-issues
     attributes:
@@ -21,22 +26,24 @@ body:
       description: "`nvim --version` output, please use a code block"
     validations:
       required: true
-  - type: dropdown
+  - type: textarea
+    id: checkhealth
     attributes:
-      label: Multiplexer Integration
-      description: Which multiplexer integration are you using?
-      multiple: false
-      options:
-        - tmux
-        - Wezterm
-        - Kitty
-        - I don't use one
+      label: Checkhealth Output
+      description: "Output of `:checkhealth smart-splits`, please use a code block"
     validations:
       required: true
+  - type: input
+    id: backend
+    attributes:
+      label: Backend
+      description: "Which multiplexer backend plugin are you using, and at what version? Leave blank if none."
+      placeholder: "smart-splits-backend-zellij @ v1.2.0"
   - type: textarea
+    id: mux-version
     attributes:
       label: Multiplexer Version
-      description: "If using a multiplexer, output from `tmux -V` or `wezterm --version` or `kitty --version`, please use a code block"
+      description: "Version of the multiplexer itself, if you use one, e.g. `zellij --version`. Please use a code block."
   - type: textarea
     id: reproduction-steps
     validations:
@@ -64,7 +71,7 @@ body:
     id: min-config
     attributes:
       label: Minimal Configuration to Reproduce
-      description: "MINIMAL `init.lua` or `init.vim` to reproduce, please use a code fence with `lua` syntax specified (e.g. ```lua). All unrelated config and plugins should be removed. See [minimal init.lua template](https://github.com/mrjones2014/smart-splits.nvim/discussions/72)"
+      description: "MINIMAL `init.lua` to reproduce, please use a code fence with `lua` syntax specified (e.g. ```lua). All unrelated config and plugins should be removed. See [minimal init.lua template](https://github.com/mrjones2014/smart-splits.nvim/discussions/72)"
       value: |
         ```lua
         local root = vim.fn.fnamemodify('./.repro', ':p')
@@ -76,7 +83,7 @@ body:
 
         -- bootstrap lazy
         local lazypath = root .. '/plugins/lazy.nvim'
-        if not vim.loop.fs_stat(lazypath) then
+        if not vim.uv.fs_stat(lazypath) then
           vim.fn.system({
             'git',
             'clone',
@@ -92,8 +99,12 @@ body:
         local plugins = {
           -- do not remove the colorscheme! it makes testing nicer
           'folke/tokyonight.nvim',
-          'mrjones2014/smart-splits.nvim',
-          -- add any other pugins here
+          {
+            'mrjones2014/smart-splits.nvim',
+            -- add your multiplexer backend plugin here, if you use one
+            -- dependencies = { 'smart-splits-nvim/smart-splits-backend-zellij' },
+          },
+          -- add any other plugins here
         }
 
         require('lazy').setup(plugins, {
@@ -101,13 +112,14 @@ body:
         })
 
         require('smart-splits').setup({
-          -- add any options here
+          -- add any options here, for example
+          -- mux = { backend = 'smart-splits-backend-zellij' },
         })
 
         -- recommended mappings
         -- resizing splits
         -- these keymaps will also accept a range,
-        -- for example `10<A-h>` will `resize_left` by `(10 * config.default_amount)`
+        -- for example `10<A-h>` will `resize_left` by `(10 * config.resize.amount)`
         vim.keymap.set('n', '<A-h>', require('smart-splits').resize_left)
         vim.keymap.set('n', '<A-j>', require('smart-splits').resize_down)
         vim.keymap.set('n', '<A-k>', require('smart-splits').resize_up)

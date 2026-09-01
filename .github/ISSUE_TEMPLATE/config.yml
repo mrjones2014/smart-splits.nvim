@@ -3,3 +3,6 @@ contact_links:
   - name: ❓️ Question
     url: https://github.com/mrjones2014/smart-splits.nvim/discussions
     about: Please create a GitHub Discussion for general questions
+  - name: 🔌 Multiplexer backend issue
+    url: https://github.com/mrjones2014/smart-splits.nvim/blob/master/README.md#available-backends
+    about: Backends are maintained in their own repositories, please file multiplexer specific issues there

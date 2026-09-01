@@ -1,9 +1,8 @@
 name: Run All Checks
 on:
   push:
-    branches: [master]
+    branches: [master, v3]
   pull_request:
-    branches: [master]
 jobs:
   check-lua:
     name: Run Checks
@@ -17,5 +16,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
       - name: Run lints
         run: nix develop .#ci --command just lint
+      - name: Check types
+        run: nix develop .#ci --command just types
       - name: Run tests
         run: nix develop .#ci --command just test

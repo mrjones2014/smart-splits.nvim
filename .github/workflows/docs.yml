@@ -3,6 +3,7 @@ on:
     branches: [master]
     paths:
       - README.md
+      - PROTOCOL.md
       - .github/workflows/docs.yml
 name: docs
 jobs:
@@ -10,23 +11,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: panvimdoc
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+      - name: panvimdoc README
         uses: kdheepak/panvimdoc@main
         with:
-          vimdoc: ${{ github.event.repository.name }}
+          vimdoc: smart-splits
+          pandoc: README.md
           version: "Neovim >= 0.11.0"
           demojify: true
           treesitter: true
-          # exclude the toplevel `# codesettings.nvim` heading
+          # exclude the toplevel `# smart-splits.nvim` heading
           # because it makes the section tags have duped project name
           shiftheadinglevelby: -1
-      - name: Setup Neovim
-        uses: rhysd/action-setup-vim@v1
+      - name: panvimdoc PROTOCOL
+        uses: kdheepak/panvimdoc@main
         with:
-          neovim: true
-          version: stable
+          vimdoc: smart-splits-protocol
+          pandoc: PROTOCOL.md
+          version: "Neovim >= 0.11.0"
+          demojify: true
+          treesitter: true
+          shiftheadinglevelby: -1
       - name: Generate helptags
-        run: nvim --headless -c 'helptags doc' -c 'qa'
+        run: nix develop .#ci --command nvim --headless -c 'helptags doc' -c 'qa'
       - name: Push changes
         uses: stefanzweifel/git-auto-commit-action@v6
         with:

@@ -1,10 +1,7 @@
-local lazy = require('smart-splits.lazy')
-local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
-local utils = require('smart-splits.utils')
-local types = require('smart-splits.types')
-local Direction = types.Direction
-local FloatWinBehavior = types.FloatWinBehavior
+local Types = require('smart-splits.types')
+local Direction = Types.Direction
 
+---@class SmartSplitsWin
 local M = {}
 
 ---@enum WinPosition
@@ -36,39 +33,71 @@ M.WincmdResizeDirection = {
   smaller = '-',
 }
 
----@param winid number|nil window ID, defaults to current window (0)
+---@param win_id number|nil window ID, defaults to the current window
 ---@return boolean
-function M.is_ignored_win(winid)
-  local bufnr = vim.api.nvim_win_get_buf(winid or 0)
-  return vim.tbl_contains(config.ignored_buftypes, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
-    or vim.tbl_contains(config.ignored_filetypes, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
+function M.is_floating(win_id)
+  local cfg = vim.api.nvim_win_get_config(win_id or 0)
+  return cfg and cfg.relative ~= ''
 end
 
----@param dir_key DirectionKeys
----@return number|nil window ID of neighbor, or nil if at edge
-function M.neighbor_win_id(dir_key)
-  local cur = vim.fn.winnr()
-  local neighbor = vim.fn.winnr(dir_key)
-  if neighbor == cur then
-    return nil
+---Is this a floating window that behaves like a sidebar rather than a popup?
+---Neovim's default floating zindex is 50, so anything explicitly set below that
+---is meant to sit alongside normal splits, like snacks explorer at 33.
+---@param win_id number|nil window ID, defaults to the current window
+---@return boolean
+function M.is_embedded_float(win_id)
+  if not M.is_floating(win_id) then
+    return false
   end
-  return vim.fn.win_getid(neighbor)
+  local cfg = vim.api.nvim_win_get_config(win_id or 0)
+  return cfg.zindex ~= nil and cfg.zindex < 50
 end
 
----@param winnr number|nil window ID, defaults to current window
+---@param direction SmartSplitsDirection
+---@param win_id number|nil window ID, defaults to the current window
+---@return boolean
+function M.is_float_at_screen_edge(direction, win_id)
+  win_id = win_id or vim.api.nvim_get_current_win()
+  if not M.is_floating(win_id) then
+    return false
+  end
+
+  local cfg = vim.api.nvim_win_get_config(win_id)
+  local col = type(cfg.col) == 'number' and cfg.col or 0
+  local row = type(cfg.row) == 'number' and cfg.row or 0
+  if direction == Direction.left then
+    return col <= 0
+  elseif direction == Direction.right then
+    return col + cfg.width >= vim.o.columns
+  elseif direction == Direction.up then
+    return row <= 0
+  end
+  return row + cfg.height >= vim.o.lines - vim.o.cmdheight
+end
+
+---@param bufnr number|nil buffer number, defaults to the current buffer
+---@param buftypes string[]
+---@param filetypes string[]
+---@return boolean
+function M.is_ignored(bufnr, buftypes, filetypes)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  return vim.tbl_contains(buftypes, vim.bo[bufnr].buftype) or vim.tbl_contains(filetypes, vim.bo[bufnr].filetype)
+end
+
+---@param winnr number|nil window ID, defaults to the current window
 ---@return boolean
 function M.is_full_height(winnr)
-  local window_height = vim.o.lines - vim.o.cmdheight
+  local height = vim.o.lines - vim.o.cmdheight
   if (vim.o.laststatus == 1 and #vim.api.nvim_tabpage_list_wins(0) > 1) or vim.o.laststatus > 1 then
-    window_height = window_height - 1
+    height = height - 1
   end
   if (vim.o.showtabline == 1 and #vim.api.nvim_list_tabpages() > 1) or vim.o.showtabline == 2 then
-    window_height = window_height - 1
+    height = height - 1
   end
-  return vim.api.nvim_win_get_height(winnr or 0) == window_height
+  return vim.api.nvim_win_get_height(winnr or 0) == height
 end
 
----@param winnr number|nil window ID, defaults to current window
+---@param winnr number|nil window ID, defaults to the current window
 ---@return boolean
 function M.is_full_width(winnr)
   return vim.api.nvim_win_get_width(winnr or 0) == vim.o.columns
@@ -116,91 +145,102 @@ function M.win_position(direction)
   return M.WinPosition.middle
 end
 
----@param direction DirectionKeys
+---Move to the neighboring window, staying put if it turns out to be one we
+---ignore while resizing.
+---@param dir_key DirectionKeys
 ---@param skip_ignore_lists boolean|nil defaults to false
----@param is_resizing boolean
-function M.next_window(direction, skip_ignore_lists, is_resizing)
+---@param is_resizing boolean|nil
+---@return table|nil view the saved view of the window moved into, for horizontal moves
+function M.next_window(dir_key, skip_ignore_lists, is_resizing)
+  local Config = require('smart-splits.config')
   local cur_win = vim.api.nvim_get_current_win()
-  if direction == M.DirectionKeys.down or direction == M.DirectionKeys.up then
-    vim.cmd('wincmd ' .. direction)
-    if
-      not skip_ignore_lists
-      and is_resizing
-      and (
-        vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-        or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-      )
-    then
+
+  local function moved_into_ignored()
+    if skip_ignore_lists or not is_resizing then
+      return false
+    end
+    local buftypes, filetypes = Config.ignores('resize')
+    return M.is_ignored(nil, buftypes, filetypes)
+  end
+
+  if dir_key == M.DirectionKeys.down or dir_key == M.DirectionKeys.up then
+    vim.cmd('wincmd ' .. dir_key)
+    if moved_into_ignored() then
       vim.api.nvim_set_current_win(cur_win)
     end
-    return
+    return nil
   end
 
   local offset = vim.fn.winline() + vim.api.nvim_win_get_position(0)[1]
-  vim.cmd('wincmd ' .. direction)
-  if
-    not skip_ignore_lists
-    and is_resizing
-    and (
-      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-    )
-  then
+  vim.cmd('wincmd ' .. dir_key)
+  if moved_into_ignored() then
     vim.api.nvim_set_current_win(cur_win)
     return nil
   end
+
   local view = vim.fn.winsaveview()
   offset = offset - vim.api.nvim_win_get_position(0)[1]
   vim.cmd('normal! ' .. offset .. 'H')
   return view
 end
 
----@param mux_callback fun()|nil
----@return boolean
-function M.handle_floating_window(mux_callback)
-  if not utils.is_floating_window() then
+---Floating windows have no meaningful neighbors, so operations run against the
+---previously focused window instead. Returns `true` when there is nothing
+---sensible to fall back to and the caller should give up.
+---@return boolean handled
+function M.handle_floating_window()
+  if not M.is_floating() then
     return false
   end
 
-  if config.float_win_behavior == FloatWinBehavior.previous then
-    local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
-    if utils.is_floating_window(prev_win) then
-      return true
-    end
-    vim.api.nvim_set_current_win(prev_win)
-    return false
-  elseif config.float_win_behavior == FloatWinBehavior.mux then
-    if mux_callback then
-      mux_callback()
-    end
+  local prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
+  if M.is_floating(prev_win) then
     return true
   end
 
+  vim.api.nvim_set_current_win(prev_win)
   return false
 end
 
+---Add the configured events to `eventignore` for the duration of a resize.
+---@return string original the previous value of `eventignore`
 function M.set_eventignore()
-  local eventignore = vim.o.eventignore
+  local original = vim.o.eventignore
+  local eventignore = original
   if #eventignore > 0 and not vim.endswith(eventignore, ',') then
     eventignore = eventignore .. ','
   end
-  eventignore = eventignore .. table.concat(config.ignored_events or {}, ',')
   -- luacheck:ignore
-  vim.o.eventignore = eventignore
+  vim.o.eventignore = eventignore .. table.concat(require('smart-splits.config').resize.ignored_events or {}, ',')
+  return original
 end
 
----@param will_wrap boolean
+---@param wrap boolean jump to the far side rather than the immediate neighbor
 ---@param dir_key DirectionKeys
-function M.next_win_or_wrap(will_wrap, dir_key)
-  -- See https://github.com/mrjones2014/smart-splits.nvim/issues/463
-  -- This is really a bug in Neovim, but if we try to do this while in
-  -- cmdwin, it leaves nvim in an invalid state sometimes.
+function M.next_win_or_wrap(wrap, dir_key)
+  -- doing this inside the cmdline window sometimes leaves nvim in an invalid
+  -- state, see https://github.com/mrjones2014/smart-splits.nvim/issues/463
   if vim.fn.getcmdwintype() ~= '' then
     return
   end
-  vim.api.nvim_set_current_win(
-    vim.fn.win_getid(vim.fn.winnr(string.format('%s%s', will_wrap and '99999' or vim.v.count1, dir_key)))
-  )
+  local target = vim.fn.winnr(('%s%s'):format(wrap and '99999' or vim.v.count1, dir_key))
+  vim.api.nvim_set_current_win(vim.fn.win_getid(target))
+end
+
+---@param direction SmartSplitsDirection
+function M.split(direction)
+  if direction == Direction.left or direction == Direction.right then
+    vim.cmd('vsp')
+    if vim.o.splitright and direction == Direction.left then
+      vim.cmd('wincmd h')
+    end
+    return
+  end
+
+  vim.cmd('sp')
+  if vim.o.splitbelow and direction == Direction.up then
+    vim.cmd('wincmd k')
+  end
 end
 
 return M

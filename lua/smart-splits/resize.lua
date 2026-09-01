@@ -1,23 +1,17 @@
-local lazy = require('smart-splits.lazy')
-local config = lazy.require_on_index('smart-splits.config') --[[@as SmartSplitsConfig]]
-local mux = lazy.require_on_exported_call('smart-splits.mux') --[[@as SmartSplitsMuxApi]]
-local win = require('smart-splits.win')
-local types = require('smart-splits.types')
-local Direction = types.Direction
-
-local WinPosition = win.WinPosition
-local DirectionKeys = win.DirectionKeys
-local WincmdResizeDirection = win.WincmdResizeDirection
+local Types = require('smart-splits.types')
+local Win = require('smart-splits.win')
+local Direction = Types.Direction
+local WinPosition = Win.WinPosition
+local DirectionKeys = Win.DirectionKeys
+local WincmdResizeDirection = Win.WincmdResizeDirection
 
 local M = {}
-
-M.is_resizing = false
 
 ---@param direction SmartSplitsDirection
 ---@return WincmdResizeDirection
 local function compute_direction_vertical(direction)
-  local current_pos = win.win_position(direction)
-  if current_pos == WinPosition.start or current_pos == WinPosition.middle then
+  local pos = Win.win_position(direction)
+  if pos == WinPosition.start or pos == WinPosition.middle then
     return direction == Direction.down and WincmdResizeDirection.bigger or WincmdResizeDirection.smaller
   end
   return direction == Direction.down and WincmdResizeDirection.smaller or WincmdResizeDirection.bigger
@@ -26,42 +20,40 @@ end
 ---@param direction SmartSplitsDirection
 ---@return WincmdResizeDirection
 local function compute_direction_horizontal(direction)
-  local at_left = win.at_left_edge()
-  local at_right = win.at_right_edge()
-  local current_pos
+  local at_left = Win.at_left_edge()
+  local at_right = Win.at_right_edge()
+
+  local pos
   if at_left then
-    current_pos = WinPosition.start
+    pos = WinPosition.start
   elseif at_right then
-    current_pos = WinPosition.last
+    pos = WinPosition.last
   else
-    current_pos = WinPosition.middle
+    pos = WinPosition.middle
   end
+
   local result
-  if current_pos == WinPosition.start or current_pos == WinPosition.middle then
+  if pos == WinPosition.start or pos == WinPosition.middle then
     result = direction == Direction.right and WincmdResizeDirection.bigger or WincmdResizeDirection.smaller
   else
     result = direction == Direction.right and WincmdResizeDirection.smaller or WincmdResizeDirection.bigger
   end
-  -- special case - check if there is an ignored window to the left
-  if direction == Direction.right and result == WincmdResizeDirection.bigger and at_left and at_right then
-    local cur_win = vim.api.nvim_get_current_win()
-    win.next_window(DirectionKeys.left, true, M.is_resizing)
-    if
-      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-    then
-      vim.api.nvim_set_current_win(cur_win)
-      result = WincmdResizeDirection.smaller
-    end
-  elseif direction == Direction.left and result == WincmdResizeDirection.smaller and at_left and at_right then
-    local cur_win = vim.api.nvim_get_current_win()
-    win.next_window(DirectionKeys.left, true, M.is_resizing)
-    if
-      vim.tbl_contains(config.ignored_buftypes, vim.bo.buftype)
-      or vim.tbl_contains(config.ignored_filetypes, vim.bo.filetype)
-    then
-      vim.api.nvim_set_current_win(cur_win)
-      result = WincmdResizeDirection.bigger
+
+  -- spanning the full width usually means growing, but not when the only thing
+  -- to the left is a window we ignore, like a file tree
+  if at_left and at_right then
+    local buftypes, filetypes = require('smart-splits.config').ignores('resize')
+    local flip = (direction == Direction.right and result == WincmdResizeDirection.bigger)
+      or (direction == Direction.left and result == WincmdResizeDirection.smaller)
+    if flip then
+      local cur_win = vim.api.nvim_get_current_win()
+      Win.next_window(DirectionKeys.left, true, true)
+      if Win.is_ignored(nil, buftypes, filetypes) then
+        vim.api.nvim_set_current_win(cur_win)
+        result = direction == Direction.right and WincmdResizeDirection.smaller or WincmdResizeDirection.bigger
+      else
+        vim.api.nvim_set_current_win(cur_win)
+      end
     end
   end
 
@@ -70,92 +62,108 @@ end
 
 ---@param direction SmartSplitsDirection
 ---@param amount number
+local function resize_vertical(direction, amount)
+  local plus_minus = compute_direction_vertical(direction)
+  local cur_win_pos = vim.api.nvim_win_get_position(0)
+  vim.cmd(('resize %s%s'):format(plus_minus, amount))
+  if Win.win_position(direction) ~= WinPosition.middle then
+    return
+  end
+
+  local new_win_pos = vim.api.nvim_win_get_position(0)
+  local adjustment
+  if cur_win_pos[1] < new_win_pos[1] and plus_minus == WincmdResizeDirection.smaller then
+    adjustment = WincmdResizeDirection.bigger
+  elseif cur_win_pos[1] > new_win_pos[1] and plus_minus == WincmdResizeDirection.bigger then
+    adjustment = WincmdResizeDirection.smaller
+  end
+
+  if Win.at_bottom_edge() then
+    local sign = plus_minus == WincmdResizeDirection.bigger and '-' or '+'
+    vim.cmd(('resize %s%s'):format(sign, amount))
+    Win.next_window(DirectionKeys.down, false, true)
+    vim.cmd(('resize %s%s'):format(sign, amount))
+    return
+  end
+
+  if adjustment ~= nil then
+    vim.cmd(('resize %s%s'):format(adjustment, amount))
+    Win.next_window(DirectionKeys.up, false, true)
+    vim.cmd(('resize %s%s'):format(adjustment, amount))
+    Win.next_window(DirectionKeys.down, false, true)
+  end
+end
+
+---@param direction SmartSplitsDirection
+---@param amount number
+local function resize_horizontal(direction, amount)
+  local plus_minus = compute_direction_horizontal(direction)
+  local cur_win_pos = vim.api.nvim_win_get_position(0)
+  vim.cmd(('vertical resize %s%s'):format(plus_minus, amount))
+  if Win.win_position(direction) ~= WinPosition.middle then
+    return
+  end
+
+  local new_win_pos = vim.api.nvim_win_get_position(0)
+  local adjustment
+  if cur_win_pos[2] < new_win_pos[2] and plus_minus == WincmdResizeDirection.smaller then
+    adjustment = WincmdResizeDirection.bigger
+  elseif cur_win_pos[2] > new_win_pos[2] and plus_minus == WincmdResizeDirection.bigger then
+    adjustment = WincmdResizeDirection.smaller
+  end
+
+  if adjustment ~= nil then
+    vim.cmd(('vertical resize %s%s'):format(adjustment, amount))
+    Win.next_window(DirectionKeys.right, false, true)
+    vim.cmd(('vertical resize %s%s'):format(adjustment, amount))
+    Win.next_window(DirectionKeys.left, false, true)
+  end
+end
+
+---@param direction SmartSplitsDirection
+---@param amount number|nil defaults to `v:count1 * config.resize.amount`
 function M.resize(direction, amount)
-  amount = amount or config.default_amount
+  amount = amount or (vim.v.count1 * require('smart-splits.config').resize.amount)
 
-  if win.handle_floating_window(function()
-    mux.resize_pane(direction, amount)
-  end) then
+  if Win.handle_floating_window() then
     return
   end
 
-  -- if a full width window and horizontal resize check if we can resize with multiplexer
-  if
-    (direction == Direction.left or direction == Direction.right)
-    and win.is_full_width()
-    and mux.resize_pane(direction, amount)
-  then
+  local horizontal = direction == Direction.left or direction == Direction.right
+  local fills_axis = horizontal and Win.is_full_width() or (not horizontal and Win.is_full_height())
+
+  if fills_axis then
+    -- the multiplexer is the only thing that can grow this window, and nvim must
+    -- not try: it shrinks a window that fills the axis into `cmdheight` with no
+    -- way to get the space back, see
+    -- https://github.com/mrjones2014/smart-splits.nvim/issues/336
+    require('smart-splits.backend').resize(direction, amount)
     return
   end
 
-  -- if a full height window and vertical resize check if we can resize with multiplexer
-  if
-    (direction == Direction.down or direction == Direction.up)
-    and win.is_full_height()
-    and (mux.resize_pane(direction, amount) or mux.get() ~= nil)
-  then
-    return
-  end
-
-  if direction == Direction.down or direction == Direction.up then
-    -- vertically
-    local plus_minus = compute_direction_vertical(direction)
-    local cur_win_pos = vim.api.nvim_win_get_position(0)
-    vim.cmd(string.format('resize %s%s', plus_minus, amount))
-    if win.win_position(direction) ~= WinPosition.middle then
-      return
-    end
-
-    local new_win_pos = vim.api.nvim_win_get_position(0)
-    local adjustment_plus_minus
-    if cur_win_pos[1] < new_win_pos[1] and plus_minus == WincmdResizeDirection.smaller then
-      adjustment_plus_minus = WincmdResizeDirection.bigger
-    elseif cur_win_pos[1] > new_win_pos[1] and plus_minus == WincmdResizeDirection.bigger then
-      adjustment_plus_minus = WincmdResizeDirection.smaller
-    end
-
-    if win.at_bottom_edge() then
-      if plus_minus == WincmdResizeDirection.bigger then
-        vim.cmd(string.format('resize -%s', amount))
-        win.next_window(DirectionKeys.down, false, M.is_resizing)
-        vim.cmd(string.format('resize -%s', amount))
-      else
-        vim.cmd(string.format('resize +%s', amount))
-        win.next_window(DirectionKeys.down, false, M.is_resizing)
-        vim.cmd(string.format('resize +%s', amount))
-      end
-      return
-    end
-
-    if adjustment_plus_minus ~= nil then
-      vim.cmd(string.format('resize %s%s', adjustment_plus_minus, amount))
-      win.next_window(DirectionKeys.up, false, M.is_resizing)
-      vim.cmd(string.format('resize %s%s', adjustment_plus_minus, amount))
-      win.next_window(DirectionKeys.down, false, M.is_resizing)
-    end
+  if horizontal then
+    resize_horizontal(direction, amount)
   else
-    -- horizontally
-    local plus_minus = compute_direction_horizontal(direction)
-    local cur_win_pos = vim.api.nvim_win_get_position(0)
-    vim.cmd(string.format('vertical resize %s%s', plus_minus, amount))
-    if win.win_position(direction) ~= WinPosition.middle then
-      return
-    end
-
-    local new_win_pos = vim.api.nvim_win_get_position(0)
-    local adjustment_plus_minus
-    if cur_win_pos[2] < new_win_pos[2] and plus_minus == WincmdResizeDirection.smaller then
-      adjustment_plus_minus = WincmdResizeDirection.bigger
-    elseif cur_win_pos[2] > new_win_pos[2] and plus_minus == WincmdResizeDirection.bigger then
-      adjustment_plus_minus = WincmdResizeDirection.smaller
-    end
-    if adjustment_plus_minus ~= nil then
-      vim.cmd(string.format('vertical resize %s%s', adjustment_plus_minus, amount))
-      win.next_window(DirectionKeys.right, false, M.is_resizing)
-      vim.cmd(string.format('vertical resize %s%s', adjustment_plus_minus, amount))
-      win.next_window(DirectionKeys.left, false, M.is_resizing)
-    end
+    resize_vertical(direction, amount)
   end
+end
+
+---Run a resize with the configured events suppressed, restoring the focused
+---window afterwards.
+---@param direction SmartSplitsDirection
+---@param amount number|nil
+function M.run(direction, amount)
+  local eventignore = Win.set_eventignore()
+  local cur_win = vim.api.nvim_get_current_win()
+
+  local ok, err = pcall(M.resize, direction, amount)
+  if not ok then
+    require('smart-splits.log').error('failed to resize %s: %s', direction, err)
+  end
+
+  pcall(vim.api.nvim_set_current_win, cur_win)
+  -- luacheck:ignore
+  vim.o.eventignore = eventignore
 end
 
 return M
