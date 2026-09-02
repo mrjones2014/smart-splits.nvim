@@ -5,11 +5,19 @@ local AtEdgeBehavior = Types.AtEdgeBehavior
 local DirectionKeys = Win.DirectionKeys
 local DirectionKeysReverse = Win.DirectionKeysReverse
 
-local M = {}
-
+---Per-call options for `move_cursor_*`.
 ---@class SmartSplitsMoveOpts
 ---@field same_row boolean|nil override `config.move.same_row`
 ---@field at_edge SmartSplitsAtEdgeBehavior|nil override `config.move.at_edge`
+
+---Passed to `config.move.at_edge` when it is a function.
+---@class SmartSplitsAtEdgeContext
+---@field backend SmartSplitsBackend|nil the resolved backend, `nil` if none resolved
+---@field direction SmartSplitsDirection direction you tried to move, so also the edge you are sitting on
+---@field split fun() split the current window towards `direction`
+---@field wrap fun() jump to the window on the opposite edge
+
+local M = {}
 
 ---Put the cursor back on the screen row it started on.
 ---@param offset number
@@ -24,7 +32,7 @@ local function at_edge_split(direction)
     return
   end
 
-  if require('smart-splits.backend').split(direction) then
+  if require('smart-splits.backend').split(direction, {}) then
     return
   end
   Win.split(direction)
@@ -43,7 +51,7 @@ function M.move_cursor(direction, opts)
 
   -- the backend cannot see `at_edge`, and a multiplexer that wraps around its own
   -- edges would otherwise wrap even for someone who asked to stop
-  ---@type SmartSplitsMoveOptions
+  ---@type SmartSplitsBackendMoveOpts
   local move_opts = { wrap = at_edge == AtEdgeBehavior.wrap }
 
   local Backend = require('smart-splits.backend')

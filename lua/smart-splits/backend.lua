@@ -1,3 +1,41 @@
+---The resolved options for a move, as core worked them out from the user's
+---config and whatever they passed for this call. Fields are optional so the
+---functions can be called by hand; fall back to your own defaults for anything
+---absent. Later protocol versions may add fields, so ignore unknown ones.
+---@class SmartSplitsBackendMoveOpts
+---@field wrap boolean|nil whether wrapping was asked for, from `at_edge`
+
+---@class SmartSplitsBackendResizeOpts
+---@field amount number|nil cells to resize by, already multiplied by `v:count1`
+
+---No fields today. Splits take whatever default size the thing doing the
+---splitting uses. Kept so every operation has the same shape, and so a later
+---protocol version has somewhere to add options.
+---@class SmartSplitsBackendSplitOpts
+
+---A multiplexer backend. Backends live in their own plugins, core ships none.
+---Only `name`, `protocol_version`, `detect` and `move` are required. Omit
+---`resize` or `split` entirely if the multiplexer cannot do them; core checks
+---whether the function is present rather than asking for a capability table.
+---
+---Every operation takes `(direction, opts)`. Core always passes a table, but the
+---parameter is optional so the functions stay pleasant to call by hand.
+---@class SmartSplitsBackend
+---@field name string human readable name, used in logs and `:checkhealth`
+---@field protocol_version number major protocol version this backend implements
+---@field detect fun():boolean is this multiplexer usable right now? must be cheap and free of side effects
+---@field move fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendMoveOpts):boolean move focus one pane, `true` if handled
+---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean resize the current pane, `true` if handled
+---@field split? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendSplitOpts):boolean create a new pane, `true` if handled
+---@field setup? fun() called once, when the backend is resolved
+---@field health? fun() called during `:checkhealth smart-splits`, under a header emitted by core
+
+---@alias SmartSplitsBackendSpec SmartSplitsBackend|string
+
+---What `config.mux.backend` accepts: one backend, several in priority order, or
+---a function returning either.
+---@alias SmartSplitsBackendConfig SmartSplitsBackendSpec|SmartSplitsBackendSpec[]|fun():SmartSplitsBackendSpec|SmartSplitsBackendSpec[]
+
 ---Current protocol version. A backend declares the major version it implements
 ---and core refuses to load anything outside `SUPPORTED_VERSIONS`.
 local PROTOCOL_VERSION = 3
@@ -241,23 +279,24 @@ local function call(op, ...)
 end
 
 ---@param direction SmartSplitsDirection
----@param opts SmartSplitsMoveOptions
+---@param opts SmartSplitsBackendMoveOpts|nil
 ---@return boolean handled
 function M.move(direction, opts)
-  return call('move', direction, opts)
+  return call('move', direction, opts or {})
 end
 
 ---@param direction SmartSplitsDirection
----@param amount number
+---@param opts SmartSplitsBackendResizeOpts|nil
 ---@return boolean handled
-function M.resize(direction, amount)
-  return call('resize', direction, amount)
+function M.resize(direction, opts)
+  return call('resize', direction, opts or {})
 end
 
 ---@param direction SmartSplitsDirection
+---@param opts SmartSplitsBackendSplitOpts|nil
 ---@return boolean handled
-function M.split(direction)
-  return call('split', direction)
+function M.split(direction, opts)
+  return call('split', direction, opts or {})
 end
 
 return M

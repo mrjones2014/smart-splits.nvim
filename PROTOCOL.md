@@ -35,9 +35,9 @@ next configured backend. Navigation keeps working with plain Neovim behaviour. N
 ---@field name string
 ---@field protocol_version number
 ---@field detect fun():boolean
----@field move fun(direction: SmartSplitsDirection, opts: SmartSplitsMoveOptions):boolean
----@field resize? fun(direction: SmartSplitsDirection, amount: number):boolean
----@field split? fun(direction: SmartSplitsDirection):boolean
+---@field move fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendMoveOpts):boolean
+---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean
+---@field split? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendSplitOpts):boolean
 ---@field setup? fun()
 ---@field health? fun()
 ```
@@ -46,6 +46,43 @@ next configured backend. Navigation keeps working with plain Neovim behaviour. N
 
 `name`, `protocol_version`, `detect` and `move` are required. A backend missing any of them, or with
 one of the wrong type, is reported and disabled.
+
+### Options
+
+Every operation takes `(direction, opts)`. `opts` holds the options core resolved for that call, from
+the user's config and whatever they passed at the call site:
+
+```lua
+---@class SmartSplitsBackendMoveOpts
+---@field wrap boolean|nil whether wrapping was asked for, from `at_edge`
+
+---@class SmartSplitsBackendResizeOpts
+---@field amount number|nil cells to resize by, already multiplied by `v:count1`
+
+---no fields today
+---@class SmartSplitsBackendSplitOpts
+```
+
+Three rules, so the calls stay pleasant to make by hand and cheap to extend:
+
+- **Core always passes a table**, never `nil`. It may be empty.
+- **Every field is optional.** Fall back to your own default for anything absent, rather than
+  assuming a value. `opts = opts or {}` at the top of each function covers direct callers.
+- **Ignore fields you do not recognise.** Later protocol versions add fields without bumping the
+  version, since an unrecognised field can only mean "core knew something you do not use".
+
+So all of these are valid:
+
+```lua
+mux.move('left', { wrap = true })
+mux.move('left', {})              -- no preference, use your defaults
+mux.move('left')                  -- same, by hand
+mux.resize('left', { amount = 5 })
+```
+
+Options that only mean something inside Neovim are not forwarded. `move.same_row` is the notable one:
+it keeps the cursor on the same screen row across a window boundary, which has no counterpart in a
+multiplexer pane.
 
 There is no capabilities table. If your multiplexer cannot resize or cannot split, **leave the
 function out entirely**. Core checks whether the function exists.
@@ -78,16 +115,9 @@ Return `true` when you moved, `false` when you did not. On `false`, core applies
 The return value is checked with `== true`. A backend that forgets to return gets treated as "did not
 handle", never as success.
 
-```lua
----@class SmartSplitsMoveOptions
----@field wrap boolean whether the user asked for wrapping
-```
-
-`opts` carries what core knows about the user's intent and you cannot work out for yourself. Later
-protocol versions may add fields, so ignore any you do not recognise.
-
 **Wrapping.** There is no `wrap` capability field; whether you wrap is a per-call decision, and
-`opts.wrap` is how you make it. It is `true` only when the user set `move.at_edge = 'wrap'`.
+`opts.wrap` is how you make it. It is `true` only when `move.at_edge` resolved to `'wrap'` for this
+call, so a per-call `at_edge` override reaches you too.
 
 This matters because many multiplexers wrap around their own edges by default. `tmux select-pane -R`
 at the rightmost pane moves to the leftmost one, and core cannot tell that apart from an ordinary
@@ -95,6 +125,7 @@ move, so a user who asked to stop at the edge would silently wrap anyway. Honour
 
 ```lua
 function M.move(direction, opts)
+  opts = opts or {}
   if focus_pane(direction) then
     return true
   end
@@ -127,13 +158,14 @@ function M.move(direction, opts)
 end
 ```
 
-### `resize(direction, amount)`
+### `resize(direction, opts)`
 
-Resize the current pane by `amount` cells. Core calls this only when the current Neovim window
+Resize the current pane by `opts.amount` cells. Core calls this only when the current Neovim window
 already fills that axis, so nothing inside Neovim can absorb the change.
 
-`amount` is in Neovim's terms, `v:count1 * config.resize.amount`. Translate it if your multiplexer
-counts differently.
+`opts.amount` is in Neovim's terms, `v:count1 * config.resize.amount`, or `v:count1` times whatever
+the caller passed for this resize. Translate it if your multiplexer counts differently. When it is
+absent, resize by however much your multiplexer normally would.
 
 The return value is logged but does not change what core does next. Core never falls back to a
 Neovim resize here: Neovim shrinks a window that fills the axis into `cmdheight` with no way to
@@ -141,12 +173,17 @@ recover the space ([#336](https://github.com/mrjones2014/smart-splits.nvim/issue
 
 Omit this function if your multiplexer cannot resize panes.
 
-### `split(direction)`
+### `split(direction, opts)`
 
 Create a new pane in `direction`. Core calls this only when `move.at_edge` is `'split'` and the
 cursor is at the edge of the layout.
 
 Return `true` when you created a pane. On `false`, core creates a Neovim split instead.
+
+Size the new pane however your multiplexer normally would. There is no size option; whichever side
+performs the split uses its own default, so a Neovim split gets Neovim's and a multiplexer pane gets
+the multiplexer's. `opts` is empty today, and takes the second parameter slot so that every operation
+has the same shape.
 
 Omit this function if your multiplexer cannot create panes on demand.
 
@@ -247,17 +284,17 @@ function M.detect()
 end
 
 function M.move(direction, opts)
-  require('smart-splits.log').debug('echo backend: move(%s, wrap=%s)', direction, opts.wrap)
+  require('smart-splits.log').debug('echo backend: move(%s, %s)', direction, vim.inspect(opts))
   return false
 end
 
-function M.resize(direction, amount)
-  require('smart-splits.log').debug('echo backend: resize(%s, %s)', direction, amount)
+function M.resize(direction, opts)
+  require('smart-splits.log').debug('echo backend: resize(%s, %s)', direction, vim.inspect(opts))
   return false
 end
 
-function M.split(direction)
-  require('smart-splits.log').debug('echo backend: split(%s)', direction)
+function M.split(direction, opts)
+  require('smart-splits.log').debug('echo backend: split(%s, %s)', direction, vim.inspect(opts))
   return false
 end
 

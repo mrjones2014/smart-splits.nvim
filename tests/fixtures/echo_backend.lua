@@ -1,13 +1,7 @@
 ---A minimal backend that records every call and handles nothing. Doubles as the
 ---worked example in PROTOCOL.md and as a way to watch core's delegation points
 ---fire in a real editor, via `:SmartSplitsLog`.
----
----```lua
----require('smart-splits').setup({
----  mux = { backend = require('smart-splits-echo-backend') },
----  log = { level = 'debug' },
----})
----```
+--- Used to write tests with.
 ---@class EchoBackend: SmartSplitsBackend
 local M = {
   name = 'echo',
@@ -32,7 +26,7 @@ function M.detect()
 end
 
 ---@param direction SmartSplitsDirection
----@param opts SmartSplitsMoveOptions
+---@param opts SmartSplitsBackendMoveOpts|nil
 ---@return boolean
 function M.move(direction, opts)
   record('move', direction, opts)
@@ -40,17 +34,18 @@ function M.move(direction, opts)
 end
 
 ---@param direction SmartSplitsDirection
----@param amount number
+---@param opts SmartSplitsBackendResizeOpts|nil
 ---@return boolean
-function M.resize(direction, amount)
-  record('resize', direction, amount)
+function M.resize(direction, opts)
+  record('resize', direction, opts)
   return false
 end
 
 ---@param direction SmartSplitsDirection
+---@param opts SmartSplitsBackendSplitOpts|nil
 ---@return boolean
-function M.split(direction)
-  record('split', direction)
+function M.split(direction, opts)
+  record('split', direction, opts)
   return false
 end
 

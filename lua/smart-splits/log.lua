@@ -1,3 +1,5 @@
+---@alias SmartSplitsLogLevel 'trace'|'debug'|'info'|'warn'|'error'
+
 ---@type SmartSplitsLogLevel[]
 local LEVELS = { 'trace', 'debug', 'info', 'warn', 'error' }
 

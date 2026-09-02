@@ -4,10 +4,11 @@ local Direction = Types.Direction
 local DirectionKeys = Win.DirectionKeys
 local DirectionKeysReverse = Win.DirectionKeysReverse
 
-local M = {}
-
+---Per-call options for `swap_buf_*`.
 ---@class SmartSplitsSwapOpts
 ---@field move_cursor boolean|nil override `config.swap.move_cursor`
+
+local M = {}
 
 ---@param direction SmartSplitsDirection
 ---@param opts SmartSplitsSwapOpts|nil

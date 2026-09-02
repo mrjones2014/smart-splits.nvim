@@ -5,6 +5,11 @@ local WinPosition = Win.WinPosition
 local DirectionKeys = Win.DirectionKeys
 local WincmdResizeDirection = Win.WincmdResizeDirection
 
+---Per-call options for `resize_*`. A bare number is accepted in place of the
+---table and means `amount`.
+---@class SmartSplitsResizeOpts
+---@field amount number|nil resize by this many cells instead of `config.resize.amount`
+
 local M = {}
 
 ---@param direction SmartSplitsDirection
@@ -121,9 +126,16 @@ local function resize_horizontal(direction, amount)
 end
 
 ---@param direction SmartSplitsDirection
----@param amount number|nil defaults to `v:count1 * config.resize.amount`
-function M.resize(direction, amount)
-  amount = amount or (vim.v.count1 * require('smart-splits.config').resize.amount)
+---@param opts number|SmartSplitsResizeOpts|nil a bare number means `amount`
+function M.resize(direction, opts)
+  if type(opts) == 'number' then
+    opts = { amount = opts }
+  elseif type(opts) ~= 'table' then
+    opts = {}
+  end
+
+  local amount = opts.amount or require('smart-splits.config').resize.amount
+  amount = vim.v.count1 * amount
 
   if Win.handle_floating_window() then
     return
@@ -137,7 +149,7 @@ function M.resize(direction, amount)
     -- not try: it shrinks a window that fills the axis into `cmdheight` with no
     -- way to get the space back, see
     -- https://github.com/mrjones2014/smart-splits.nvim/issues/336
-    require('smart-splits.backend').resize(direction, amount)
+    require('smart-splits.backend').resize(direction, { amount = amount })
     return
   end
 
@@ -151,12 +163,12 @@ end
 ---Run a resize with the configured events suppressed, restoring the focused
 ---window afterwards.
 ---@param direction SmartSplitsDirection
----@param amount number|nil
-function M.run(direction, amount)
+---@param opts number|SmartSplitsResizeOpts|nil
+function M.run(direction, opts)
   local eventignore = Win.set_eventignore()
   local cur_win = vim.api.nvim_get_current_win()
 
-  local ok, err = pcall(M.resize, direction, amount)
+  local ok, err = pcall(M.resize, direction, opts)
   if not ok then
     require('smart-splits.log').error('failed to resize %s: %s', direction, err)
   end

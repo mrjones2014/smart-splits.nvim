@@ -33,30 +33,30 @@ end
 
 ---Resize the current window to the left, delegating to the multiplexer when the
 ---window already spans the full width.
----@param amount number|nil defaults to `v:count1 * config.resize.amount`
-function M.resize_left(amount)
-  require('smart-splits.resize').run('left', amount)
+---@param opts number|SmartSplitsResizeOpts|nil a bare number means `amount`
+function M.resize_left(opts)
+  require('smart-splits.resize').run('left', opts)
 end
 
 ---Resize the current window to the right, delegating to the multiplexer when the
 ---window already spans the full width.
----@param amount number|nil defaults to `v:count1 * config.resize.amount`
-function M.resize_right(amount)
-  require('smart-splits.resize').run('right', amount)
+---@param opts number|SmartSplitsResizeOpts|nil a bare number means `amount`
+function M.resize_right(opts)
+  require('smart-splits.resize').run('right', opts)
 end
 
 ---Resize the current window upwards, delegating to the multiplexer when the
 ---window already spans the full height.
----@param amount number|nil defaults to `v:count1 * config.resize.amount`
-function M.resize_up(amount)
-  require('smart-splits.resize').run('up', amount)
+---@param opts number|SmartSplitsResizeOpts|nil a bare number means `amount`
+function M.resize_up(opts)
+  require('smart-splits.resize').run('up', opts)
 end
 
 ---Resize the current window downwards, delegating to the multiplexer when the
 ---window already spans the full height.
----@param amount number|nil defaults to `v:count1 * config.resize.amount`
-function M.resize_down(amount)
-  require('smart-splits.resize').run('down', amount)
+---@param opts number|SmartSplitsResizeOpts|nil a bare number means `amount`
+function M.resize_down(opts)
+  require('smart-splits.resize').run('down', opts)
 end
 
 ---Move the cursor to the window on the left, or to the multiplexer pane there

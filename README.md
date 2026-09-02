@@ -82,11 +82,12 @@ vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
 ```lua
 local ss = require('smart-splits')
 
--- resize, `amount` defaults to `v:count1 * config.resize.amount`
-ss.resize_left(amount)
-ss.resize_right(amount)
-ss.resize_up(amount)
-ss.resize_down(amount)
+-- resize, `opts` is `{ amount = n }` or a bare number, defaulting to
+-- `config.resize.amount`; either way `v:count1` multiplies it
+ss.resize_left(opts)
+ss.resize_right(opts)
+ss.resize_up(opts)
+ss.resize_down(opts)
 
 -- move the cursor, `opts` may override `same_row` and `at_edge` for this call
 ss.move_cursor_left(opts)
@@ -320,6 +321,10 @@ return {
   end,
 }
 ```
+
+Every operation takes `(direction, opts)`, where `opts` holds the options core resolved for that
+call, such as `wrap` for `move` and `amount` for `resize`. Fields are optional, so a backend falls
+back to its own defaults for anything the user did not ask for.
 
 You can also pass a table like this inline, without publishing a plugin at all.
 
