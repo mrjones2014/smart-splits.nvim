@@ -38,7 +38,6 @@ next configured backend. Navigation keeps working with plain Neovim behaviour. N
 ---@field move fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendMoveOpts):boolean
 ---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean
 ---@field split? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendSplitOpts):boolean
----@field setup? fun(opts?: table)
 ---@field activate? fun()
 ---@field health? fun()
 ```
@@ -76,8 +75,8 @@ So all of these are valid:
 
 ```lua
 mux.move('left', { wrap = true })
-mux.move('left', {})              -- no preference, use your defaults
-mux.move('left')                  -- same, by hand
+mux.move('left', {}) -- no preference, use your defaults
+mux.move('left') -- same, by hand
 mux.resize('left', { amount = 5 })
 ```
 
@@ -142,7 +141,7 @@ If your multiplexer wraps for free and gives you no way to stop it, say so in yo
 `health()`. Returning `false` when `opts.wrap` is false and you already wrapped is worse than
 useless, because core will then also apply `at_edge` on top of the move you just made.
 
-Conversely, when you *can* wrap and `opts.wrap` is true, prefer doing it yourself and returning
+Conversely, when you _can_ wrap and `opts.wrap` is true, prefer doing it yourself and returning
 `true`. Otherwise core falls back to wrapping among Neovim's own windows, which is a smaller wrap
 than the user pictured.
 
@@ -188,25 +187,6 @@ has the same shape.
 
 Omit this function if your multiplexer cannot create panes on demand.
 
-### `setup(opts)`
-
-Your backend's own configuration entry point. **Core never calls this.** It exists in the protocol
-because plugin managers do: `opts = { ... }` in a lazy.nvim spec becomes a `setup(opts)` call, and
-that is how a user configures your backend when several are installed side by side.
-
-Store the config and nothing else:
-
-```lua
-function M.setup(opts)
-  M.config = vim.tbl_deep_extend('force', M.config, opts or {})
-end
-```
-
-**You should not do any initialization work here.** No autocommands, no subprocesses, no writing to
-the multiplexer. `setup()` being called does **not** mean your backend is in use: the plugin manager
-calls it for every installed backend, including the ones whose multiplexer is not even running. Put
-that work in `activate()`.
-
 ### `activate()`
 
 Called once, when your backend is the one selected, from inside core's own `setup()`. This is where
@@ -232,8 +212,10 @@ end
 ```
 
 A backend that loses the priority race never gets `activate()` called, so anything you do here is
-safe to assume applies to the multiplexer the user is actually inside. By the time it runs, your
-`setup()` has already been called if the user configured you at all.
+safe to assume applies to the multiplexer the user is actually inside. This is the only lifecycle
+hook in the protocol, and the only place initialization work belongs. Whatever code path your plugin
+uses to take configuration is not that place, however it is spelled: see
+[Configuration](#configuration).
 
 ### `health()`
 
@@ -264,8 +246,23 @@ the multiplexer disappears mid-session, return `false` from the operations.
 
 ## Configuration
 
-Core passes nothing to your backend. Options belong to your plugin, and reach it through your own
-`setup(opts)`:
+Core passes nothing to your backend, and the protocol has nothing to say about how you take options.
+Configuration belongs entirely to your plugin. A `setup(opts)` function, a `vim.g.my_backend` table,
+a `config` module the user edits fields on, plain defaults with no configuration at all: all of them
+are fine, and core neither calls nor looks for any of them. `setup()` is a convention, not a
+requirement, and not one everybody shares.
+
+There is exactly one rule, and it is about **where initialization work goes, not how options
+arrive**:
+
+> [!ATTENTION]
+> Your configuration path should be inert and idempotent. Store values and return. Autocommands, subprocesses,
+> keymaps, user commands, writes to the multiplexer, anything with a side effect or a cost: those go
+> in `activate()`.
+
+The reason is that being configured says nothing about being used. Users might install several backends and
+list them in priority order, so every installed backend gets configured on every startup, including
+the ones whose multiplexer is not even running:
 
 ```lua
 {
@@ -286,13 +283,35 @@ Core passes nothing to your backend. Options belong to your plugin, and reach it
 }
 ```
 
-Both backends get `setup()` called here, whichever multiplexer the user is actually in. That is the
-whole reason `setup()` must stay inert: only the winner gets `activate()`.
+Here lazy.nvim calls `setup(opts)` on both backends, whichever multiplexer the user is actually in,
+because that is what lazy.nvim does with an `opts` table. A backend that registered autocommands or
+shelled out to its multiplexer from `setup()` would do so from inside Kitty as well as from inside
+Zellij. Only one of them gets `activate()`, so only one of them should be doing anything.
+
+Whatever you settle on, calling a configuration function should not be required for use (e.g. your
+backend should ship with sensible defaults and not require configuration to work). Users can pass your module inline, in which
+case nothing of yours is called before core resolves your backend, so read options from a table with real
+defaults rather than assuming they were ever set:
+
+```lua
+local M = {
+  name = 'my-mux',
+  protocol_version = 3,
+}
+
+-- real defaults, usable whether or not the user configured anything
+M.config = {
+  disable_nav_when_zoomed = false,
+}
+
+-- one convention among several; core never calls this
+function M.setup(opts)
+  M.config = vim.tbl_deep_extend('force', M.config, opts or {})
+end
+```
 
 Users can also pass your module directly, or a list in priority order, or a function returning
-either. All of those reach your backend the same way, so there is nothing extra to support. Someone
-configuring you inline has no `setup()` call at all, so read your options from a table with real
-defaults rather than assuming `setup()` ran.
+either. All of those reach your backend the same way, so there is nothing extra to support.
 
 ## Publishing
 

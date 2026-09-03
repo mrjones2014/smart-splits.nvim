@@ -110,8 +110,9 @@ describe('smart-splits.backend', function()
       assert.is_true(called)
     end)
 
-    -- a backend's `setup()` belongs to its own users and plugin managers, and
-    -- gets called for every installed backend, not just the one in use
+    -- a backend's `setup()` is not part of the protocol: it belongs to its own
+    -- users and plugin managers, and gets called for every installed backend,
+    -- not just the one in use
     it('never calls the backend setup', function()
       local called = false
       Config.setup({
@@ -241,6 +242,13 @@ describe('smart-splits.backend', function()
 
     it('rejects an optional field of the wrong type', function()
       rejects({ health = 'not a function' })
+    end)
+
+    -- `setup` is not a protocol field, so whatever a backend keeps under that
+    -- name is its own business and core has no opinion on its type
+    it('ignores a setup field entirely', function()
+      Config.setup({ mux = { backend = helpers.mock_backend({ setup = 'not a function' }) } })
+      assert.is_not_nil(Backend.resolve())
     end)
 
     it('rejects a module path that cannot be required', function()

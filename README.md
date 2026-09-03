@@ -326,15 +326,14 @@ Every operation takes `(direction, opts)`, where `opts` holds the options core r
 call, such as `wrap` for `move` and `amount` for `resize`. Fields are optional, so a backend falls
 back to its own defaults for anything the user did not ask for.
 
-Two optional lifecycle functions, which are deliberately not the same thing:
+There is one optional lifecycle hook, `activate()`. Core calls it once, only on the backend it
+resolved, and that is where autocommands, caches and anything else with a side effect belong.
 
-| Function      | Called by                         | For                                               |
-| ------------- | --------------------------------- | ------------------------------------------------- |
-| `setup(opts)` | the user or their plugin manager  | storing your own config, and nothing else         |
-| `activate()`  | core, only for the backend in use | autocommands, caches, anything with a side effect |
-
-Every installed backend gets `setup()`, including ones whose multiplexer is not running, so
-initialization work belongs in `activate()`.
+Backend options are the backend's own business and core passes none of them along. Take them however
+you like, `setup(opts)` or `vim.g` or a config module; the protocol does not care and core calls none
+of them. It only asks that whichever path you pick stays inert, storing values and nothing more,
+because every installed backend gets configured on startup including the ones whose multiplexer is
+not running. Only the resolved backend gets `activate()`.
 
 You can also pass a table like this inline, without publishing a plugin at all.
 
