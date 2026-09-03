@@ -326,6 +326,16 @@ Every operation takes `(direction, opts)`, where `opts` holds the options core r
 call, such as `wrap` for `move` and `amount` for `resize`. Fields are optional, so a backend falls
 back to its own defaults for anything the user did not ask for.
 
+Two optional lifecycle functions, which are deliberately not the same thing:
+
+| Function      | Called by                         | For                                               |
+| ------------- | --------------------------------- | ------------------------------------------------- |
+| `setup(opts)` | the user or their plugin manager  | storing your own config, and nothing else         |
+| `activate()`  | core, only for the backend in use | autocommands, caches, anything with a side effect |
+
+Every installed backend gets `setup()`, including ones whose multiplexer is not running, so
+initialization work belongs in `activate()`.
+
 You can also pass a table like this inline, without publishing a plugin at all.
 
 ## Troubleshooting

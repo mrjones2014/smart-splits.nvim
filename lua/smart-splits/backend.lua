@@ -20,6 +20,12 @@
 ---
 ---Every operation takes `(direction, opts)`. Core always passes a table, but the
 ---parameter is optional so the functions stay pleasant to call by hand.
+---
+---`setup()` and `activate()` are separate on purpose. `setup()` is the backend's
+---own config entry point, which plugin managers call for every installed plugin;
+---core never calls it and being called says nothing about whether the backend is
+---in use. `activate()` is core's signal that this backend won, and is the only
+---place initialization work belongs.
 ---@class SmartSplitsBackend
 ---@field name string human readable name, used in logs and `:checkhealth`
 ---@field protocol_version number major protocol version this backend implements
@@ -27,7 +33,8 @@
 ---@field move fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendMoveOpts):boolean move focus one pane, `true` if handled
 ---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean resize the current pane, `true` if handled
 ---@field split? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendSplitOpts):boolean create a new pane, `true` if handled
----@field setup? fun() called once, when the backend is resolved
+---@field setup? fun(opts?: table) the backend's own config entry point, called by the user or their plugin manager, never by core
+---@field activate? fun() called once, when this backend is the one selected; where initialization work belongs
 ---@field health? fun() called during `:checkhealth smart-splits`, under a header emitted by core
 
 ---@alias SmartSplitsBackendSpec SmartSplitsBackend|string
@@ -61,6 +68,7 @@ local OPTIONAL = {
   resize = 'function',
   split = 'function',
   setup = 'function',
+  activate = 'function',
   health = 'function',
 }
 
@@ -206,10 +214,13 @@ function M.resolve()
         Log.debug('backend `%s` detect() returned false, skipping', name)
         table.insert(report, { spec = name, status = 'skipped', reason = 'detect() returned false', backend = backend })
       else
-        if backend.setup then
-          local setup_ok, setup_err = pcall(backend.setup)
-          if not setup_ok then
-            Log.error('backend `%s` setup() errored: %s', name, setup_err)
+        -- `activate()`, not `setup()`: a backend's `setup()` belongs to its own
+        -- users and plugin managers, and gets called whether or not the backend
+        -- ends up being the one in use
+        if backend.activate then
+          local activate_ok, activate_err = pcall(backend.activate)
+          if not activate_ok then
+            Log.error('backend `%s` activate() errored: %s', name, activate_err)
           end
         end
         resolved = backend

@@ -96,7 +96,23 @@ describe('smart-splits.backend', function()
       assert.is_true(detected)
     end)
 
-    it('calls the backend setup during setup', function()
+    it('activates the backend during setup', function()
+      local called = false
+      Config.setup({
+        mux = {
+          backend = helpers.mock_backend({
+            activate = function()
+              called = true
+            end,
+          }),
+        },
+      })
+      assert.is_true(called)
+    end)
+
+    -- a backend's `setup()` belongs to its own users and plugin managers, and
+    -- gets called for every installed backend, not just the one in use
+    it('never calls the backend setup', function()
       local called = false
       Config.setup({
         mux = {
@@ -107,7 +123,8 @@ describe('smart-splits.backend', function()
           }),
         },
       })
-      assert.is_true(called)
+      Backend.resolve()
+      assert.is_false(called)
     end)
 
     it('resolves on first use when setup was never called', function()
@@ -132,31 +149,31 @@ describe('smart-splits.backend', function()
       assert.equal('wanted', Backend.resolve().name)
     end)
 
-    it('never sets up a backend that lost', function()
-      local loser_setup = false
-      local winner_setup = false
+    it('never activates a backend that lost', function()
+      local loser_activated = false
+      local winner_activated = false
       local winner = helpers.mock_backend({
         name = 'winner',
-        setup = function()
-          winner_setup = true
+        activate = function()
+          winner_activated = true
         end,
       })
       local loser = helpers.mock_backend({
         name = 'loser',
-        setup = function()
-          loser_setup = true
+        activate = function()
+          loser_activated = true
         end,
       })
       Config.setup({ mux = { backend = { winner, loser } } })
       Backend.resolve()
-      assert.is_true(winner_setup)
-      assert.is_false(loser_setup)
+      assert.is_true(winner_activated)
+      assert.is_false(loser_activated)
     end)
 
-    it('calls setup exactly once across repeated resolves', function()
+    it('calls activate exactly once across repeated resolves', function()
       local count = 0
       local backend = helpers.mock_backend({
-        setup = function()
+        activate = function()
           count = count + 1
         end,
       })
@@ -167,10 +184,10 @@ describe('smart-splits.backend', function()
       assert.equal(1, count)
     end)
 
-    it('keeps working when setup errors', function()
+    it('keeps working when activate errors', function()
       local backend = helpers.mock_backend({
-        setup = function()
-          error('bad setup')
+        activate = function()
+          error('bad activate')
         end,
       })
       Config.setup({ mux = { backend = backend } })

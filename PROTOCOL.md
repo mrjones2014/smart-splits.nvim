@@ -38,7 +38,8 @@ next configured backend. Navigation keeps working with plain Neovim behaviour. N
 ---@field move fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendMoveOpts):boolean
 ---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean
 ---@field split? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendSplitOpts):boolean
----@field setup? fun()
+---@field setup? fun(opts?: table)
+---@field activate? fun()
 ---@field health? fun()
 ```
 
@@ -187,14 +188,33 @@ has the same shape.
 
 Omit this function if your multiplexer cannot create panes on demand.
 
-### `setup()`
+### `setup(opts)`
 
-Called once, when your backend is the one selected, from inside core's `setup()`. This is where you
-register autocommands, warm caches, or set a user variable the multiplexer reads. Note that core may
-be lazy loaded, so do not assume `VimEnter` has yet to fire:
+Your backend's own configuration entry point. **Core never calls this.** It exists in the protocol
+because plugin managers do: `opts = { ... }` in a lazy.nvim spec becomes a `setup(opts)` call, and
+that is how a user configures your backend when several are installed side by side.
+
+Store the config and nothing else:
 
 ```lua
-function M.setup()
+function M.setup(opts)
+  M.config = vim.tbl_deep_extend('force', M.config, opts or {})
+end
+```
+
+**You should not do any initialization work here.** No autocommands, no subprocesses, no writing to
+the multiplexer. `setup()` being called does **not** mean your backend is in use: the plugin manager
+calls it for every installed backend, including the ones whose multiplexer is not even running. Put
+that work in `activate()`.
+
+### `activate()`
+
+Called once, when your backend is the one selected, from inside core's own `setup()`. This is where
+you register autocommands, warm caches, or set a user variable the multiplexer reads. Note that core
+may be lazy loaded, so do not assume `VimEnter` has yet to fire:
+
+```lua
+function M.activate()
   -- do it now as well as on resume: if the user lazy loads smart-splits.nvim,
   -- `VimEnter` has already fired by the time this runs
   set_pane_marker(true)
@@ -211,7 +231,9 @@ function M.setup()
 end
 ```
 
-A backend that loses the priority race never gets `setup()` called.
+A backend that loses the priority race never gets `activate()` called, so anything you do here is
+safe to assume applies to the multiplexer the user is actually inside. By the time it runs, your
+`setup()` has already been called if the user configured you at all.
 
 ### `health()`
 
@@ -242,7 +264,8 @@ the multiplexer disappears mid-session, return `false` from the operations.
 
 ## Configuration
 
-Core passes nothing to your backend. Options belong to your plugin:
+Core passes nothing to your backend. Options belong to your plugin, and reach it through your own
+`setup(opts)`:
 
 ```lua
 {
@@ -252,15 +275,24 @@ Core passes nothing to your backend. Options belong to your plugin:
       'smart-splits-nvim/smart-splits-backend-zellij',
       opts = { disable_nav_when_zoomed = true },
     },
+    {
+      'smart-splits-nvim/smart-splits-backend-kitty',
+      opts = { kitty_password = 'my-password' },
+    },
   },
   opts = {
-    mux = { backend = 'smart-splits-backend-zellij' },
+    mux = { backend = { 'smart-splits-backend-zellij', 'smart-splits-backend-kitty' } },
   },
 }
 ```
 
+Both backends get `setup()` called here, whichever multiplexer the user is actually in. That is the
+whole reason `setup()` must stay inert: only the winner gets `activate()`.
+
 Users can also pass your module directly, or a list in priority order, or a function returning
-either. All of those reach your backend the same way, so there is nothing extra to support.
+either. All of those reach your backend the same way, so there is nothing extra to support. Someone
+configuring you inline has no `setup()` call at all, so read your options from a table with real
+defaults rather than assuming `setup()` ran.
 
 ## Publishing
 
