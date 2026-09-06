@@ -4,6 +4,11 @@
 
 </div>
 
+> [!NOTE]
+> This repo recently moved to a new `smart-splits-nvim` GitHub org!
+> See [#488](https://github.com/mrjones2014/smart-splits.nvim/issues/488) / [#492](https://github.com/mrjones2014/smart-splits.nvim/issues/492)
+> for details.
+
 🧠 Smarter and more intuitive split pane management that uses a mental model of left/right/up/down
 instead of wider/narrower/taller/shorter for resizing. Supports seamless navigation between Neovim and terminal
 multiplexer split panes. See [Multiplexer Integrations](#multiplexer-integrations).
