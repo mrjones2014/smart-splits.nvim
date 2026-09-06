@@ -1,5 +1,5 @@
 *smart-splits.nvim.txt*
-                           For Neovim >= 0.11.0    Last change: 2026 August 08
+                        For Neovim >= 0.11.0    Last change: 2026 September 06
 
 ==============================================================================
 Table of Contents                        *smart-splits.nvim-table-of-contents*
@@ -14,6 +14,10 @@ Table of Contents                        *smart-splits.nvim-table-of-contents*
   - Persistent Resize Mode    |smart-splits.nvim-usage-persistent-resize-mode|
 4. Links                                             |smart-splits.nvim-links|
 
+
+  [!NOTE] This repo recently moved to a new `smart-splits-nvim` GitHub org! See
+  #488 <https://github.com/mrjones2014/smart-splits.nvim/issues/488> / #492
+  <https://github.com/mrjones2014/smart-splits.nvim/issues/492> for details.
 Smarter and more intuitive split pane management that uses a mental model of
 left/right/up/down instead of wider/narrower/taller/shorter for resizing.
 Supports seamless navigation between Neovim and terminal multiplexer split
