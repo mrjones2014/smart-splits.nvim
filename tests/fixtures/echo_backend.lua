@@ -41,14 +41,6 @@ function M.resize(direction, opts)
   return false
 end
 
----@param direction SmartSplitsDirection
----@param opts SmartSplitsBackendSplitOpts|nil
----@return boolean
-function M.split(direction, opts)
-  record('split', direction, opts)
-  return false
-end
-
 function M.health()
   vim.health.ok('echo backend is loaded, it records calls and handles nothing')
 end

@@ -26,19 +26,6 @@ local function restore_row(offset)
 end
 
 ---@param direction SmartSplitsDirection
-local function at_edge_split(direction)
-  local buftypes, filetypes = require('smart-splits.config').ignores('move')
-  if Win.is_ignored(nil, buftypes, filetypes) then
-    return
-  end
-
-  if require('smart-splits.backend').split(direction, {}) then
-    return
-  end
-  Win.split(direction)
-end
-
----@param direction SmartSplitsDirection
 ---@param opts SmartSplitsMoveOpts|nil
 function M.move_cursor(direction, opts)
   local Config = require('smart-splits.config')
@@ -49,10 +36,11 @@ function M.move_cursor(direction, opts)
   end
   local at_edge = opts.at_edge or Config.move.at_edge
 
-  -- the backend cannot see `at_edge`, and a multiplexer that wraps around its own
-  -- edges would otherwise wrap even for someone who asked to stop
   ---@type SmartSplitsBackendMoveOpts
-  local move_opts = { wrap = at_edge == AtEdgeBehavior.wrap }
+  local move_opts = {}
+  if type(at_edge) == 'string' then
+    move_opts.at_edge = at_edge
+  end
 
   local Backend = require('smart-splits.backend')
   local dir_key = DirectionKeys[direction]
@@ -88,6 +76,8 @@ function M.move_cursor(direction, opts)
       return
     end
 
+    -- mux backend did not handle the edge behavior;
+    -- handle it inside neovim's layout
     if type(at_edge) == 'function' then
       at_edge({
         backend = Backend.resolve(),
@@ -103,7 +93,10 @@ function M.move_cursor(direction, opts)
     elseif at_edge == AtEdgeBehavior.stop then
       return
     elseif at_edge == AtEdgeBehavior.split then
-      at_edge_split(direction)
+      local buftypes, filetypes = Config.ignores('move')
+      if not Win.is_ignored(nil, buftypes, filetypes) then
+        Win.split(direction)
+      end
       return
     end
 

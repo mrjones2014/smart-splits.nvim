@@ -100,7 +100,6 @@ function M.mock_backend(overrides)
     detect = record('detect', true),
     move = record('move', false),
     resize = record('resize', false),
-    split = record('split', false),
   }
 
   for key, value in pairs(overrides) do

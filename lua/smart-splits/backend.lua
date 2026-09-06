@@ -3,20 +3,15 @@
 ---functions can be called by hand; fall back to your own defaults for anything
 ---absent. Later protocol versions may add fields, so ignore unknown ones.
 ---@class SmartSplitsBackendMoveOpts
----@field wrap boolean|nil whether wrapping was asked for, from `at_edge`
+---@field at_edge 'stop'|'wrap'|'split'|nil what to do when there is no pane in the given direction
 
 ---@class SmartSplitsBackendResizeOpts
 ---@field amount number|nil cells to resize by, already multiplied by `v:count1`
 
----No fields today. Splits take whatever default size the thing doing the
----splitting uses. Kept so every operation has the same shape, and so a later
----protocol version has somewhere to add options.
----@class SmartSplitsBackendSplitOpts
-
 ---A multiplexer backend. Backends live in their own plugins, core ships none.
 ---Only `name`, `protocol_version`, `detect` and `move` are required. Omit
----`resize` or `split` entirely if the multiplexer cannot do them; core checks
----whether the function is present rather than asking for a capability table.
+---`resize` entirely if the multiplexer cannot do it; core checks whether the
+---function is present rather than asking for a capability table.
 ---
 ---Every operation takes `(direction, opts)`. Core always passes a table, but the
 ---parameter is optional so the functions stay pleasant to call by hand.
@@ -31,7 +26,6 @@
 ---@field detect fun():boolean is this multiplexer usable right now? must be cheap and free of side effects
 ---@field move fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendMoveOpts):boolean move focus one pane, `true` if handled
 ---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean resize the current pane, `true` if handled
----@field split? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendSplitOpts):boolean create a new pane, `true` if handled
 ---@field activate? fun() called once, when this backend is the one selected; where initialization work belongs
 ---@field health? fun() called during `:checkhealth smart-splits`, under a header emitted by core
 ---@field slow_threshold? number configure the threshold, in milliseconds, at which a backend operation should be considered slow and log a warning; default 100ms
@@ -65,7 +59,6 @@ local REQUIRED = {
 
 local OPTIONAL = {
   resize = 'function',
-  split = 'function',
   activate = 'function',
   health = 'function',
   slow_threshold = 'number',
@@ -257,7 +250,7 @@ end
 local reported_errors = {}
 
 ---Call an operation on the resolved backend.
----@param op 'move'|'resize'|'split'
+---@param op 'move'|'resize'
 ---@param ... any
 ---@return boolean handled
 local function call(op, ...)
@@ -304,13 +297,6 @@ end
 ---@return boolean handled
 function M.resize(direction, opts)
   return call('resize', direction, opts or {})
-end
-
----@param direction SmartSplitsDirection
----@param opts SmartSplitsBackendSplitOpts|nil
----@return boolean handled
-function M.split(direction, opts)
-  return call('split', direction, opts or {})
 end
 
 return M

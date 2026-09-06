@@ -37,7 +37,6 @@ next configured backend. Navigation keeps working with plain Neovim behaviour. N
 ---@field detect fun():boolean
 ---@field move fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendMoveOpts):boolean
 ---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean
----@field split? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendSplitOpts):boolean
 ---@field activate? fun()
 ---@field health? fun()
 ---@field slow_threshold? number in milliseconds, operations taking longer than this will log a warning; default 100ms
@@ -55,13 +54,10 @@ the user's config and whatever they passed at the call site:
 
 ```lua
 ---@class SmartSplitsBackendMoveOpts
----@field wrap boolean|nil whether wrapping was asked for, from `at_edge`
+---@field at_edge 'stop'|'wrap'|'split'|nil what to do when there is no pane in the given direction
 
 ---@class SmartSplitsBackendResizeOpts
 ---@field amount number|nil cells to resize by, already multiplied by `v:count1`
-
----no fields today
----@class SmartSplitsBackendSplitOpts
 ```
 
 Three rules, so the calls stay pleasant to make by hand and cheap to extend:
@@ -75,7 +71,7 @@ Three rules, so the calls stay pleasant to make by hand and cheap to extend:
 So all of these are valid:
 
 ```lua
-mux.move('left', { wrap = true })
+mux.move('left', { at_edge = 'wrap' })
 mux.move('left', {}) -- no preference, use your defaults
 mux.move('left') -- same, by hand
 mux.resize('left', { amount = 5 })
@@ -85,7 +81,7 @@ Options that only mean something inside Neovim are not forwarded. `move.same_row
 it keeps the cursor on the same screen row across a window boundary, which has no counterpart in a
 multiplexer pane.
 
-There is no capabilities table. If your multiplexer cannot resize or cannot split, **leave the
+There is no capabilities table. If your multiplexer cannot resize, **leave the
 function out entirely**. Core checks whether the function exists.
 
 ## Contracts
@@ -116,13 +112,19 @@ Return `true` when you moved, `false` when you did not. On `false`, core applies
 The return value is checked with `== true`. A backend that forgets to return gets treated as "did not
 handle", never as success.
 
-**Wrapping.** There is no `wrap` capability field; whether you wrap is a per-call decision, and
-`opts.wrap` is how you make it. It is `true` only when `move.at_edge` resolved to `'wrap'` for this
-call, so a per-call `at_edge` override reaches you too.
+**`opts.at_edge`.** This tells you what the user asked to happen when there is no pane in the given
+direction. It is one of `'stop'`, `'wrap'`, `'split'`, or `nil` (when the user's `at_edge` is a
+function, which core handles itself). Use it to decide how to behave at the edge:
+
+- `'stop'`: do not move past the edge. Return `false` if there is no pane that way.
+- `'wrap'`: if your multiplexer can wrap around its own edges, do so and return `true`. Otherwise
+  return `false` and core will wrap among its own windows.
+- `'split'`: if your multiplexer can create a new pane, do so and return `true`. Otherwise return
+  `false` and core will create a Neovim split.
 
 This matters because many multiplexers wrap around their own edges by default. `tmux select-pane -R`
 at the rightmost pane moves to the leftmost one, and core cannot tell that apart from an ordinary
-move, so a user who asked to stop at the edge would silently wrap anyway. Honour `opts.wrap`:
+move, so a user who asked to stop at the edge would silently wrap anyway. Honour `opts.at_edge`:
 
 ```lua
 function M.move(direction, opts)
@@ -130,21 +132,23 @@ function M.move(direction, opts)
   if focus_pane(direction) then
     return true
   end
-  -- nothing that way, so wrapping is the only way to move
-  if opts.wrap then
+  -- nothing that way
+  if opts.at_edge == 'wrap' then
     return focus_far_pane(opposite[direction])
+  elseif opts.at_edge == 'split' then
+    return create_pane(direction)
   end
   return false
 end
 ```
 
 If your multiplexer wraps for free and gives you no way to stop it, say so in your README and in
-`health()`. Returning `false` when `opts.wrap` is false and you already wrapped is worse than
+`health()`. Returning `false` when `opts.at_edge` is `'stop'` and you already wrapped is worse than
 useless, because core will then also apply `at_edge` on top of the move you just made.
 
-Conversely, when you _can_ wrap and `opts.wrap` is true, prefer doing it yourself and returning
-`true`. Otherwise core falls back to wrapping among Neovim's own windows, which is a smaller wrap
-than the user pictured.
+Conversely, when you _can_ wrap or split and the corresponding `opts.at_edge` value is set, prefer
+doing it yourself and returning `true`. Otherwise core falls back to its own windows, which is a
+smaller wrap or split than the user pictured.
 
 **Zoom.** Entirely yours. Core has no concept of a zoomed pane. If your multiplexer can zoom and the
 user wants navigation disabled while zoomed, return `false` from `move()` and expose your own option
@@ -173,20 +177,6 @@ Neovim resize here: Neovim shrinks a window that fills the axis into `cmdheight`
 recover the space ([#336](https://github.com/mrjones2014/smart-splits.nvim/issues/336)).
 
 Omit this function if your multiplexer cannot resize panes.
-
-### `split(direction, opts)`
-
-Create a new pane in `direction`. Core calls this only when `move.at_edge` is `'split'` and the
-cursor is at the edge of the layout.
-
-Return `true` when you created a pane. On `false`, core creates a Neovim split instead.
-
-Size the new pane however your multiplexer normally would. There is no size option; whichever side
-performs the split uses its own default, so a Neovim split gets Neovim's and a multiplexer pane gets
-the multiplexer's. `opts` is empty today, and takes the second parameter slot so that every operation
-has the same shape.
-
-Omit this function if your multiplexer cannot create panes on demand.
 
 ### `activate()`
 
@@ -342,11 +332,6 @@ end
 
 function M.resize(direction, opts)
   require('smart-splits.log').debug('echo backend: resize(%s, %s)', direction, vim.inspect(opts))
-  return false
-end
-
-function M.split(direction, opts)
-  require('smart-splits.log').debug('echo backend: split(%s, %s)', direction, vim.inspect(opts))
   return false
 end
 
