@@ -40,6 +40,7 @@ next configured backend. Navigation keeps working with plain Neovim behaviour. N
 ---@field split? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendSplitOpts):boolean
 ---@field activate? fun()
 ---@field health? fun()
+---@field slow_threshold? number in milliseconds, operations taking longer than this will log a warning; default 100ms
 ```
 
 `SmartSplitsDirection` is one of `'left'`, `'right'`, `'up'`, `'down'`.
