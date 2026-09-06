@@ -96,7 +96,7 @@ function M.mock_backend(overrides)
 
   local backend = {
     name = 'mock',
-    protocol_version = 3,
+    protocol_version = '3.0.0',
     detect = record('detect', true),
     move = record('move', false),
     resize = record('resize', false),

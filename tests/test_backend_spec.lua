@@ -233,7 +233,7 @@ describe('smart-splits.backend', function()
     end)
 
     it('rejects an unsupported protocol version', function()
-      rejects({ protocol_version = 2 })
+      rejects({ protocol_version = '2.0.0' })
     end)
 
     it('rejects move that is not a function', function()
@@ -257,7 +257,7 @@ describe('smart-splits.backend', function()
     end)
 
     it('falls through to the next candidate after an invalid one', function()
-      local invalid = helpers.mock_backend({ name = 'invalid', protocol_version = 2 })
+      local invalid = helpers.mock_backend({ name = 'invalid', protocol_version = '2.0.0' })
       local valid = helpers.mock_backend({ name = 'valid' })
       Config.setup({ mux = { backend = { invalid, valid } } })
       assert.equal('valid', Backend.resolve().name)
@@ -274,7 +274,7 @@ describe('smart-splits.backend', function()
 
   describe('report', function()
     it('records an entry per candidate', function()
-      local invalid = helpers.mock_backend({ name = 'invalid', protocol_version = 99 })
+      local invalid = helpers.mock_backend({ name = 'invalid', protocol_version = '99.0.0' })
       local undetected = helpers.mock_backend({
         name = 'undetected',
         detect = function()
@@ -421,12 +421,37 @@ describe('smart-splits.backend', function()
   end)
 
   describe('protocol version', function()
+    local function rejects(overrides)
+      Config.setup({ mux = { backend = helpers.mock_backend(overrides) } })
+      assert.is_nil(Backend.resolve())
+    end
+
     it('exposes the current version through the plugin entry point', function()
-      assert.equal(3, require('smart-splits').PROTOCOL_VERSION)
+      assert.is_true(
+        vim.version.eq(vim.version.parse('3.0.0') --[[@as vim.Version]], require('smart-splits').PROTOCOL_VERSION)
+      )
     end)
 
     it('supports the current version', function()
-      assert.is_true(vim.tbl_contains(Backend.SUPPORTED_VERSIONS, Backend.PROTOCOL_VERSION))
+      assert.is_true(Backend.SUPPORTED_VERSIONS:has(Backend.PROTOCOL_VERSION))
+    end)
+
+    it('rejects an invalid semantic version', function()
+      rejects({ protocol_version = 'not-a-version' })
+    end)
+
+    it('accepts a backend with a compatible range', function()
+      Config.setup({ mux = { backend = helpers.mock_backend({ protocol_version = '^3.0.0' }) } })
+      assert.is_not_nil(Backend.resolve())
+    end)
+
+    it('accepts a backend with a compatible explicit range', function()
+      Config.setup({ mux = { backend = helpers.mock_backend({ protocol_version = '3.0.0 - 4.0.0' }) } })
+      assert.is_not_nil(Backend.resolve())
+    end)
+
+    it('rejects a backend with an incompatible range', function()
+      rejects({ protocol_version = '^4.0.0' })
     end)
   end)
 end)

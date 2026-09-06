@@ -22,7 +22,7 @@
 ---core never calls it and the protocol says nothing about it.
 ---@class SmartSplitsBackend
 ---@field name string human readable name, used in logs and `:checkhealth`
----@field protocol_version number major protocol version this backend implements
+---@field protocol_version string semantic version or range this backend implements (e.g. "3.0.0", "^3.0.0", ">=3.0.0 <4.0.0")
 ---@field detect fun():boolean is this multiplexer usable right now? must be cheap and free of side effects
 ---@field move fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendMoveOpts):boolean move focus one pane, `true` if handled
 ---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean resize the current pane, `true` if handled
@@ -36,14 +36,40 @@
 ---a function returning either.
 ---@alias SmartSplitsBackendConfig SmartSplitsBackendSpec|SmartSplitsBackendSpec[]|fun():SmartSplitsBackendSpec|SmartSplitsBackendSpec[]
 
----Current protocol version. A backend declares the major version it implements
+---Current protocol version. A backend declares the version it implements
 ---and core refuses to load anything outside `SUPPORTED_VERSIONS`.
-local PROTOCOL_VERSION = 3
+local PROTOCOL_VERSION = vim.version.parse('3.0.0')
 
----Versions core can talk to. A set rather than a single number, so a future
+---Versions core can talk to. A range rather than a set, so a future
 ---protocol bump can keep accepting older backends for a release or two instead
 ---of breaking every backend on the same day.
-local SUPPORTED_VERSIONS = { 3 }
+local SUPPORTED_VERSIONS = vim.version.range('^3.0.0')
+
+---Check if two version ranges overlap. Manual implementation since
+---vim.version.intersect requires Neovim 0.12+.
+---@param r1 vim.VersionRange
+---@param r2 vim.VersionRange
+---@return boolean
+local function ranges_intersect(r1, r2)
+  -- Single point ranges (from == to) need special handling
+  local r1_is_point = vim.version.eq(r1.from, r1.to)
+  local r2_is_point = vim.version.eq(r2.from, r2.to)
+
+  if r1_is_point and r2_is_point then
+    -- Both are single points: intersect iff they're the same point
+    return vim.version.eq(r1.from, r2.from)
+  elseif r1_is_point then
+    -- r1 is a point, r2 is a range: check if r1.from is in r2
+    return r2:has(r1.from)
+  elseif r2_is_point then
+    -- r2 is a point, r1 is a range: check if r2.from is in r1
+    return r1:has(r2.from)
+  else
+    -- Both are ranges: standard intersection check
+    -- [from1, to1) and [from2, to2) intersect if from1 < to2 AND from2 < to1
+    return vim.version.lt(r1.from, r2.to) and vim.version.lt(r2.from, r1.to)
+  end
+end
 
 ---Backend operations run on every keypress that reaches a window edge, so a
 ---backend that shells out without a timeout will freeze the editor. Core cannot
@@ -52,7 +78,7 @@ local DEFAULT_SLOW_MS = 100
 
 local REQUIRED = {
   name = 'string',
-  protocol_version = 'number',
+  protocol_version = 'string',
   detect = 'function',
   move = 'function',
 }
@@ -111,10 +137,16 @@ local function validate(backend)
     end
   end
 
-  if not vim.tbl_contains(SUPPORTED_VERSIONS, backend.protocol_version) then
+  local backend_range = vim.version.range(backend.protocol_version)
+  if not backend_range then
+    return ('implements protocol version %q, which is not a valid semantic version'):format(backend.protocol_version)
+  end
+
+  ---@diagnostic disable-next-line: param-type-mismatch
+  if not ranges_intersect(SUPPORTED_VERSIONS, backend_range) then
     return ('implements protocol version %s, this version of smart-splits.nvim supports %s'):format(
       backend.protocol_version,
-      table.concat(vim.tbl_map(tostring, SUPPORTED_VERSIONS), ', ')
+      tostring(SUPPORTED_VERSIONS)
     )
   end
 

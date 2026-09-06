@@ -5,7 +5,7 @@
 ---@class EchoBackend: SmartSplitsBackend
 local M = {
   name = 'echo',
-  protocol_version = 3,
+  protocol_version = '3.0.0',
 }
 
 ---Calls core has made, in order. Each entry is `{ op, ... }`.

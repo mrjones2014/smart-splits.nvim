@@ -312,7 +312,7 @@ See [`PROTOCOL.md`](./PROTOCOL.md), or `:help smart-splits-protocol`. A backend 
 ```lua
 return {
   name = 'my-mux',
-  protocol_version = 3,
+  protocol_version = '3.0.0',
   detect = function()
     return vim.env.MY_MUX ~= nil
   end,

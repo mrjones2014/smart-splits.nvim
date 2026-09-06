@@ -74,7 +74,7 @@ local function check_backends()
   local Config = require('smart-splits.config')
 
   vim.health.start('smart-splits.nvim: backends')
-  info('supported protocol versions: %s', table.concat(vim.tbl_map(tostring, Backend.SUPPORTED_VERSIONS), ', '))
+  info('supported protocol version range: %s', tostring(Backend.SUPPORTED_VERSIONS))
 
   if Config.mux.backend == nil then
     info('no backend configured, window movement stops at the edges of Neovim')

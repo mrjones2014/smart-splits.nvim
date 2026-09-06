@@ -8,32 +8,32 @@ backend only answers one question, in three variations: **did you handle this?**
 
 ## Versioning
 
-The current protocol version is **3**. A backend declares the major version it implements:
+The current protocol version is **3.0.0**. A backend declares the version or range it implements:
 
 ```lua
-protocol_version = 3
+protocol_version = "3.0.0"
+-- or a range:
+protocol_version = "^3.0.0"
+protocol_version = ">=3.0.0 <4.0.0"
 ```
 
-Core accepts any version in its supported set. Read the current values from Lua:
+Core accepts any version or range that overlaps with its supported range. Read the current values from Lua:
 
 ```lua
-require('smart-splits').PROTOCOL_VERSION            --> 3
-require('smart-splits.backend').SUPPORTED_VERSIONS  --> { 3 }
+require('smart-splits').PROTOCOL_VERSION            --> vim.Version (3.0.0)
+require('smart-splits.backend').SUPPORTED_VERSIONS  --> vim.VersionRange (^3.0.0)
 ```
 
-Protocol versions are major versions only. Additions that do not break existing backends do not bump
-it. When a breaking change does land, core keeps accepting the previous version for at least one
-release, so the supported set may hold more than one entry.
+Protocol versions follow semantic versioning. Additions that do not break existing backends do not bump the major version. When a breaking change does land, core keeps accepting the previous major version for at least one release, so the supported range may span multiple major versions.
 
-A backend outside the supported set is reported as an error, disabled, and skipped in favour of the
-next configured backend. Navigation keeps working with plain Neovim behaviour. Nothing throws.
+A backend whose version or range does not overlap the supported range is reported as an error, disabled, and skipped in favour of the next configured backend. Navigation keeps working with plain Neovim behaviour. Nothing throws.
 
 ## Interface
 
 ```lua
 ---@class SmartSplitsBackend
 ---@field name string
----@field protocol_version number
+---@field protocol_version string
 ---@field detect fun():boolean
 ---@field move fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendMoveOpts):boolean
 ---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean
@@ -287,7 +287,7 @@ defaults rather than assuming they were ever set:
 ```lua
 local M = {
   name = 'my-mux',
-  protocol_version = 3,
+  protocol_version = '3.0.0',
 }
 
 -- real defaults, usable whether or not the user configured anything
@@ -318,7 +318,7 @@ call and handles nothing, which makes it useful for watching core's delegation p
 ---@class EchoBackend: SmartSplitsBackend
 local M = {
   name = 'echo',
-  protocol_version = 3,
+  protocol_version = '3.0.0',
 }
 
 function M.detect()
