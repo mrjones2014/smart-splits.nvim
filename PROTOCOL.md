@@ -11,10 +11,10 @@ backend only answers one question, in three variations: **did you handle this?**
 The current protocol version is **3.0.0**. A backend declares the version or range it implements:
 
 ```lua
-protocol_version = "3.0.0"
+protocol_version = '3.0.0'
 -- or a range:
-protocol_version = "^3.0.0"
-protocol_version = ">=3.0.0 <4.0.0"
+protocol_version = '^3.0.0'
+protocol_version = '>=3.0.0 <4.0.0'
 ```
 
 Core accepts any version or range that overlaps with its supported range. Read the current values from Lua:
@@ -225,7 +225,7 @@ behaviour, but the error is reported to the user as your backend's fault. When t
 unreachable, return `false`.
 
 **Return promptly.** These functions run on every keypress that reaches a window edge. Core warns
-when a call exceeds 100ms and names your backend in the message. If you shell out, pass a timeout:
+when a call exceeds `backend.slow_threshold` (100ms by default) and names your backend in the message. If you shell out, pass a timeout:
 
 ```lua
 local result = vim.system({ 'zellij', 'action', 'move-focus', direction }, { timeout = 200 }):wait()
@@ -246,7 +246,7 @@ requirement, and not one everybody shares.
 There is exactly one rule, and it is about **where initialization work goes, not how options
 arrive**:
 
-> [!ATTENTION]
+> [!WARNING]
 > Your configuration path should be inert and idempotent. Store values and return. Autocommands, subprocesses,
 > keymaps, user commands, writes to the multiplexer, anything with a side effect or a cost: those go
 > in `activate()`.
