@@ -295,4 +295,82 @@ describe('resize', function()
       assert.equals(before, vim.api.nvim_win_get_height(0))
     end)
   end)
+
+  describe('count-aware resizing', function()
+    it('multiplies the default amount by v:count1', function()
+      local wins = helpers.create_vsplits(2)
+      helpers.focus(wins[1])
+      local before = vim.api.nvim_win_get_width(wins[1])
+      vim.keymap.set('n', 'gR', function()
+        ss.resize_right()
+      end)
+      vim.cmd('normal 3gR')
+      assert.equals(9, vim.api.nvim_win_get_width(wins[1]) - before)
+    end)
+
+    it('multiplies a per-call amount by v:count1', function()
+      local wins = helpers.create_vsplits(2)
+      helpers.focus(wins[1])
+      local before = vim.api.nvim_win_get_width(wins[1])
+      vim.keymap.set('n', 'gR', function()
+        ss.resize_right(2)
+      end)
+      vim.cmd('normal 4gR')
+      assert.equals(8, vim.api.nvim_win_get_width(wins[1]) - before)
+    end)
+
+    it('multiplies a configured amount by v:count1', function()
+      ss.setup({ resize = { amount = 4 } })
+      local wins = helpers.create_vsplits(2)
+      helpers.focus(wins[1])
+      local before = vim.api.nvim_win_get_width(wins[1])
+      vim.keymap.set('n', 'gR', function()
+        ss.resize_right()
+      end)
+      vim.cmd('normal 2gR')
+      assert.equals(8, vim.api.nvim_win_get_width(wins[1]) - before)
+    end)
+  end)
+
+  describe('floating windows', function()
+    it('redirects resize to the previous window from a regular float', function()
+      local wins = helpers.create_vsplits(2)
+      helpers.focus(wins[1])
+      local buf = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_open_win(buf, true, {
+        relative = 'editor',
+        width = 10,
+        height = 5,
+        row = 5,
+        col = 5,
+      })
+      local before = vim.api.nvim_win_get_width(wins[1])
+      ss.resize_right(3)
+      assert.is_true(vim.api.nvim_win_get_width(wins[1]) > before)
+    end)
+
+    it('does not crash when both current and previous windows are floats', function()
+      local wins = helpers.create_vsplits(2)
+      helpers.focus(wins[1])
+      local before = vim.api.nvim_win_get_width(wins[1])
+      local buf1 = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_open_win(buf1, true, {
+        relative = 'editor',
+        width = 10,
+        height = 5,
+        row = 5,
+        col = 5,
+      })
+      local buf2 = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_open_win(buf2, true, {
+        relative = 'editor',
+        width = 10,
+        height = 5,
+        row = 15,
+        col = 15,
+      })
+      ss.resize_right(3)
+      assert.equals(before, vim.api.nvim_win_get_width(wins[1]))
+    end)
+  end)
 end)

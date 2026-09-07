@@ -368,4 +368,62 @@ describe('move_cursor', function()
       assert.is_false(called)
     end)
   end)
+
+  describe('floating windows', function()
+    it('redirects to the previous window from a regular float', function()
+      local wins = helpers.create_vsplits(2)
+      helpers.focus(wins[1])
+      local buf = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_open_win(buf, true, {
+        relative = 'editor',
+        width = 10,
+        height = 5,
+        row = 5,
+        col = 5,
+      })
+      ss.move_cursor_right()
+      assert.equals(wins[2], helpers.curwin())
+    end)
+
+    it('does not crash when both current and previous windows are floats', function()
+      local wins = helpers.create_vsplits(2)
+      helpers.focus(wins[1])
+      local buf1 = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_open_win(buf1, true, {
+        relative = 'editor',
+        width = 10,
+        height = 5,
+        row = 5,
+        col = 5,
+      })
+      local buf2 = vim.api.nvim_create_buf(false, true)
+      local float2 = vim.api.nvim_open_win(buf2, true, {
+        relative = 'editor',
+        width = 10,
+        height = 5,
+        row = 15,
+        col = 15,
+      })
+      ss.move_cursor_right()
+      assert.equals(float2, helpers.curwin())
+    end)
+
+    it('delegates to the backend from an embedded float at the screen edge', function()
+      local backend, calls = helpers.mock_backend()
+      ss.setup({ mux = { backend = backend } })
+      local wins = helpers.create_vsplits(2)
+      helpers.focus(wins[1])
+      local buf = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_open_win(buf, true, {
+        relative = 'editor',
+        width = 20,
+        height = 10,
+        row = 0,
+        col = 0,
+        zindex = 33,
+      })
+      ss.move_cursor_left()
+      assert.is_true(vim.tbl_contains(helpers.ops(calls), 'move'))
+    end)
+  end)
 end)
