@@ -9,9 +9,16 @@
 > See [#488](https://github.com/mrjones2014/smart-splits.nvim/issues/488) / [#492](https://github.com/mrjones2014/smart-splits.nvim/issues/492)
 > for details.
 
-🧠 Smarter and more intuitive split pane management that uses a mental model of left/right/up/down
-instead of wider/narrower/taller/shorter for resizing. Navigate seamlessly between Neovim windows and
-terminal multiplexer panes.
+🧠 Smarter and more intuitive split pane management for Neovim. Resize splits using a mental model of left/right/up/down instead of wider/narrower/taller/shorter. Navigate seamlessly between Neovim windows and terminal multiplexer panes with a clean, backend-driven architecture.
+
+**Key features:**
+
+- Intuitive resize model that matches how you think about splits
+- Seamless navigation between Neovim and multiplexer panes
+- Modular architecture: multiplexer support lives in separate plugins
+- Configurable edge behavior: wrap, stop, split, or custom logic
+- Ignore lists for buffers and filetypes
+- Count-aware resizing with `v:count1` support
 
 <video src="https://github.com/user-attachments/assets/e516399d-0c49-4c3d-b748-3ee0e4262898"></video>
 
@@ -19,107 +26,165 @@ terminal multiplexer panes.
 
 <!--toc:start-->
 
-- [🧠 `smart-splits.nvim`](#🧠-smart-splitsnvim)
-  - [Install](#install)
-  - [Usage](#usage)
-    - [Key Mappings](#key-mappings)
-    - [Lua API](#lua-api)
-    - [Commands](#commands)
+- [🧠 `smart-splits.nvim`](#-smart-splitsnvim)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Quick Start](#quick-start)
   - [Configuration](#configuration)
     - [Ignore Lists](#ignore-lists)
     - [At Edge Behavior](#at-edge-behavior)
-  - [Multiplexer Backends](#multiplexer-backends)
+  - [Keybindings](#keybindings)
+  - [Lua API](#lua-api)
+  - [Commands](#commands)
+  - [Backends](#backends)
     - [Available Backends](#available-backends)
     - [Multiple Backends](#multiple-backends)
     - [Writing a Backend](#writing-a-backend)
+  - [Migration from v2](#migration-from-v2)
   - [Troubleshooting](#troubleshooting)
-  - [Migrating from v2](#migrating-from-v2)
   <!--toc:end-->
 
-## Install
+## Requirements
 
-Requires Neovim 0.11 or newer. Versions are tagged, see
-[Releases](https://github.com/mrjones2014/smart-splits.nvim/releases).
+- Neovim 0.11 or newer
+- (Optional) A terminal multiplexer with a supported `smart-splits` backend plugin (e.g. `smart-splits-nvim/backend-zellij`)
 
-With lazy.nvim:
+## Installation
+
+**smart-splits.nvim** is the core plugin. Multiplexer backends (Zellij, Ghostty, etc.) are separate plugins you install alongside it.
+
+With [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
-{
-  'mrjones2014/smart-splits.nvim',
-  -- pin a major version to opt out of protocol changes
+return {
+  'smart-splits-nvim/smart-splits.nvim',
   version = '^3.0.0',
+  -- optional: install a backend
+  dependencies = {
+    {
+      'smart-splits-nvim/backend-zellij',
+      main = 'smart-splits-backend-zellij',
+      opts = {
+        --[[ backend-specific options go here ]]
+      },
+    },
+  },
+  opts = {
+    mux = { backend = 'smart-splits-backend-zellij' },
+  },
 }
 ```
 
 Calling `setup()` is optional. Without it you get the defaults and no multiplexer integration.
 
-## Usage
+## Quick Start
 
-### Key Mappings
-
-`smart-splits.nvim` sets no mappings for you. The recommended set:
+Here's a minimal working configuration with Zellij:
 
 ```lua
--- resizing splits, these accept a count, so `10<A-h>` resizes by 10 * config.resize.amount
-vim.keymap.set('n', '<A-h>', require('smart-splits').resize_left)
-vim.keymap.set('n', '<A-j>', require('smart-splits').resize_down)
-vim.keymap.set('n', '<A-k>', require('smart-splits').resize_up)
-vim.keymap.set('n', '<A-l>', require('smart-splits').resize_right)
--- moving between splits
-vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
-vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
-vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
-vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
--- swapping buffers between windows
-vim.keymap.set('n', '<leader><leader>h', require('smart-splits').swap_buf_left)
-vim.keymap.set('n', '<leader><leader>j', require('smart-splits').swap_buf_down)
-vim.keymap.set('n', '<leader><leader>k', require('smart-splits').swap_buf_up)
-vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
+-- Install smart-splits.nvim and a backend
+return {
+  'smart-splits-nvim/smart-splits.nvim',
+  version = '^3.0.0',
+  dependencies = {
+    'smart-splits-nvim/smart-splits-backend-zellij',
+  },
+  opts = {
+    mux = { backend = 'smart-splits-backend-zellij' },
+  },
+  keys = {
+    -- Resize splits
+    {
+      '<A-h>',
+      function()
+        require('smart-splits').resize_left()
+      end,
+      desc = 'Resize left',
+    },
+    {
+      '<A-j>',
+      function()
+        require('smart-splits').resize_down()
+      end,
+      desc = 'Resize down',
+    },
+    {
+      '<A-k>',
+      function()
+        require('smart-splits').resize_up()
+      end,
+      desc = 'Resize up',
+    },
+    {
+      '<A-l>',
+      function()
+        require('smart-splits').resize_right()
+      end,
+      desc = 'Resize right',
+    },
+    -- Move between splits
+    {
+      '<C-h>',
+      function()
+        require('smart-splits').move_cursor_left()
+      end,
+      desc = 'Move left',
+    },
+    {
+      '<C-j>',
+      function()
+        require('smart-splits').move_cursor_down()
+      end,
+      desc = 'Move down',
+    },
+    {
+      '<C-k>',
+      function()
+        require('smart-splits').move_cursor_up()
+      end,
+      desc = 'Move up',
+    },
+    {
+      '<C-l>',
+      function()
+        require('smart-splits').move_cursor_right()
+      end,
+      desc = 'Move right',
+    },
+    -- Swap buffers
+    {
+      '<leader><leader>h',
+      function()
+        require('smart-splits').swap_buf_left()
+      end,
+      desc = 'Swap left',
+    },
+    {
+      '<leader><leader>j',
+      function()
+        require('smart-splits').swap_buf_down()
+      end,
+      desc = 'Swap down',
+    },
+    {
+      '<leader><leader>k',
+      function()
+        require('smart-splits').swap_buf_up()
+      end,
+      desc = 'Swap up',
+    },
+    {
+      '<leader><leader>l',
+      function()
+        require('smart-splits').swap_buf_right()
+      end,
+      desc = 'Swap right',
+    },
+  },
+}
 ```
 
-### Lua API
-
-```lua
-local ss = require('smart-splits')
-
--- resize, `opts` is `{ amount = n }` or a bare number, defaulting to
--- `config.resize.amount`; either way `v:count1` multiplies it
-ss.resize_left(opts)
-ss.resize_right(opts)
-ss.resize_up(opts)
-ss.resize_down(opts)
-
--- move the cursor, `opts` may override `same_row` and `at_edge` for this call
-ss.move_cursor_left(opts)
-ss.move_cursor_right(opts)
-ss.move_cursor_up(opts)
-ss.move_cursor_down(opts)
-
--- swap the current buffer with a neighbor, `opts` may override `move_cursor`
-ss.swap_buf_left(opts)
-ss.swap_buf_right(opts)
-ss.swap_buf_up(opts)
-ss.swap_buf_down(opts)
-```
-
-### Commands
-
-| Command                        | Description                           |
-| ------------------------------ | ------------------------------------- |
-| `:SmartResizeLeft [amount]`    | Resize left                           |
-| `:SmartResizeRight [amount]`   | Resize right                          |
-| `:SmartResizeUp [amount]`      | Resize up                             |
-| `:SmartResizeDown [amount]`    | Resize down                           |
-| `:SmartCursorMoveLeft`         | Move the cursor left                  |
-| `:SmartCursorMoveRight`        | Move the cursor right                 |
-| `:SmartCursorMoveUp`           | Move the cursor up                    |
-| `:SmartCursorMoveDown`         | Move the cursor down                  |
-| `:SmartSwapLeft`               | Swap the buffer left                  |
-| `:SmartSwapRight`              | Swap the buffer right                 |
-| `:SmartSwapUp`                 | Swap the buffer up                    |
-| `:SmartSwapDown`               | Swap the buffer down                  |
-| `:SmartSplitsLog`              | Open the log file                     |
-| `:SmartSplitsLogLevel {level}` | Change the log level for this session |
+That's it! You now have intuitive split management with seamless Zellij integration.
 
 ## Configuration
 
@@ -152,7 +217,7 @@ require('smart-splits').setup({
 
   mux = {
     -- a backend, a list of backends in priority order, or a function returning
-    -- either; see Multiplexer Backends below
+    -- either; see Backends below
     backend = nil,
     -- warn when backends are configured but none of them detected
     warn_if_unusable = true,
@@ -175,21 +240,21 @@ they are skipped when working out resize geometry, and `at_edge = 'split'` will 
 Both can be overridden per feature. A bare list replaces the top level one:
 
 ```lua
-{
+require('smart-splits').setup({
   ignored_filetypes = { 'NvimTree' },
   -- resizing ignores only Trouble, moving still ignores only NvimTree
   resize = { ignored_filetypes = { 'Trouble' } },
-}
+})
 ```
 
 Set `inherit = true` to add to the top level list instead of replacing it:
 
 ```lua
-{
+require('smart-splits').setup({
   ignored_filetypes = { 'NvimTree', 'neo-tree' },
   -- resizing ignores NvimTree, neo-tree and Trouble
   resize = { ignored_filetypes = { inherit = true, 'Trouble' } },
-}
+})
 ```
 
 ### At Edge Behavior
@@ -229,7 +294,7 @@ The function form receives:
 For example, wrap horizontally but stop vertically:
 
 ```lua
-{
+require('smart-splits').setup({
   move = {
     at_edge = function(ctx)
       if ctx.direction == 'left' or ctx.direction == 'right' then
@@ -237,10 +302,76 @@ For example, wrap horizontally but stop vertically:
       end
     end,
   },
-}
+})
 ```
 
-## Multiplexer Backends
+## Keybindings
+
+`smart-splits.nvim` sets no mappings for you. The recommended set:
+
+```lua
+-- resizing splits, these accept a count, so `10<A-h>` resizes by 10 * config.resize.amount
+vim.keymap.set('n', '<A-h>', require('smart-splits').resize_left)
+vim.keymap.set('n', '<A-j>', require('smart-splits').resize_down)
+vim.keymap.set('n', '<A-k>', require('smart-splits').resize_up)
+vim.keymap.set('n', '<A-l>', require('smart-splits').resize_right)
+-- moving between splits
+vim.keymap.set('n', '<C-h>', require('smart-splits').move_cursor_left)
+vim.keymap.set('n', '<C-j>', require('smart-splits').move_cursor_down)
+vim.keymap.set('n', '<C-k>', require('smart-splits').move_cursor_up)
+vim.keymap.set('n', '<C-l>', require('smart-splits').move_cursor_right)
+-- swapping buffers between windows
+vim.keymap.set('n', '<leader><leader>h', require('smart-splits').swap_buf_left)
+vim.keymap.set('n', '<leader><leader>j', require('smart-splits').swap_buf_down)
+vim.keymap.set('n', '<leader><leader>k', require('smart-splits').swap_buf_up)
+vim.keymap.set('n', '<leader><leader>l', require('smart-splits').swap_buf_right)
+```
+
+## Lua API
+
+```lua
+local ss = require('smart-splits')
+
+-- resize, `opts` is `{ amount = n }` or a bare number, defaulting to
+-- `config.resize.amount`; either way `v:count1` multiplies it
+ss.resize_left(opts)
+ss.resize_right(opts)
+ss.resize_up(opts)
+ss.resize_down(opts)
+
+-- move the cursor, `opts` may override `same_row` and `at_edge` for this call
+ss.move_cursor_left(opts)
+ss.move_cursor_right(opts)
+ss.move_cursor_up(opts)
+ss.move_cursor_down(opts)
+
+-- swap the current buffer with a neighbor, `opts` may override `move_cursor`
+ss.swap_buf_left(opts)
+ss.swap_buf_right(opts)
+ss.swap_buf_up(opts)
+ss.swap_buf_down(opts)
+```
+
+## Commands
+
+| Command                        | Description                           |
+| ------------------------------ | ------------------------------------- |
+| `:SmartResizeLeft [amount]`    | Resize left                           |
+| `:SmartResizeRight [amount]`   | Resize right                          |
+| `:SmartResizeUp [amount]`      | Resize up                             |
+| `:SmartResizeDown [amount]`    | Resize down                           |
+| `:SmartCursorMoveLeft`         | Move the cursor left                  |
+| `:SmartCursorMoveRight`        | Move the cursor right                 |
+| `:SmartCursorMoveUp`           | Move the cursor up                    |
+| `:SmartCursorMoveDown`         | Move the cursor down                  |
+| `:SmartSwapLeft`               | Swap the buffer left                  |
+| `:SmartSwapRight`              | Swap the buffer right                 |
+| `:SmartSwapUp`                 | Swap the buffer up                    |
+| `:SmartSwapDown`               | Swap the buffer down                  |
+| `:SmartSplitsLog`              | Open the log file                     |
+| `:SmartSplitsLogLevel {level}` | Change the log level for this session |
+
+## Backends
 
 **Core ships no backends.** Support for tmux, Zellij, WezTerm, Kitty and anything else lives in
 separate plugins, so each one can be maintained by people who actually use it.
@@ -248,8 +379,8 @@ separate plugins, so each one can be maintained by people who actually use it.
 Install a backend plugin and name it:
 
 ```lua
-{
-  'mrjones2014/smart-splits.nvim',
+return {
+  'smart-splits-nvim/smart-splits.nvim',
   dependencies = {
     {
       'smart-splits-nvim/smart-splits-backend-zellij',
@@ -267,13 +398,15 @@ There is no auto-detection. Naming your backend explicitly is what replaced it.
 
 ### Available Backends
 
-| Multiplexer | Backend                                                                                         |
-| ----------- | ----------------------------------------------------------------------------------------------- |
-| Zellij      | [smart-splits-backend-zellij](https://github.com/smart-splits-nvim/smart-splits-backend-zellij) |
+| Multiplexer | Backend                                                                                         | Maintainer  |
+| ----------- | ----------------------------------------------------------------------------------------------- | ----------- |
+| Zellij      | [smart-splits-backend-zellij](https://github.com/smart-splits-nvim/smart-splits-backend-zellij) | @Torsteinws |
+| Ghostty     | [backend-ghostty](https://github.com/smart-splits-nvim/backend-ghostty)                         | @geodimm    |
 
 Using tmux, WezTerm, Kitty or Herdr? Those backends shipped in core through v2 and need maintainers.
-Either stay on the `v2` tag, or [volunteer to maintain
-one](https://github.com/mrjones2014/smart-splits.nvim/issues/488).
+Either stay on the `v2` tag, or [volunteer to maintain one](https://github.com/mrjones2014/smart-splits.nvim/issues/488).
+
+The community is also free to make 3rd party backends.
 
 ### Multiple Backends
 
@@ -281,25 +414,25 @@ one](https://github.com/mrjones2014/smart-splits.nvim/issues/488).
 wins, which covers the case where you are usually in one multiplexer and occasionally in another:
 
 ```lua
-{
+require('smart-splits').setup({
   mux = {
-    -- inside tmux, use tmux; otherwise fall back to Kitty
-    backend = { 'smart-splits-backend-tmux', 'smart-splits-backend-kitty' },
+    -- inside zellij, use zellij; otherwise fall back to ghostty
+    backend = { 'smart-splits-backend-zellij', 'smart-splits-backend-ghostty' },
   },
-}
+})
 ```
 
 It also accepts a module table directly, or a function returning any of the above. The function form
 defers the `require` until startup, which helps if your backend plugin is lazy loaded:
 
 ```lua
-{
+require('smart-splits').setup({
   mux = {
     backend = function()
-      return { require('smart-splits-backend-tmux'), require('smart-splits-backend-kitty') }
+      return { require('smart-splits-backend-zellij'), require('smart-splits-backend-ghostty') }
     end,
   },
-}
+})
 ```
 
 Resolution happens once, during `setup()`. A backend that fails to load, implements an unsupported
@@ -337,21 +470,26 @@ not running. Only the resolved backend gets `activate()`.
 
 You can also pass a table like this inline, without publishing a plugin at all.
 
-## Troubleshooting
+## Migration from v2
 
-Start with `:checkhealth smart-splits`. It reports your resolved config, every backend it tried and
-why each one was accepted or skipped, and runs each backend's own health check.
+v2 remains available via its git tag. You have two options:
 
-For anything involving movement or resizing, turn the log up and reproduce it:
+### Option 1: Stay on v2
 
-```vim
-:SmartSplitsLogLevel debug
-:SmartSplitsLog
+Pin to the most recent v2 release:
+
+```lua
+return {
+  'mrjones2014/smart-splits.nvim',
+  version = '^2.0.0',
+}
 ```
 
-## Migrating from v2
+This gives you the tmux, WezTerm, Kitty, and Herdr backends that shipped in core. No migration needed.
 
-v2 remains available via its git tag. To move to v3:
+### Option 2: Migrate to v3
+
+v3 introduces a backend architecture where multiplexer support lives in separate plugins. This is a breaking change.
 
 **1. Install a backend plugin.** Core ships none. See [Available Backends](#available-backends).
 
@@ -370,7 +508,7 @@ it finds, with the new location, and `:checkhealth smart-splits` repeats the rep
 | `ignored_buftypes`            | unchanged               |
 | `ignored_filetypes`           | unchanged               |
 
-**3. Drop what no longer exists.**
+**3. Drop what no longer exists.** Some of these may have migrated to backend-specific configuration.
 
 | Removed                                                          | Why                                                        |
 | ---------------------------------------------------------------- | ---------------------------------------------------------- |
@@ -385,3 +523,15 @@ it finds, with the new location, and `:checkhealth smart-splits` repeats the rep
 
 **4. Post install hooks are gone.** The Kitty kittens, the tmux plugin file, the WezTerm plugin and
 the Herdr manifest all moved out of this repository. Remove any `build`/`run` hook you had.
+
+## Troubleshooting
+
+Start with `:checkhealth smart-splits`. It reports your resolved config, every backend it tried and
+why each one was accepted or skipped, and runs each backend's own health check.
+
+To trace behavior, you can set the log level and view the log file with:
+
+```vim
+:SmartSplitsLogLevel debug
+:SmartSplitsLog
+```
