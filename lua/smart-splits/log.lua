@@ -3,6 +3,7 @@
 ---@type SmartSplitsLogLevel[]
 local LEVELS = { 'trace', 'debug', 'info', 'warn', 'error' }
 
+---Reverse lookup of LEVELS
 ---@type table<SmartSplitsLogLevel, number>
 local LEVEL_INDEX = {}
 for idx, level in ipairs(LEVELS) do
@@ -80,6 +81,7 @@ end
 ---@param path string
 ---@param line string
 local function append(path, line)
+  -- NB: Use async file writes
   vim.uv.fs_open(path, 'a', 420, function(err, fd)
     if err or not fd then
       return
@@ -108,14 +110,15 @@ end
 ---@param template any
 ---@param ... any
 local function write(level, template, ...)
-  if not enabled(level) then
-    return
-  end
-
+  -- NB: always write to log file
   local msg = format(template, ...)
   local path = M.file_path()
   if path then
     append(path, ('%s %s %s\n'):format(os.date('%F %T'), level:upper(), msg))
+  end
+
+  if not enabled(level) then
+    return
   end
 
   if echoed[msg] then
