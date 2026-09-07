@@ -79,7 +79,9 @@ Calling `setup()` is optional. Without it you get the defaults and no multiplexe
 
 ## Quick Start
 
-Here's a minimal working configuration with Zellij:
+<details>
+
+  <summary>Minimal working example configuration with the Zellij backend (click to expand)</summary>
 
 ```lua
 -- Install smart-splits.nvim and a backend
@@ -184,7 +186,7 @@ return {
 }
 ```
 
-That's it! You now have intuitive split management with seamless Zellij integration.
+</details>
 
 ## Configuration
 
@@ -472,22 +474,8 @@ You can also pass a table like this inline, without publishing a plugin at all.
 
 ## Migration from v2
 
-v2 remains available via its git tag. You have two options:
-
-### Option 1: Stay on v2
-
-Pin to the most recent v2 release:
-
-```lua
-return {
-  'mrjones2014/smart-splits.nvim',
-  version = '^2.0.0',
-}
-```
-
-This gives you the tmux, WezTerm, Kitty, and Herdr backends that shipped in core. No migration needed.
-
-### Option 2: Migrate to v3
+v2 remains available via its git tag. You may pin to the latest 2.x.x version if you do not wish to migrate to v3
+(e.g. if you use a terminal multiplexer that does not yet have a v3 backend).
 
 v3 introduces a backend architecture where multiplexer support lives in separate plugins. This is a breaking change.
 
