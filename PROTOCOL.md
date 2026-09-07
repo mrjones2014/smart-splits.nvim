@@ -20,8 +20,8 @@ protocol_version = '>=3.0.0 <4.0.0'
 Core accepts any version or range that overlaps with its supported range. Read the current values from Lua:
 
 ```lua
-require('smart-splits').PROTOCOL_VERSION            --> vim.Version (3.0.0)
-require('smart-splits.backend').SUPPORTED_VERSIONS  --> vim.VersionRange (^3.0.0)
+local proto_version = require('smart-splits').PROTOCOL_VERSION --> vim.Version (3.0.0)
+local supported_versions = require('smart-splits').SUPPORTED_VERSIONS --> vim.VersionRange (^3.0.0)
 ```
 
 Protocol versions follow semantic versioning. Additions that do not break existing backends do not bump the major version. When a breaking change does land, core keeps accepting the previous major version for at least one release, so the supported range may span multiple major versions.
@@ -256,7 +256,7 @@ list them in priority order, so every installed backend gets configured on every
 the ones whose multiplexer is not even running:
 
 ```lua
-{
+return {
   'smart-splits-nvim/smart-splits.nvim',
   dependencies = {
     {
@@ -353,6 +353,53 @@ require('smart-splits').setup({
 ```
 
 Then drive your movement keys and read `:SmartSplitsLog`.
+
+## Testing
+
+This repository is the source of truth for protocol correctness. It ships a Lua module,
+`smart-splits.protocol_tests`, that your backend can require in its own test suite to verify
+conformance. The module is framework-agnostic: it returns a list of test cases you can run in
+busted, plenary, or any other test runner.
+
+Each test is a `{name, fn}` pair. `fn()` returns `true` on pass, or an error string on failure:
+
+```lua
+local protocol_tests = require('smart-splits.protocol_tests')
+
+describe('backend conformance', function()
+  for _, test in ipairs(protocol_tests.tests(my_backend)) do
+    it(test.name, function()
+      local result = test.fn()
+      if result ~= true then
+        error(result)
+      end
+    end)
+  end
+end)
+```
+
+Or run them all at once without a framework:
+
+```lua
+local results = require('smart-splits.protocol_tests').run(my_backend)
+for _, r in ipairs(results) do
+  print(r.ok and 'PASS' or 'FAIL', r.name, r.ok == true and '' or r.ok)
+end
+```
+
+The tests cover:
+
+- **Structural validation** — required fields exist with correct types, protocol version overlaps
+  the supported range.
+- **`detect()`** — returns a boolean, does not throw.
+- **`move(direction, {})`** — returns a boolean for each of `left`, `right`, `up`, `down`; does not
+  throw.
+- **`resize(direction, {amount=1})`** — same, but only when `resize` is present on the backend.
+- **`activate()`** — does not throw, if present.
+- **`health()`** — does not throw, if present.
+
+Optional fields (`resize`, `activate`, `health`) are only tested when the backend provides them. A
+backend that omits `resize` entirely will not see resize tests.
 
 ## What core does not give you
 

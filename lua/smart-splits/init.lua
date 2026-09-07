@@ -3,6 +3,7 @@ local M = {}
 ---The multiplexer protocol version this release implements. Backends can assert
 ---against it, see PROTOCOL.md.
 M.PROTOCOL_VERSION = require('smart-splits.backend').PROTOCOL_VERSION
+M.SUPPORTED_VERSIONS = require('smart-splits.backend').SUPPORTED_VERSIONS
 
 ---@class (partial) SmartSplitsSetupOpts: SmartSplitsConfig
 

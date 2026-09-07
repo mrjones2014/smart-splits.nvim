@@ -121,7 +121,7 @@ end
 
 ---@param backend table
 ---@return string|nil error
-local function validate(backend)
+function M.validate(backend)
   for field, expected in pairs(REQUIRED) do
     local actual = type(backend[field])
     if backend[field] == nil then
@@ -184,7 +184,7 @@ end
 ---@return string|nil error
 local function load(spec)
   if type(spec) ~= 'string' then
-    local err = validate(spec)
+    local err = M.validate(spec)
     if err then
       return nil, err
     end
@@ -199,7 +199,7 @@ local function load(spec)
     return nil, ('module returned a %s, expected a table'):format(type(module))
   end
 
-  local err = validate(module)
+  local err = M.validate(module)
   if err then
     return nil, err
   end
