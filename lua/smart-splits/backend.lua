@@ -28,7 +28,6 @@
 ---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean resize the current pane, `true` if handled
 ---@field activate? fun() called once, when this backend is the one selected; where initialization work belongs
 ---@field health? fun() called during `:checkhealth smart-splits`, under a header emitted by core
----@field slow_threshold? number configure the threshold, in milliseconds, at which a backend operation should be considered slow and log a warning; default 100ms
 
 ---@alias SmartSplitsBackendSpec SmartSplitsBackend|string
 
@@ -71,11 +70,6 @@ local function ranges_intersect(r1, r2)
   end
 end
 
----Backend operations run on every keypress that reaches a window edge, so a
----backend that shells out without a timeout will freeze the editor. Core cannot
----impose one, but it can name the culprit.
-local DEFAULT_SLOW_MS = 100
-
 local REQUIRED = {
   name = 'string',
   protocol_version = 'string',
@@ -87,7 +81,6 @@ local OPTIONAL = {
   resize = 'function',
   activate = 'function',
   health = 'function',
-  slow_threshold = 'number',
 }
 
 ---How a candidate backend fared during resolution.
@@ -296,12 +289,8 @@ local function call(op, ...)
   local ok, result = pcall(backend[op], ...)
   local elapsed = (vim.uv.hrtime() - start) / 1e6
 
-  local slow_threshold = backend.slow_threshold
-  if type(slow_threshold) ~= 'number' then
-    slow_threshold = DEFAULT_SLOW_MS
-  end
-  if elapsed > slow_threshold then
-    Log.warn('backend `%s` %s() took %.1fms, this runs on every keypress at an edge', backend.name, op, elapsed)
+  if elapsed > require('smart-splits.config').diagnostic.slow_threshold then
+    Log.diagnostic('backend `%s` %s() took %.1fms, this runs on every keypress at an edge', backend.name, op, elapsed)
   end
 
   if not ok then

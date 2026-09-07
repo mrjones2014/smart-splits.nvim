@@ -31,6 +31,10 @@ local AtEdgeBehavior = Types.AtEdgeBehavior
 ---@field level SmartSplitsLogLevel
 ---@field file boolean|string `true` for the default path, a string for a custom one, `false` to disable
 
+---@class SmartSplitsDiagnosticConfig
+---@field enabled boolean enable or disable all doagnostic messages; default `true`
+---@field slow_threshold number in milliseconcds, time at which a backend operation is considered slow
+
 ---@class SmartSplitsConfig
 ---@field ignored_buftypes string[]
 ---@field ignored_filetypes string[]
@@ -39,6 +43,7 @@ local AtEdgeBehavior = Types.AtEdgeBehavior
 ---@field swap SmartSplitsSwapConfig
 ---@field mux SmartSplitsMuxConfig
 ---@field log SmartSplitsLogConfig
+---@field diagnostic SmartSplitsDiagnosticConfig
 
 ---@class SmartSplitsConfigModule: SmartSplitsConfig
 ---@field setup fun(opts: table|nil)
@@ -68,6 +73,10 @@ local defaults = {
     level = 'info',
     file = true,
   },
+  diagnostic = {
+    enabled = false,
+    slow_threshold = 100,
+  },
 }
 
 ---Every option the user may set. Spelled out rather than derived from
@@ -82,6 +91,7 @@ local schema = {
   swap = { 'move_cursor' },
   mux = { 'backend', 'warn_if_unusable' },
   log = { 'level', 'file' },
+  diagnostic = { 'enabled', 'slow_threshold' },
 }
 
 ---v2 keys and where they went. Due for removal some time after v3 ships.

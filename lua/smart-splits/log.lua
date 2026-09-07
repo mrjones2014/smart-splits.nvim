@@ -1,4 +1,4 @@
----@alias SmartSplitsLogLevel 'trace'|'debug'|'info'|'warn'|'error'
+---@alias SmartSplitsLogLevel 'trace'|'debug'|'info'|'warn'|'error'|'diagnostic'
 
 ---@type SmartSplitsLogLevel[]
 local LEVELS = { 'trace', 'debug', 'info', 'warn', 'error' }
@@ -74,6 +74,11 @@ end
 ---@param level SmartSplitsLogLevel
 ---@return boolean
 local function enabled(level)
+  if level == 'diagnostic' then
+    -- this level is controlled separately by config
+    return require('smart-splits.config').diagnostic.enabled
+  end
+
   local configured = LEVEL_INDEX[require('smart-splits.config').log.level] or LEVEL_INDEX.info
   return LEVEL_INDEX[level] >= configured
 end
@@ -172,6 +177,13 @@ function M.notify(level, template, ...)
   vim.schedule(function()
     vim.notify(msg, level, { title = 'smart-splits.nvim' })
   end)
+end
+
+---Log a diagnostic message, these messages should be directly
+---relevant/actionable by the end user, for example, warnings about
+---slow operations.
+function M.diagnostic(template, ...)
+  write('diagnostic', template, ...)
 end
 
 ---Open the log file in a read only buffer that follows external writes.

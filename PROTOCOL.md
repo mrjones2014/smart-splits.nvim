@@ -39,7 +39,6 @@ A backend whose version or range does not overlap the supported range is reporte
 ---@field resize? fun(direction: SmartSplitsDirection, opts?: SmartSplitsBackendResizeOpts):boolean
 ---@field activate? fun()
 ---@field health? fun()
----@field slow_threshold? number in milliseconds, operations taking longer than this will log a warning; default 100ms
 ```
 
 `SmartSplitsDirection` is one of `'left'`, `'right'`, `'up'`, `'down'`.
@@ -225,7 +224,8 @@ behaviour, but the error is reported to the user as your backend's fault. When t
 unreachable, return `false`.
 
 **Return promptly.** These functions run on every keypress that reaches a window edge. Core warns
-when a call exceeds `backend.slow_threshold` (100ms by default) and names your backend in the message. If you shell out, pass a timeout:
+when a call exceeds core's `config.diagnostic.slow_threshold` (100ms by default) and names your
+backend in the message. If you shell out, pass a reasonable timeout:
 
 ```lua
 local result = vim.system({ 'zellij', 'action', 'move-focus', direction }, { timeout = 200 }):wait()
