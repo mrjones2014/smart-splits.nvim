@@ -1,9 +1,0 @@
-{
-  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
-  "runtime.version": "LuaJIT",
-  "workspace.checkThirdParty": false,
-  "workspace.library": ["$VIMRUNTIME/lua", "${3rd}/luv/library", "types"],
-  "workspace.ignoreDir": [".direnv", ".jj", ".git", "types"],
-  "diagnostics.globals": ["vim"],
-  "type.checkTableShape": true
-}
