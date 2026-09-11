@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: friday
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: nix
+    directory: /
+    schedule:
+      interval: weekly
+      day: friday
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      flake-inputs:
+        patterns: ["*"]
