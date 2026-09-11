@@ -57,7 +57,12 @@ command('SmartSplitsLogLevel', function(args)
   local Log = require('smart-splits.log')
   local level = vim.trim(args.args)
   if not vim.tbl_contains(Log.levels, level) then
-    Log.notify(vim.log.levels.ERROR, 'invalid log level `%s`, expected one of %s', level, table.concat(Log.levels, ', '))
+    Log.notify(
+      vim.log.levels.ERROR,
+      'invalid log level `%s`, expected one of %s',
+      level,
+      table.concat(Log.levels, ', ')
+    )
     return
   end
   require('smart-splits.config').log.level = level

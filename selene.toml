@@ -1,2 +1,5 @@
-std="vim"
+std = "vim"
 exclude = [".install/lua-5*", ".lua"]
+
+[lints]
+mixed_table = "allow"
