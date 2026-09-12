@@ -401,6 +401,38 @@ The tests cover:
 Optional fields (`resize`, `activate`, `health`) are only tested when the backend provides them. A
 backend that omits `resize` entirely will not see resize tests.
 
+### Helpers
+
+In addition to offering `smart-splits.protocol_tests` for protocol correctness tests, the core plugin also
+offers various helper functions that may be useful for writing backend tests, such as:
+
+```lua
+-- ensure that `smart-splits.nvim/tests/` is added to your runtimepath
+-- in your Busted `init.lua`, e.g. if your test job clones the core plugin
+-- under `./deps/` then:
+vim.opt.rtp:append('./deps/smart-splits.nvim/tests')
+
+-- Then, in your tests, you can use:
+local helpers = require('tests.helpers')
+
+-- Reset smart-splits.nvim's plugin config, loaded backend, and logging instance
+helpers.reset_plugin()
+-- Reset editor layout
+helpers.reset_editor()
+-- Reset editor layout, then create `n` vertical splits
+helpers.create_vsplits(n)
+-- Same for horizontal splits
+helpers.create_hsplits(n)
+-- Focus `win`
+helpers.focus(win)
+-- Get active window
+helpers.curwin()
+-- Give each provided window ID a unique buffer inside it
+helpers.unique_buffers(wins)
+
+-- And more! See `./tests/helpers.lua`
+```
+
 ## What core does not give you
 
 - **Pane identifiers.** Core no longer asks for them, and no longer compares them to work out whether
