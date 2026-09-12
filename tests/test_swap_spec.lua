@@ -60,6 +60,88 @@ describe('swap_buf', function()
       ss.swap_buf_right({ move_cursor = false })
       assert.equals(wins[1], helpers.curwin())
     end)
+
+    it('preserves scroll position when move_cursor is true', function()
+      ss.setup({ swap = { move_cursor = true } })
+      local wins = helpers.create_vsplits(2)
+      helpers.unique_buffers(wins)
+
+      -- Fill buffers with enough lines to scroll
+      local lines = {}
+      for i = 1, 100 do
+        table.insert(lines, 'Line ' .. i)
+      end
+      vim.api.nvim_buf_set_lines(vim.api.nvim_win_get_buf(wins[1]), 0, -1, false, lines)
+      vim.api.nvim_buf_set_lines(vim.api.nvim_win_get_buf(wins[2]), 0, -1, false, lines)
+
+      -- Scroll each window to different positions
+      helpers.focus(wins[1])
+      vim.api.nvim_win_set_cursor(wins[1], { 50, 0 })
+      vim.cmd('normal! zz')
+      local view_1_before = vim.fn.winsaveview()
+
+      helpers.focus(wins[2])
+      vim.api.nvim_win_set_cursor(wins[2], { 75, 0 })
+      vim.cmd('normal! zz')
+      local view_2_before = vim.fn.winsaveview()
+
+      -- Swap with move_cursor
+      helpers.focus(wins[1])
+      ss.swap_buf_right()
+
+      -- Cursor should be in win_2 (following buf_1)
+      assert.equals(wins[2], helpers.curwin())
+
+      -- Scroll position should be preserved
+      local view_1_after = vim.fn.winsaveview()
+      assert.equals(view_1_before.topline, view_1_after.topline)
+      assert.equals(view_1_before.lnum, view_1_after.lnum)
+
+      -- Check win_1 as well
+      helpers.focus(wins[1])
+      local view_2_after = vim.fn.winsaveview()
+      assert.equals(view_2_before.topline, view_2_after.topline)
+      assert.equals(view_2_before.lnum, view_2_after.lnum)
+    end)
+
+    it('preserves scroll position when move_cursor is false', function()
+      -- default: move_cursor = false
+      local wins = helpers.create_vsplits(2)
+      helpers.unique_buffers(wins)
+
+      local lines = {}
+      for i = 1, 100 do
+        table.insert(lines, 'Line ' .. i)
+      end
+      vim.api.nvim_buf_set_lines(vim.api.nvim_win_get_buf(wins[1]), 0, -1, false, lines)
+      vim.api.nvim_buf_set_lines(vim.api.nvim_win_get_buf(wins[2]), 0, -1, false, lines)
+
+      helpers.focus(wins[1])
+      vim.api.nvim_win_set_cursor(wins[1], { 50, 0 })
+      vim.cmd('normal! zz')
+      local view_1_before = vim.fn.winsaveview()
+
+      helpers.focus(wins[2])
+      vim.api.nvim_win_set_cursor(wins[2], { 75, 0 })
+      vim.cmd('normal! zz')
+      local view_2_before = vim.fn.winsaveview()
+
+      -- Swap without move_cursor (default)
+      helpers.focus(wins[1])
+      ss.swap_buf_right()
+
+      -- Cursor should stay in win_1
+      assert.equals(wins[1], helpers.curwin())
+
+      -- win_1 now has buf_2, so it should have view_2's scroll position
+      local view_1_after = vim.fn.winsaveview()
+      assert.equals(view_2_before.topline, view_1_after.topline)
+
+      -- win_2 now has buf_1, so it should have view_1's scroll position
+      helpers.focus(wins[2])
+      local view_2_after = vim.fn.winsaveview()
+      assert.equals(view_1_before.topline, view_2_after.topline)
+    end)
   end)
 
   describe('vertical swaps', function()
