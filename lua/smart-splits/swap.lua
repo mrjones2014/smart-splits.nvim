@@ -37,26 +37,30 @@ function M.swap_bufs(direction, opts)
   local win_2 = vim.api.nvim_get_current_win()
   local view_2 = vim.fn.winsaveview()
 
-  if buf_1 == buf_2 then
-    -- same buffer in both windows, so there is nothing to swap but the cursor and
-    -- scroll position; folds have to come off first or restoring the view moves
-    -- the cursor somewhere else
-    local folds_1 = vim.api.nvim_get_option_value('foldenable', { win = win_1 })
-    local folds_2 = vim.api.nvim_get_option_value('foldenable', { win = win_2 })
-    vim.api.nvim_set_option_value('foldenable', false, { win = win_1 })
-    vim.api.nvim_set_option_value('foldenable', false, { win = win_2 })
-
-    vim.api.nvim_set_current_win(win_1)
-    vim.fn.winrestview(view_2)
-    vim.api.nvim_set_current_win(win_2)
-    vim.fn.winrestview(view_1)
-
-    vim.api.nvim_set_option_value('foldenable', folds_1, { win = win_1 })
-    vim.api.nvim_set_option_value('foldenable', folds_2, { win = win_2 })
-  else
+  -- NB: if the buffers are the same,
+  -- we don't need to swap them, but we
+  -- do still want to swap the view/cursor/etc.
+  -- below; do not early return inside this
+  -- if statement
+  if buf_1 ~= buf_2 then
     vim.api.nvim_win_set_buf(win_2, buf_1)
     vim.api.nvim_win_set_buf(win_1, buf_2)
   end
+
+  -- restore scroll positions; folds have to come off first or restoring
+  -- the view moves the cursor somewhere else
+  local folds_1 = vim.api.nvim_get_option_value('foldenable', { win = win_1 })
+  local folds_2 = vim.api.nvim_get_option_value('foldenable', { win = win_2 })
+  vim.api.nvim_set_option_value('foldenable', false, { win = win_1 })
+  vim.api.nvim_set_option_value('foldenable', false, { win = win_2 })
+
+  vim.api.nvim_set_current_win(win_1)
+  vim.fn.winrestview(view_2)
+  vim.api.nvim_set_current_win(win_2)
+  vim.fn.winrestview(view_1)
+
+  vim.api.nvim_set_option_value('foldenable', folds_1, { win = win_1 })
+  vim.api.nvim_set_option_value('foldenable', folds_2, { win = win_2 })
 
   local move_cursor = opts.move_cursor
   if move_cursor == nil then
